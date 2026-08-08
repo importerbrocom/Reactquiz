@@ -39,8 +39,12 @@ import json
 import re
 import sys
 from collections import Counter
+
+from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 from dataclasses import dataclass, field
 from pathlib import Path
+
+from profiles import detect_profile, parse_sectioned
 
 # --------------------------------------------------------------------------- #
 # Import-format contract (must mirror docs/import-format.md)
@@ -79,6 +83,9 @@ OPTION_KEYS = ["a", "b", "c", "d"]
 # Watermark discrimination thresholds (see is_watermark_char).
 WATERMARK_MIN_SIZE = 40.0
 WATERMARK_MIN_LIGHTNESS = 0.8
+
+# docs/import-format.md caps explanations at 2000 characters.
+EXPLANATION_MAX_LEN = 2000
 
 # --------------------------------------------------------------------------- #
 # Patterns
@@ -124,6 +131,21 @@ CROSS_REFERENCE_MAX_LEN = 48
 
 # Stems that depend on a figure. Deliberately conservative: 'image is formed at'
 # (optics) and 'PR interval in ECG' are about concepts, not pictures.
+# Explanations that name an option letter are wrong for most students once option
+# order is shuffled per exposure (docs/adr/003). Flagged, never silently rewritten.
+RE_EXPLANATION_NAMES_LETTER = re.compile(
+    r"\(?\bOptions?\b\s*\(?[A-Da-d]\)?|\banswer\s+is\s+\(?[A-Da-d]\)?\b",
+    re.IGNORECASE,
+)
+
+# A mechanical, meaning-preserving cleanup: solutions here open with
+# "Correct Option: A) <answer text> ..." where the text that follows already names
+# the answer, so the letter prefix is redundant and safe to drop.
+RE_SOLUTION_PREFIX = re.compile(
+    r"^\s*Correct\s*(?:Option|Answer)\s*:?\s*\(?[A-Da-d]\)?[).:]?\s*",
+    re.IGNORECASE,
+)
+
 RE_MENTIONS_FIGURE = re.compile(
     r"(shown\s+(?:in|below)|given\s+below|in\s+the\s+(?:image|figure|picture)\s+below"
     r"|following\s+(?:image|figure|photograph)|fundus\s+picture|as\s+shown)",
@@ -199,10 +221,25 @@ class ParsedQuestion:
         # Explanations are required by the import spec. A missing one is reported,
         # never filled in: fabricating medical rationale would look convincing and
         # teach a future doctor something wrong.
+        self.explanation = RE_SOLUTION_PREFIX.sub("", self.explanation).strip()
+
+        if RE_EXPLANATION_NAMES_LETTER.search(self.explanation):
+            self.warnings.append("explanation_references_option_letter")
+
+        if len(self.explanation) > EXPLANATION_MAX_LEN:
+            self.warnings.append("explanation_too_long")
+
         if not self.explanation.strip():
             (self.errors if require_explanation else self.warnings).append("missing_explanation")
         elif len(self.explanation.strip()) < 25:
             self.warnings.append("short_explanation")
+
+        # A stem whose boundary could not be established has almost certainly
+        # absorbed the tail of the previous explanation. That is broken content and
+        # must never reach the clean sheet.
+        if "stem_boundary_uncertain" in self.warnings:
+            self.warnings.remove("stem_boundary_uncertain")
+            self.errors.append("stem_boundary_uncertain")
 
         texts = [v.strip().lower() for v in self.options.values() if v.strip()]
         if len(texts) != len(set(texts)):
@@ -296,6 +333,18 @@ def is_watermark_char(obj: dict) -> bool:
             return True
 
     return False
+
+
+def extract_styled_lines(path: Path):
+    """Watermark-filtered lines WITH character style metadata, for profile parsing."""
+    import pdfplumber
+
+    out = []
+    with pdfplumber.open(str(path)) as pdf:
+        for n, page in enumerate(pdf.pages, start=1):
+            clean = page.filter(lambda obj: not is_watermark_char(obj))
+            out.append((n, clean.extract_text_lines() or []))
+    return out
 
 
 def extract_text(path: Path) -> tuple[list[tuple[int, str]], dict]:
@@ -560,6 +609,18 @@ def parse(pages: list[tuple[int, str]], require_explanation: bool = True) -> lis
 # Output
 # --------------------------------------------------------------------------- #
 
+def sanitise_cell(value):
+    """
+    Strip characters Excel refuses (XML control characters).
+
+    PDF text routinely carries stray control bytes; openpyxl raises on them, which
+    would otherwise fail the whole export at the last step.
+    """
+    if not isinstance(value, str):
+        return value
+    return ILLEGAL_CHARACTERS_RE.sub("", value)
+
+
 def write_xlsx(questions: list[ParsedQuestion], path: Path) -> None:
     from openpyxl import Workbook
     from openpyxl.styles import Alignment, Font, PatternFill
@@ -588,7 +649,7 @@ def write_xlsx(questions: list[ParsedQuestion], path: Path) -> None:
 
         for q in rows:
             row = q.to_row()
-            values = [row[c] for c in COLUMNS]
+            values = [sanitise_cell(row[c]) for c in COLUMNS]
             if with_diagnostics:
                 values += [";".join(q.errors), ";".join(q.warnings), q.page]
             ws.append(values)
@@ -618,6 +679,7 @@ def write_report(questions: list[ParsedQuestion], noise: list[str], probe: dict,
         f"- Pages: {probe.get('pages', 'n/a')}",
         f"- Text layer: {'yes' if probe.get('has_text_layer') else 'n/a'}"
         + (f" ({probe['chars_per_page']:.0f} chars/page)" if probe else " (pre-extracted text)"),
+        f"- Profile: `{probe.get('profile', 'numbered')}`",
         f"- Questions detected: **{len(questions)}**",
     ]
     if expected:
@@ -682,6 +744,8 @@ def main() -> int:
     src.add_argument("--text", type=Path, help="pre-extracted text (for testing)")
     ap.add_argument("--out", type=Path, required=True, help="output .xlsx")
     ap.add_argument("--expected", type=int, help="expected question count")
+    ap.add_argument("--profile", choices=["numbered", "sectioned"],
+                    help="source layout (auto-detected when omitted)")
     ap.add_argument("--allow-missing-explanation", action="store_true",
                     help="treat a blank explanation as a warning instead of a blocker "
                          "(for previous-year papers that ship answers only)")
@@ -715,8 +779,24 @@ def main() -> int:
         pages, extras = extract_text(args.pdf)
         probe |= extras
 
-    pages, noise = strip_watermark(pages, args.strip)
-    questions = parse(pages, require_explanation=not args.allow_missing_explanation)
+    profile = args.profile or detect_profile([t for _, t in pages])
+
+    if profile == "sectioned":
+        # This layout is parsed from character styling, so the text-level watermark
+        # pass is unnecessary (and the glyphs are already gone).
+        noise = []
+        questions = parse_sectioned(
+            extract_styled_lines(args.pdf) if args.pdf else [],
+            ParsedQuestion,
+            CANONICAL_TOPICS,
+        )
+        for q in questions:
+            q.validate(require_explanation=not args.allow_missing_explanation)
+    else:
+        pages, noise = strip_watermark(pages, args.strip)
+        questions = parse(pages, require_explanation=not args.allow_missing_explanation)
+
+    probe["profile"] = profile
 
     if not questions:
         print("error: no question blocks detected — the format may differ from the sample",
