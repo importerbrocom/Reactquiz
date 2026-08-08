@@ -57,10 +57,15 @@ CANONICAL_TOPICS = {
     "anatomy": "Anatomy", "physiology": "Physiology", "biochemistry": "Biochemistry",
     "pathology": "Pathology", "pharmacology": "Pharmacology",
     "microbiology": "Microbiology", "forensic medicine": "Forensic Medicine",
-    "community medicine": "Community Medicine", "general medicine": "General Medicine",
+    "community medicine": "Community Medicine", "psm": "Community Medicine",
+    "preventive and social medicine": "Community Medicine",
+    "general medicine": "General Medicine",
     "medicine": "General Medicine", "general surgery": "General Surgery",
     "surgery": "General Surgery", "obstetrics & gynaecology": "Obstetrics & Gynaecology",
     "obstetrics and gynaecology": "Obstetrics & Gynaecology",
+    "gynaecology & obstetrics": "Obstetrics & Gynaecology",
+    "gynecology & obstetrics": "Obstetrics & Gynaecology",
+    "obstetrics & gynecology": "Obstetrics & Gynaecology",
     "obg": "Obstetrics & Gynaecology", "gynaecology": "Obstetrics & Gynaecology",
     "paediatrics": "Paediatrics", "pediatrics": "Paediatrics",
     "orthopaedics": "Orthopaedics", "orthopedics": "Orthopaedics",
@@ -70,6 +75,10 @@ CANONICAL_TOPICS = {
 }
 
 OPTION_KEYS = ["a", "b", "c", "d"]
+
+# Watermark discrimination thresholds (see is_watermark_char).
+WATERMARK_MIN_SIZE = 40.0
+WATERMARK_MIN_LIGHTNESS = 0.8
 
 # --------------------------------------------------------------------------- #
 # Patterns
@@ -113,6 +122,14 @@ RE_CROSS_REFERENCE = re.compile(
 )
 CROSS_REFERENCE_MAX_LEN = 48
 
+# Stems that depend on a figure. Deliberately conservative: 'image is formed at'
+# (optics) and 'PR interval in ECG' are about concepts, not pictures.
+RE_MENTIONS_FIGURE = re.compile(
+    r"(shown\s+(?:in|below)|given\s+below|in\s+the\s+(?:image|figure|picture)\s+below"
+    r"|following\s+(?:image|figure|photograph)|fundus\s+picture|as\s+shown)",
+    re.IGNORECASE,
+)
+
 # --------------------------------------------------------------------------- #
 
 
@@ -128,6 +145,7 @@ class ParsedQuestion:
     subject: str = ""
     topic: str = ""
     subtopic: str = ""
+    figure: str = ""
     errors: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
 
@@ -164,7 +182,7 @@ class ParsedQuestion:
             (norm(self.stem) + "|" + "|".join(opts)).encode()
         ).hexdigest()
 
-    def validate(self) -> None:
+    def validate(self, require_explanation: bool = True) -> None:
         """Apply the import spec. Flags rather than guesses — never invents content."""
         if len(self.stem) < 10:
             self.errors.append("missing_question")
@@ -182,7 +200,7 @@ class ParsedQuestion:
         # never filled in: fabricating medical rationale would look convincing and
         # teach a future doctor something wrong.
         if not self.explanation.strip():
-            self.errors.append("missing_explanation")
+            (self.errors if require_explanation else self.warnings).append("missing_explanation")
         elif len(self.explanation.strip()) < 25:
             self.warnings.append("short_explanation")
 
@@ -221,7 +239,7 @@ class ParsedQuestion:
             # QuesID is preserved so any row can be traced back to the source PDF
             # during subject-matter review.
             "source": f"QuesID {self.source_id}" if self.source_id else "",
-            "image_filename": "",
+            "image_filename": self.figure,
             "status": "active" if not self.errors else "draft",
         }
 
@@ -252,24 +270,68 @@ def probe_pdf(path: Path) -> dict:
     return info
 
 
-def extract_text(path: Path) -> list[tuple[int, str]]:
-    """Page-by-page text, layout preserved. Table cells become separate lines."""
+def is_watermark_char(obj: dict) -> bool:
+    """
+    True for glyphs belonging to a diagonal watermark.
+
+    Filtering has to happen at the CHARACTER level, not on the assembled text. A
+    large rotated watermark interleaves its individual letters into the text stream,
+    so "Ans: 1" arrives as "Ans: 1 a" and "O2:" as "O2: d" — which silently corrupts
+    answer keys and option text. Regex cleanup after the fact cannot reliably tell a
+    stray watermark letter from real content.
+
+    Two discriminators, either is sufficient:
+      * size    — watermarks are set very large (~100pt vs 11pt body text)
+      * colour  — they are near-white so they sit behind the text
+    """
+    if obj.get("object_type") != "char":
+        return False
+
+    if (obj.get("size") or 0) >= WATERMARK_MIN_SIZE:
+        return True
+
+    colour = obj.get("non_stroking_color")
+    if isinstance(colour, (list, tuple)) and len(colour) == 3:
+        if all(isinstance(c, (int, float)) and c > WATERMARK_MIN_LIGHTNESS for c in colour):
+            return True
+
+    return False
+
+
+def extract_text(path: Path) -> tuple[list[tuple[int, str]], dict]:
+    """
+    Page-by-page text with watermark glyphs removed.
+
+    Also records which pages carry images beyond the per-page furniture, so questions
+    that depend on a figure can be flagged — the text alone would read as a complete
+    question while silently missing the thing being asked about.
+    """
     import pdfplumber
 
     pages: list[tuple[int, str]] = []
+    image_pages: dict[int, int] = {}
+    removed = 0
+
     with pdfplumber.open(str(path)) as pdf:
         for n, page in enumerate(pdf.pages, start=1):
-            text = page.extract_text(layout=False, x_tolerance=1.5) or ""
+            before = len(page.chars)
+            clean = page.filter(lambda obj: not is_watermark_char(obj))
+            removed += before - len(clean.chars)
+
+            text = clean.extract_text(layout=False, x_tolerance=1.5) or ""
             if len(text.strip()) < 20:
-                # Bordered tables sometimes defeat plain text extraction; fall back
-                # to reading the table cells directly.
-                for table in page.extract_tables() or []:
+                # Bordered tables can defeat plain text extraction; read cells directly.
+                for table in clean.extract_tables() or []:
                     for row in table:
                         for cell in row:
                             if cell:
                                 text += cell + "\n"
+
+            if page.images:
+                image_pages[n] = len(page.images)
             pages.append((n, text))
-    return pages
+
+    return pages, {"watermark_chars_removed": removed, "image_pages": image_pages}
 
 
 def strip_watermark(
@@ -317,6 +379,10 @@ def strip_watermark(
         and not RE_BLOCK_START.match(line)
         and not RE_ANSWER.match(line)
         and not RE_OPTION.match(line)
+        and not RE_SUBJECT.match(line)
+        and not RE_TOPIC.match(line)
+        and not RE_SUBTOPIC.match(line)
+        and not RE_EXPLANATION.match(line)
     } | (explicit_set - protected)
 
     cleaned = []
@@ -327,10 +393,83 @@ def strip_watermark(
 
 
 # --------------------------------------------------------------------------- #
+# Figures
+# --------------------------------------------------------------------------- #
+
+def extract_figures(pdf_path: Path, out_dir: Path) -> dict[str, str]:
+    """
+    Save question figures and map each to the question it belongs to.
+
+    Without this, a question like "Identify the condition shown in the image below"
+    imports as a complete-looking row that is actually unanswerable — the worst kind
+    of defect, because nothing about it looks wrong in the spreadsheet.
+
+    Mapping is positional: a figure belongs to the last "Ques No:" heading at or
+    above it on the page, or to the question carried over from the previous page.
+
+    @return {question_no: filename}
+    """
+    import pdfplumber
+    import pypdf
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    # Per-page question boundaries, by vertical position.
+    boundaries: dict[int, list[tuple[float, str]]] = {}
+    carried: dict[int, str] = {}
+    with pdfplumber.open(str(pdf_path)) as pdf:
+        current = ""
+        for n, page in enumerate(pdf.pages, start=1):
+            carried[n] = current
+            marks: list[tuple[float, str]] = []
+            clean = page.filter(lambda obj: not is_watermark_char(obj))
+            for line in clean.extract_text_lines() or []:
+                if m := RE_BLOCK_START.match(line["text"].strip()):
+                    marks.append((line["top"], m.group(1)))
+                    current = m.group(1)
+            boundaries[n] = marks
+
+    reader = pypdf.PdfReader(str(pdf_path))
+
+    # The logo repeats on every page; the most common pixel footprint is therefore it.
+    sizes: Counter = Counter()
+    for page in reader.pages:
+        for image in page.images:
+            sizes[image.image.size] += 1
+    logo_size = sizes.most_common(1)[0][0] if sizes else None
+
+    mapping: dict[str, str] = {}
+    with pdfplumber.open(str(pdf_path)) as pdf:
+        for n, page in enumerate(reader.pages, start=1):
+            plumber_figures = [
+                im for im in (pdf.pages[n - 1].images or [])
+                if (round(im["width"]), round(im["height"])) != (140, 40)
+            ]
+            embedded = [im for im in page.images if im.image.size != logo_size]
+
+            for index, image in enumerate(embedded):
+                top = plumber_figures[index]["top"] if index < len(plumber_figures) else 0.0
+
+                owner = carried.get(n, "")
+                for mark_top, number in boundaries.get(n, []):
+                    if mark_top <= top:
+                        owner = number
+                if not owner:
+                    continue
+
+                suffix = Path(image.name).suffix or ".png"
+                filename = f"q{owner.zfill(3)}{'' if index == 0 else f'-{index + 1}'}{suffix}"
+                (out_dir / filename).write_bytes(image.data)
+                mapping.setdefault(owner, filename)
+
+    return mapping
+
+
+# --------------------------------------------------------------------------- #
 # Parsing
 # --------------------------------------------------------------------------- #
 
-def parse(pages: list[tuple[int, str]]) -> list[ParsedQuestion]:
+def parse(pages: list[tuple[int, str]], require_explanation: bool = True) -> list[ParsedQuestion]:
     """
     State machine over the line stream. Values may sit on the same line as their
     label or on the following line (this source uses "O1:" then the text below),
@@ -413,7 +552,7 @@ def parse(pages: list[tuple[int, str]]) -> list[ParsedQuestion]:
         questions.append(current)
 
     for q in questions:
-        q.validate()
+        q.validate(require_explanation)
     return questions
 
 
@@ -543,6 +682,11 @@ def main() -> int:
     src.add_argument("--text", type=Path, help="pre-extracted text (for testing)")
     ap.add_argument("--out", type=Path, required=True, help="output .xlsx")
     ap.add_argument("--expected", type=int, help="expected question count")
+    ap.add_argument("--allow-missing-explanation", action="store_true",
+                    help="treat a blank explanation as a warning instead of a blocker "
+                         "(for previous-year papers that ship answers only)")
+    ap.add_argument("--images", type=Path,
+                    help="extract question figures to this directory and link them")
     ap.add_argument("--strip", action="append", default=[],
                     help="exact line to treat as watermark/furniture (repeatable)")
     ap.add_argument("--json", action="store_true", help="also dump parsed JSON")
@@ -551,6 +695,7 @@ def main() -> int:
     probe: dict = {}
     if args.text:
         pages = [(1, args.text.read_text(encoding="utf-8"))]
+        extras = {}
     else:
         if not args.pdf.exists():
             print(f"error: {args.pdf} not found", file=sys.stderr)
@@ -567,15 +712,27 @@ def main() -> int:
                 file=sys.stderr,
             )
             return 2
-        pages = extract_text(args.pdf)
+        pages, extras = extract_text(args.pdf)
+        probe |= extras
 
     pages, noise = strip_watermark(pages, args.strip)
-    questions = parse(pages)
+    questions = parse(pages, require_explanation=not args.allow_missing_explanation)
 
     if not questions:
         print("error: no question blocks detected — the format may differ from the sample",
               file=sys.stderr)
         return 3
+
+    figure_map: dict[str, str] = {}
+    if args.images and args.pdf:
+        figure_map = extract_figures(args.pdf, args.images)
+        for q in questions:
+            if filename := figure_map.get(q.source_no):
+                q.figure = filename
+            elif RE_MENTIONS_FIGURE.search(q.stem):
+                # The text asks about something visual but no image was found on the
+                # page — flag it rather than let it import looking complete.
+                q.errors.append("figure_referenced_but_missing")
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     write_xlsx(questions, args.out)
