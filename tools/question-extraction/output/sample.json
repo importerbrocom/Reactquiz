@@ -1,0 +1,81 @@
+[
+  {
+    "question_no": "1",
+    "question": "Which of the following Ions is involved in cell injury",
+    "option_a": "Calcium",
+    "option_b": "Copper",
+    "option_c": "Selenium",
+    "option_d": "All above",
+    "correct_option": "A",
+    "explanation": "",
+    "topic": "Pathology",
+    "tags": "Cell Injury",
+    "source": "QuesID 799622",
+    "image_filename": "",
+    "status": "draft",
+    "_errors": [
+      "missing_explanation"
+    ],
+    "_warnings": [
+      "pin_last_option_4"
+    ]
+  },
+  {
+    "question_no": "2",
+    "question": "Which beta blocker is the most cardioselective and therefore preferred in a patient with coexisting bronchial asthma",
+    "option_a": "Propranolol",
+    "option_b": "Nebivolol",
+    "option_c": "Timolol",
+    "option_d": "Pindolol",
+    "correct_option": "B",
+    "explanation": "Nebivolol has the highest beta-1 selectivity of the listed agents and additionally releases nitric oxide, so it is preferred where beta-2 blockade would provoke bronchospasm. Propranolol and timolol are non-selective.",
+    "topic": "Pharmacology",
+    "tags": "Autonomic Nervous System;Beta blockers",
+    "source": "QuesID 799623",
+    "image_filename": "",
+    "status": "active",
+    "_errors": [],
+    "_warnings": []
+  },
+  {
+    "question_no": "3",
+    "question": "A patient has raised jugular venous pressure and pulsus paradoxus. Which are true",
+    "option_a": "Both 1 and 2",
+    "option_b": "Cardiac tamponade is likely",
+    "option_c": "Constrictive pericarditis is excluded",
+    "option_d": "None above",
+    "correct_option": "B",
+    "explanation": "Short note.",
+    "topic": "General Medicine",
+    "tags": "Cardiology",
+    "source": "QuesID 799624",
+    "image_filename": "",
+    "status": "active",
+    "_errors": [],
+    "_warnings": [
+      "short_explanation",
+      "cross_reference_option_1",
+      "pin_last_option_4"
+    ]
+  },
+  {
+    "question_no": "4",
+    "question": "Which nerve is injured in a midshaft humeral fracture",
+    "option_a": "Radial nerve",
+    "option_b": "",
+    "option_c": "Median nerve",
+    "option_d": "Axillary nerve",
+    "correct_option": "A",
+    "explanation": "",
+    "topic": "Anatomy",
+    "tags": "Upper Limb",
+    "source": "QuesID 799625",
+    "image_filename": "",
+    "status": "draft",
+    "_errors": [
+      "missing_option_b",
+      "missing_explanation"
+    ],
+    "_warnings": []
+  }
+]
