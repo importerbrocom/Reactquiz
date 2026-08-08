@@ -33,3 +33,13 @@ Thumbs.db
 *.log
 /api/_ide_helper*.php
 /api/.phpstorm.meta.php
+
+# Question extraction: source PDFs and extracted figures are large binaries.
+# The produced spreadsheet and report ARE committed — they are the deliverable.
+/tools/question-extraction/input/
+/tools/question-extraction/output/figures/
+/tools/question-extraction/output/*.json
+
+# Python
+__pycache__/
+*.py[cod]

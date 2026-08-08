@@ -1,0 +1,69 @@
+Placeholder
+Ques No: 1, QuesID: 799622
+Subject: Pathology
+Topic: Cell Injury
+Sub-Topic:
+
+Which of the following Ions is involved in cell injury
+O1:
+Calcium
+O2:
+Copper
+O3:
+Selenium
+O4:
+All above
+Ans: 1
+Placeholder
+Ques No: 2, QuesID: 799623
+Subject: Pharmacology
+Topic: Autonomic Nervous System
+Sub-Topic: Beta blockers
+
+Which beta blocker is the most cardioselective and therefore preferred
+in a patient with coexisting bronchial asthma
+O1:
+Propranolol
+O2:
+Nebivolol
+O3:
+Timolol
+O4:
+Pindolol
+Ans: 2
+Explanation: Nebivolol has the highest beta-1 selectivity of the listed agents and
+additionally releases nitric oxide, so it is preferred where beta-2 blockade would
+provoke bronchospasm. Propranolol and timolol are non-selective.
+Placeholder
+Ques No: 3, QuesID: 799624
+Subject: Medicine
+Topic: Cardiology
+Sub-Topic:
+
+A patient has raised jugular venous pressure and pulsus paradoxus. Which are true
+O1:
+Both 1 and 2
+O2:
+Cardiac tamponade is likely
+O3:
+Constrictive pericarditis is excluded
+O4:
+None above
+Ans: 2
+Explanation: Short note.
+Placeholder
+Ques No: 4, QuesID: 799625
+Subject: Anatomy
+Topic: Upper Limb
+Sub-Topic:
+
+Which nerve is injured in a midshaft humeral fracture
+O1:
+Radial nerve
+O2:
+O3:
+Median nerve
+O4:
+Axillary nerve
+Ans: 1
+Placeholder

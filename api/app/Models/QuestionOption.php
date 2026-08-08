@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\OptionKey;
+use App\Support\OptionTextAnalyser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -36,20 +37,17 @@ class QuestionOption extends Model
         return $this->belongsTo(Question::class);
     }
 
-    /** Options whose text references other option letters cannot be shuffled. */
+    /**
+     * Shuffle-safety checks, delegated to App\Support\OptionTextAnalyser so the
+     * patterns live in one auditable place and are shared with the import pipeline.
+     */
     public static function textReferencesOtherOptions(string $text): bool
     {
-        return (bool) preg_match(
-            '/\b(both|only|and)\s*\(?[a-d]\)?\s*(and|,|&)\s*\(?[a-d]\)?/i',
-            $text,
-        );
+        return OptionTextAnalyser::referencesOtherOptions($text);
     }
 
     public static function isAllOrNoneOfTheAbove(string $text): bool
     {
-        return (bool) preg_match(
-            '/^\s*(all|none)\s+of\s+(the\s+)?(above|these)\s*\.?\s*$/i',
-            $text,
-        );
+        return OptionTextAnalyser::shouldPinLast($text);
     }
 }
