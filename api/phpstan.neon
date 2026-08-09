@@ -10,6 +10,12 @@ parameters:
 
     level: 5
 
+    # Annotations are a best-effort description of runtime behaviour, not a proof.
+    # A relation annotated non-nullable can still be null (soft-deleted parent, a row
+    # removed between two queries), so a `?->` guarding it is prudent rather than
+    # redundant, and PHPStan should not talk us out of it.
+    treatPhpDocTypesAsCertain: false
+
     # Pest's DSL needs its own PHPStan integration; the suite is verified by running
     # it, which is a stronger guarantee than static analysis of the test files.
     excludePaths:
@@ -20,20 +26,19 @@ parameters:
     reportUnmatchedIgnoredErrors: false
 
     ignoreErrors:
-        # Larastan reads column types from the migrations, so it sees `status`,
-        # `role`, `state` etc. as plain strings and does not know that casts()
-        # turns them into enums at runtime. Comparisons against enum cases are
-        # therefore reported as impossible even though they are correct — the
-        # behaviour is covered by the test suite instead.
-        #
-        # Proper fix: generated @property annotations via `ide-helper:models`,
-        # scheduled as Phase 3 housekeeping.
-        - identifier: identical.alwaysFalse
-        - identifier: booleanAnd.alwaysFalse
-        - identifier: property.nonObject
-        - identifier: method.nonObject
-        - identifier: function.impossibleType
-        - identifier: instanceof.alwaysTrue
+        # NOTE: Phase 2 suppressed a broad set of identifiers here (identical.alwaysFalse,
+        # property.nonObject, instanceof.alwaysTrue, ...) because Larastan read column
+        # types from the migrations and saw every enum-cast column as a plain string.
+        # Those suppressions are gone: `php artisan ide-helper:models --write` now
+        # generates real @property annotations from the casts, so enum comparisons are
+        # analysed properly and a genuine mistake is reported instead of ignored.
+        # Regenerate after any migration that adds or changes a column.
+
+        # Larastan types a relation from the foreign key's nullability, so a NOT NULL
+        # `user_id` makes `$enrolment->user` look guaranteed. At runtime it is not: the
+        # parent row can be gone (hard-deleted user, a race between two queries) and the
+        # relation returns null. Keeping `?->` is deliberate; dropping it to satisfy the
+        # analyser would trade a static warning for a production 500.
         - identifier: nullsafe.neverNull
 
         # Eloquent relations forward unknown calls to the underlying query builder,

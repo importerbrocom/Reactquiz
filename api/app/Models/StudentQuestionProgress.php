@@ -8,9 +8,56 @@ use App\Enums\OptionKey;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Lifetime mastery per student per question, accumulating across cycles.
+ *
+ * @property int $id
+ * @property int $user_id
+ * @property int $level_id
+ * @property int $question_id
+ * @property int $attempts
+ * @property int $correct_count
+ * @property int $wrong_count
+ * @property OptionKey|null $last_selected_option
+ * @property bool $is_mastered
+ * @property Carbon|null $mastered_at
+ * @property bool|null $first_attempt_correct
+ * @property array<array-key, mixed>|null $cycle_first_attempt
+ * @property int $last_cycle_seen
+ * @property Carbon|null $last_attempted_at
+ * @property int $total_time_seconds
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Level|null $level
+ * @property-read Question|null $question
+ * @property-read User|null $user
+ *
+ * @method static Builder<static>|StudentQuestionProgress everWrong()
+ * @method static Builder<static>|StudentQuestionProgress newModelQuery()
+ * @method static Builder<static>|StudentQuestionProgress newQuery()
+ * @method static Builder<static>|StudentQuestionProgress query()
+ * @method static Builder<static>|StudentQuestionProgress unresolved()
+ * @method static Builder<static>|StudentQuestionProgress whereAttempts($value)
+ * @method static Builder<static>|StudentQuestionProgress whereCorrectCount($value)
+ * @method static Builder<static>|StudentQuestionProgress whereCreatedAt($value)
+ * @method static Builder<static>|StudentQuestionProgress whereCycleFirstAttempt($value)
+ * @method static Builder<static>|StudentQuestionProgress whereFirstAttemptCorrect($value)
+ * @method static Builder<static>|StudentQuestionProgress whereId($value)
+ * @method static Builder<static>|StudentQuestionProgress whereIsMastered($value)
+ * @method static Builder<static>|StudentQuestionProgress whereLastAttemptedAt($value)
+ * @method static Builder<static>|StudentQuestionProgress whereLastCycleSeen($value)
+ * @method static Builder<static>|StudentQuestionProgress whereLastSelectedOption($value)
+ * @method static Builder<static>|StudentQuestionProgress whereLevelId($value)
+ * @method static Builder<static>|StudentQuestionProgress whereMasteredAt($value)
+ * @method static Builder<static>|StudentQuestionProgress whereQuestionId($value)
+ * @method static Builder<static>|StudentQuestionProgress whereTotalTimeSeconds($value)
+ * @method static Builder<static>|StudentQuestionProgress whereUpdatedAt($value)
+ * @method static Builder<static>|StudentQuestionProgress whereUserId($value)
+ * @method static Builder<static>|StudentQuestionProgress whereWrongCount($value)
+ *
+ * @mixin \Eloquent
  */
 class StudentQuestionProgress extends Model
 {
@@ -39,16 +86,19 @@ class StudentQuestionProgress extends Model
         ];
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /** @return BelongsTo<Question, $this> */
     public function question(): BelongsTo
     {
         return $this->belongsTo(Question::class);
     }
 
+    /** @return BelongsTo<Level, $this> */
     public function level(): BelongsTo
     {
         return $this->belongsTo(Level::class);

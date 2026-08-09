@@ -15,10 +15,13 @@ use Illuminate\Support\Str;
 /** @extends Factory<Programme> */
 final class ProgrammeFactory extends Factory
 {
+    private static int $sequence = 0;
+
     /** @return array<string, mixed> */
     public function definition(): array
     {
-        $title = fake()->unique()->words(3, true).' Programme';
+        self::$sequence++;
+        $title = fake()->words(3, true).' Programme '.self::$sequence;
 
         return [
             'exam_category_id' => ExamCategory::factory(),
