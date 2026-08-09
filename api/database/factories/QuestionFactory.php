@@ -26,11 +26,16 @@ final class QuestionFactory extends Factory
         'General Surgery', 'Obstetrics & Gynaecology', 'Paediatrics',
     ];
 
+    private static int $sequence = 0;
+
     /** @return array<string, mixed> */
     public function definition(): array
     {
-        $stem = ucfirst(fake()->unique()->sentence(8));
-        $stem = rtrim($stem, '.').'?';
+        // Sequence-tagged so 300+ questions per level are guaranteed distinct
+        // (and therefore hash distinctly) without faker's unique() pool.
+        self::$sequence++;
+        $stem = ucfirst(fake()->sentence(8));
+        $stem = rtrim($stem, '.').' [#'.self::$sequence.']?';
 
         $options = self::optionsFor($stem);
         $correct = self::correctKeyFor($stem);

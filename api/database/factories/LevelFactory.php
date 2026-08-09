@@ -15,16 +15,20 @@ use Illuminate\Support\Str;
 /** @extends Factory<Level> */
 final class LevelFactory extends Factory
 {
+    private static int $sequence = 0;
+
     /** @return array<string, mixed> */
     public function definition(): array
     {
-        $number = fake()->unique()->numberBetween(1, 6);
+        // A counter rather than fake()->unique(): unique() exhausts its pool and
+        // slows down badly when a scenario builds hundreds of records.
+        $number = (self::$sequence++ % 6) + 1;
 
         return [
             'programme_id' => Programme::factory(),
             'level_number' => $number,
             'title' => "Level {$number}",
-            'slug' => Str::slug("level-{$number}-".fake()->unique()->numberBetween(1, 99999)),
+            'slug' => Str::slug('level-'.$number.'-'.self::$sequence.'-'.Str::random(6)),
             'total_quiz_days' => 30,
             'daily_question_count' => 10,
             'selection_mode' => SelectionMode::ExhaustiveShuffle,

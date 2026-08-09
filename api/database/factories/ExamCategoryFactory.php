@@ -12,11 +12,14 @@ use Illuminate\Support\Str;
 /** @extends Factory<ExamCategory> */
 final class ExamCategoryFactory extends Factory
 {
+    private static int $sequence = 0;
+
     /** @return array<string, mixed> */
     public function definition(): array
     {
-        $title = fake()->unique()->randomElement(['FMGE', 'AMC', 'NEET-PG', 'PLAB', 'USMLE Step 1'])
-            .' '.fake()->unique()->numberBetween(1, 9999);
+        self::$sequence++;
+        $title = fake()->randomElement(['FMGE', 'AMC', 'NEET-PG', 'PLAB', 'USMLE Step 1'])
+            .' '.self::$sequence;
 
         return [
             'title' => $title,
