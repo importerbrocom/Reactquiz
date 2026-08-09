@@ -170,14 +170,23 @@ final class QuizScenario
         $level = $enrolment->level;
         $required = $level->daily_question_count;
         $score ??= $required;
+        $dailyQuiz = $this->dailyQuiz($day, $level->level_number);
+
+        // Retakes are unlimited, so a day may be completed more than once in one test.
+        $attemptNumber = (int) QuizAttempt::query()
+            ->where('user_id', $enrolment->user_id)
+            ->where('daily_quiz_id', $dailyQuiz->getKey())
+            ->where('cycle_number', $enrolment->cycle_number)
+            ->max('attempt_number') + 1;
 
         $attempt = QuizAttempt::factory()->create([
             'user_id' => $enrolment->user_id,
             'level_enrollment_id' => $enrolment->getKey(),
             'level_id' => $level->getKey(),
-            'daily_quiz_id' => $this->dailyQuiz($day, $level->level_number)->getKey(),
+            'daily_quiz_id' => $dailyQuiz->getKey(),
             'day_number' => $day,
             'cycle_number' => $enrolment->cycle_number,
+            'attempt_number' => $attemptNumber,
             'required_count' => $required,
             'mastered_count' => $score,
             'score' => $score,
@@ -203,12 +212,30 @@ final class QuizScenario
         }
     }
 
-    /** Finish the whole level, which is what makes the month-end test eligible. */
+    /**
+     * Finish the whole level, which is what makes the month-end test eligible.
+     *
+     * Idempotent: days already completed at full marks are left alone, so a test that
+     * finishes the same level twice (a retake of the month-end test, say) does not
+     * pointlessly pile up duplicate attempts.
+     */
     public function completeAllDays(?LevelEnrollment $enrolment = null): void
     {
         $enrolment ??= $this->enrolment;
 
-        $this->completeDaysUpTo($enrolment->level->total_quiz_days, $enrolment);
+        $alreadyDone = QuizAttempt::query()
+            ->where('level_enrollment_id', $enrolment->getKey())
+            ->where('cycle_number', $enrolment->cycle_number)
+            ->where('status', AttemptStatus::Completed)
+            ->whereColumn('score', 'required_count')
+            ->pluck('day_number')
+            ->all();
+
+        for ($day = 1; $day <= $enrolment->level->total_quiz_days; $day++) {
+            if (! in_array($day, $alreadyDone, true)) {
+                $this->completeDay($day, $enrolment);
+            }
+        }
 
         $enrolment->forceFill(['test_unlocked_at' => now()])->save();
     }

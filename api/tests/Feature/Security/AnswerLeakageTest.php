@@ -2,11 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Actions\Quiz\AssignLevelQuestionsAction;
+use App\Actions\Quiz\StartQuizAttemptAction;
 use App\Http\Resources\QuestionAdminResource;
-use App\Http\Resources\QuestionForStudentResource;
 use App\Models\Level;
 use App\Models\Question;
+use App\Services\Quiz\QuestionDeliveryService;
 use Illuminate\Support\Facades\Route;
+use Tests\Support\QuizScenario;
 
 /**
  * The most important test in the suite.
@@ -25,10 +28,27 @@ beforeEach(function (): void {
     $this->question->load('options');
 });
 
-it('excludes every answer field from the student resource', function (): void {
-    $payload = (new QuestionForStudentResource($this->question))->toArray(request());
+/** Load and present the question exactly as a student endpoint would. */
+function present(?array $order = null): array
+{
+    $service = app(QuestionDeliveryService::class);
+    $question = $service->load([test()->question->getKey()])->first();
 
-    expect($payload)->toHaveKeys(['id', 'question_text', 'options'])
+    if ($order !== null) {
+        // Force a specific display order to check that keys stay canonical.
+        $question->forceFill(['shuffle_options' => false])->syncOriginal();
+        $question->options->each(fn ($option) => $option->forceFill([
+            'display_order' => array_search($option->option_key->value, $order, true),
+        ]));
+    }
+
+    return $service->present($question, position: 1, scope: 'leak-test');
+}
+
+it('excludes every answer field from the student payload', function (): void {
+    $payload = present();
+
+    expect($payload)->toHaveKeys(['question_id', 'question_text', 'options'])
         ->and($payload)->not->toHaveKey('correct_option')
         ->and($payload)->not->toHaveKey('correct_answer_text')
         ->and($payload)->not->toHaveKey('explanation');
@@ -43,12 +63,23 @@ it('excludes every answer field from the student resource', function (): void {
 });
 
 it('does not mark which option is correct', function (): void {
-    $payload = (new QuestionForStudentResource($this->question))->toArray(request());
+    $payload = present();
 
     foreach ($payload['options'] as $option) {
         expect($option)->toHaveKeys(['key', 'text'])
             ->and($option)->not->toHaveKey('is_correct');
     }
+});
+
+it('does not even load the answer columns onto the model', function (): void {
+    // The strongest form of the guarantee: the values are not in memory, so no future
+    // ->toArray(), ->append() or debug dump can reveal them.
+    $question = app(QuestionDeliveryService::class)->load([$this->question->getKey()])->first();
+
+    expect($question->getAttributes())->not->toHaveKey('correct_option')
+        ->and($question->getAttributes())->not->toHaveKey('correct_answer_text')
+        ->and($question->getAttributes())->not->toHaveKey('explanation')
+        ->and($question->options->first()->getAttributes())->not->toHaveKey('is_correct');
 });
 
 it('hides answer fields even from a raw model serialisation', function (): void {
@@ -78,7 +109,7 @@ it('still exposes answers to the admin resource', function (): void {
 it('honours a per-exposure option order while keeping canonical keys', function (): void {
     $order = ['c', 'a', 'd', 'b'];
 
-    $payload = (new QuestionForStudentResource($this->question, $order))->toArray(request());
+    $payload = present($order);
 
     expect(array_column($payload['options'], 'key'))->toBe($order);
 
@@ -91,7 +122,17 @@ it('honours a per-exposure option order while keeping canonical keys', function 
 });
 
 it('leaks no answer content from any non-admin GET endpoint', function (): void {
-    actingAsStudent();
+    // A REAL enrolled student partway through a day, so the sweep actually renders
+    // question payloads. With an un-enrolled student every endpoint would 403 and this
+    // test would pass without inspecting anything.
+    $scenario = QuizScenario::make(days: 2, perDay: 2);
+    $scenario->level()->questions()->update([
+        'explanation' => 'SENTINEL_EXPLANATION_STRING',
+        'correct_answer_text' => 'SENTINEL_ANSWER_TEXT',
+    ]);
+    app(AssignLevelQuestionsAction::class)($scenario->enrolment);
+    app(StartQuizAttemptAction::class)($scenario->enrolment, 1);
+    actingAsStudent($scenario->student);
 
     $routes = collect(Route::getRoutes())
         ->filter(fn ($route) => in_array('GET', $route->methods(), true))
@@ -102,12 +143,62 @@ it('leaks no answer content from any non-admin GET endpoint', function (): void 
 
     expect($routes)->not->toBeEmpty();
 
+    $answered = 0;
+
     foreach ($routes as $uri) {
-        $body = $this->getJson('/'.$uri)->getContent();
+        $response = $this->getJson('/'.$uri);
+        $body = $response->getContent();
+
+        if ($response->getStatusCode() === 200) {
+            $answered++;
+        }
 
         expect($body)
             ->not->toContain('SENTINEL_EXPLANATION_STRING')
             ->not->toContain('SENTINEL_ANSWER_TEXT')
             ->not->toContain('correct_option');
     }
+
+    // Guards the guard: if a refactor made every one of these 403 or 404, the loop above
+    // would still pass while inspecting nothing.
+    expect($answered)->toBeGreaterThanOrEqual(5, 'the sweep did not reach any live endpoint');
+});
+
+it('leaks no answer content from a day payload delivered over HTTP', function (): void {
+    // The route sweep skips URIs with parameters, and the day payload is the single
+    // biggest question payload in the product. Covered explicitly.
+    $scenario = QuizScenario::make(days: 2, perDay: 3);
+    $scenario->level()->questions()->update([
+        'explanation' => 'SENTINEL_EXPLANATION_STRING',
+        'correct_answer_text' => 'SENTINEL_ANSWER_TEXT',
+    ]);
+    app(AssignLevelQuestionsAction::class)($scenario->enrolment);
+    actingAsStudent($scenario->student);
+
+    $body = $this->postJson('/api/v1/student/days/1/attempt')->assertOk()->getContent();
+
+    expect($body)
+        ->not->toContain('SENTINEL_EXPLANATION_STRING')
+        ->not->toContain('SENTINEL_ANSWER_TEXT')
+        ->not->toContain('correct_option')
+        ->not->toContain('is_correct');
+});
+
+it('leaks no answer content from a month-end test window over HTTP', function (): void {
+    $scenario = QuizScenario::make(days: 2, perDay: 3);
+    $scenario->level()->questions()->update([
+        'explanation' => 'SENTINEL_EXPLANATION_STRING',
+        'correct_answer_text' => 'SENTINEL_ANSWER_TEXT',
+    ]);
+    app(AssignLevelQuestionsAction::class)($scenario->enrolment);
+    $scenario->completeAllDays();
+    actingAsStudent($scenario->student);
+
+    $body = $this->postJson('/api/v1/student/level-test/attempt')->assertOk()->getContent();
+
+    expect($body)
+        ->not->toContain('SENTINEL_EXPLANATION_STRING')
+        ->not->toContain('SENTINEL_ANSWER_TEXT')
+        ->not->toContain('correct_option')
+        ->not->toContain('is_correct');
 });

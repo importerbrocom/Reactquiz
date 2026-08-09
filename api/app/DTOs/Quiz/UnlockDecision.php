@@ -51,6 +51,17 @@ final readonly class UnlockDecision
         return ! $this->allowed;
     }
 
+    /**
+     * Shape used when the decision is reported as part of a successful response —
+     * the timeline screen needs to show a locked test alongside the open days.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(): array
+    {
+        return ['unlocked' => $this->allowed] + $this->meta();
+    }
+
     /** Shape handed to the client inside the 423 response's `meta`. */
     public function meta(): array
     {

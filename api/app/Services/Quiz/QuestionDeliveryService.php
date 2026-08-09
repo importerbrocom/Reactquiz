@@ -8,6 +8,7 @@ use App\Models\Question;
 use App\Models\QuestionOption;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Builds the answer-free question payload that goes to the student.
@@ -94,7 +95,10 @@ final class QuestionDeliveryService
             'question_id' => $question->getKey(),
             'question_text' => $question->question_text,
             'image' => $question->question_image_path === null ? null : [
-                'path' => $question->question_image_path,
+                'url' => Storage::disk(config('filesystems.default'))->url($question->question_image_path),
+                // Sent so the client can reserve the box before the image loads. Without
+                // it every question with a picture shifts the options downward as it
+                // arrives, which on a phone means tapping the wrong answer.
                 'width' => $question->question_image_width,
                 'height' => $question->question_image_height,
                 'alt' => $question->question_image_alt,
@@ -127,7 +131,7 @@ final class QuestionDeliveryService
             'display_position' => $index + 1,
             'text' => $option->option_text,
             'image' => $option->option_image_path === null ? null : [
-                'path' => $option->option_image_path,
+                'url' => Storage::disk(config('filesystems.default'))->url($option->option_image_path),
                 'alt' => $option->option_image_alt,
             ],
         ];

@@ -47,6 +47,10 @@ final readonly class AnswerResultData
                 'retry_required_question_ids' => $this->retryRequiredQuestionIds,
             ],
             'can_complete' => $this->canComplete,
+            // Lets the client tell "recorded just now" from "we already had this one",
+            // which is what the offline outbox needs in order to drop a queued answer
+            // rather than keep retrying it.
+            'replayed' => $this->replayed,
         ], static fn (mixed $value): bool => $value !== null);
     }
 }
