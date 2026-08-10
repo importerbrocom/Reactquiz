@@ -2,6 +2,8 @@ import { createBrowserRouter } from 'react-router';
 import { RouteErrorBoundary } from './error/RouteErrorBoundary';
 import { RequireAuth } from './guards/RequireAuth';
 import { RequireOnboarded } from './guards/RequireOnboarded';
+import { RequireRole } from './guards/RequireRole';
+import { UserRole } from '@/types/enums';
 
 /**
  * Application router — all route modules are lazy-loaded.
@@ -50,6 +52,70 @@ export const router = createBrowserRouter([
           {
             path: '/onboarding',
             lazy: () => import('@/features/onboarding/screens/OnboardingScreen'),
+          },
+
+          // ─── Admin routes ─────────────────────────────────────
+          {
+            element: <RequireRole role={UserRole.Admin} />,
+            children: [
+              {
+                lazy: () => import('@/layouts/AdminLayout'),
+                children: [
+                  {
+                    path: '/admin',
+                    lazy: () => import('@/features/admin/dashboard/screens/AdminDashboardScreen'),
+                  },
+                  {
+                    path: '/admin/categories',
+                    lazy: () => import('@/features/admin/categories/screens/CategoriesScreen'),
+                  },
+                  {
+                    path: '/admin/courses',
+                    lazy: () => import('@/features/admin/courses/screens/CoursesScreen'),
+                  },
+                  {
+                    path: '/admin/courses/:courseId',
+                    lazy: () => import('@/features/admin/courses/screens/CourseDetailScreen'),
+                  },
+                  {
+                    path: '/admin/questions',
+                    lazy: () => import('@/features/admin/questions/screens/QuestionsScreen'),
+                  },
+                  {
+                    path: '/admin/questions/:questionId',
+                    lazy: () => import('@/features/admin/questions/screens/QuestionEditScreen'),
+                  },
+                  {
+                    path: '/admin/students',
+                    lazy: () => import('@/features/admin/students/screens/StudentsScreen'),
+                  },
+                  {
+                    path: '/admin/students/:studentId',
+                    lazy: () => import('@/features/admin/students/screens/StudentDetailScreen'),
+                  },
+                  {
+                    path: '/admin/pdf-imports',
+                    lazy: () => import('@/features/admin/pdf-imports/screens/PdfImportsScreen'),
+                  },
+                  {
+                    path: '/admin/pdf-imports/:importId',
+                    lazy: () => import('@/features/admin/pdf-imports/screens/PdfImportDetailScreen'),
+                  },
+                  {
+                    path: '/admin/notifications',
+                    lazy: () => import('@/features/admin/notifications/screens/NotificationCampaignsScreen'),
+                  },
+                  {
+                    path: '/admin/reports',
+                    lazy: () => import('@/features/admin/reports/screens/ReportsScreen'),
+                  },
+                  {
+                    path: '/admin/activity-logs',
+                    lazy: () => import('@/features/admin/reports/screens/ActivityLogsScreen'),
+                  },
+                ],
+              },
+            ],
           },
 
           // Student routes (require onboarding complete)
