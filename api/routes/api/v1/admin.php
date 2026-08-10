@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\Admin\CounterController;
+use App\Http\Controllers\Api\V1\Admin\QuestionImportController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -17,4 +18,17 @@ Route::prefix('admin')
     ->middleware(['auth:sanctum', 'abilities:admin', 'role:admin', 'account', 'throttle:api'])
     ->group(function (): void {
         Route::get('counters', CounterController::class)->name('counters');
+
+        // Question imports (Phase 6)
+        Route::prefix('question-imports')->name('question-imports.')->group(function (): void {
+            Route::get('template', [QuestionImportController::class, 'template'])->name('template');
+            Route::post('/', [QuestionImportController::class, 'store'])->name('store');
+            Route::get('/', [QuestionImportController::class, 'index'])->name('index');
+            Route::get('{uuid}', [QuestionImportController::class, 'show'])->name('show');
+            Route::get('{uuid}/progress', [QuestionImportController::class, 'progress'])->name('progress');
+            Route::get('{uuid}/items', [QuestionImportController::class, 'items'])->name('items');
+            Route::post('{uuid}/approve', [QuestionImportController::class, 'approve'])->name('approve');
+            Route::post('{uuid}/retry', [QuestionImportController::class, 'retry'])->name('retry');
+            Route::delete('{uuid}', [QuestionImportController::class, 'destroy'])->name('destroy');
+        });
     });
