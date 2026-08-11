@@ -93,4 +93,58 @@ export const queryKeys = {
   profile: {
     all: ['profile'] as const,
   },
+
+  // ─── Admin ────────────────────────────────────────────────────────────────
+  admin: {
+    dashboard: {
+      all: ['admin', 'dashboard'] as const,
+      summary: () => [...queryKeys.admin.dashboard.all, 'summary'] as const,
+      charts: (params?: Record<string, unknown>) => [...queryKeys.admin.dashboard.all, 'charts', params] as const,
+      activity: () => [...queryKeys.admin.dashboard.all, 'activity'] as const,
+      difficult: () => [...queryKeys.admin.dashboard.all, 'difficult'] as const,
+    },
+    categories: {
+      all: ['admin', 'categories'] as const,
+      list: () => [...queryKeys.admin.categories.all, 'list'] as const,
+      detail: (id: string) => [...queryKeys.admin.categories.all, id] as const,
+    },
+    courses: {
+      all: ['admin', 'courses'] as const,
+      list: () => [...queryKeys.admin.courses.all, 'list'] as const,
+      detail: (id: string) => [...queryKeys.admin.courses.all, id] as const,
+      config: (id: string) => [...queryKeys.admin.courses.all, id, 'config'] as const,
+      readiness: (id: string) => [...queryKeys.admin.courses.all, id, 'readiness'] as const,
+    },
+    questions: {
+      all: ['admin', 'questions'] as const,
+      list: (params?: Record<string, unknown>) => [...queryKeys.admin.questions.all, 'list', params] as const,
+      detail: (id: string) => [...queryKeys.admin.questions.all, id] as const,
+      duplicates: (courseId: string) => [...queryKeys.admin.questions.all, 'duplicates', courseId] as const,
+    },
+    students: {
+      all: ['admin', 'students'] as const,
+      list: (params?: Record<string, unknown>) => [...queryKeys.admin.students.all, 'list', params] as const,
+      detail: (id: string) => [...queryKeys.admin.students.all, id] as const,
+    },
+    pdfImports: {
+      all: ['admin', 'pdfImports'] as const,
+      list: (params?: Record<string, unknown>) => [...queryKeys.admin.pdfImports.all, 'list', params] as const,
+      detail: (id: string) => [...queryKeys.admin.pdfImports.all, id] as const,
+      progress: (id: string) => [...queryKeys.admin.pdfImports.all, id, 'progress'] as const,
+      items: (id: string) => [...queryKeys.admin.pdfImports.all, id, 'items'] as const,
+    },
+    reports: {
+      all: ['admin', 'reports'] as const,
+      list: () => [...queryKeys.admin.reports.all, 'list'] as const,
+      detail: (id: string) => [...queryKeys.admin.reports.all, id] as const,
+    },
+    activityLogs: {
+      all: ['admin', 'activityLogs'] as const,
+      list: (params?: Record<string, unknown>) => [...queryKeys.admin.activityLogs.all, 'list', params] as const,
+    },
+    notifications: {
+      all: ['admin', 'notifications'] as const,
+      list: () => [...queryKeys.admin.notifications.all, 'list'] as const,
+    },
+  },
 } as const;
