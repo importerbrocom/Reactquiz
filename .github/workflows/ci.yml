@@ -1,0 +1,108 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api-lint:
+    name: API Lint & Static Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql, redis, intl, zip, gd, bcmath, pcntl
+          coverage: none
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+        working-directory: api
+      - name: Pint (code style)
+        run: vendor/bin/pint --test
+        working-directory: api
+      - name: PHPStan (static analysis)
+        run: vendor/bin/phpstan analyse --memory-limit=1G --no-progress
+        working-directory: api
+
+  api-test:
+    name: API Tests
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: secret
+          MYSQL_DATABASE: quizpath_test
+        ports: ['3306:3306']
+        options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=3s --health-retries=10
+      redis:
+        image: redis:7.4-alpine
+        ports: ['6379:6379']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql, redis, intl, zip, gd, bcmath, pcntl
+          coverage: none
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+        working-directory: api
+      - name: Prepare environment
+        run: |
+          cp .env.example .env.testing
+          php artisan key:generate --env=testing
+        working-directory: api
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: quizpath_test
+          DB_USERNAME: root
+          DB_PASSWORD: secret
+          REDIS_HOST: 127.0.0.1
+      - name: Run tests
+        run: vendor/bin/pest --compact
+        working-directory: api
+        env:
+          APP_KEY: base64:dGVzdGluZ2tleWZvcmNpdGhhdGlzMzJieXRlcw==
+          APP_ENV: testing
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: quizpath_test
+          DB_USERNAME: root
+          DB_PASSWORD: secret
+          REDIS_HOST: 127.0.0.1
+          CACHE_STORE: array
+          QUEUE_CONNECTION: sync
+
+  web-build:
+    name: Web Build & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+        working-directory: web
+      - name: Type check (tsc --noEmit)
+        run: npx tsc -b
+        working-directory: web
+      - name: Build
+        run: npm run build
+        working-directory: web
+        env:
+          VITE_API_BASE_URL: http://localhost:8000/api/v1
+          VITE_API_CONTRACT_VERSION: '1'

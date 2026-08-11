@@ -14,12 +14,12 @@ class ReportGeneratorFactory
     public static function make(ReportType $type): ReportGeneratorInterface
     {
         return match ($type) {
-            ReportType::StudentProgress => new StudentProgressReport(),
-            ReportType::LevelCompletion => new LevelCompletionReport(),
-            ReportType::QuestionDifficulty => new QuestionDifficultyReport(),
-            ReportType::StudentEngagement => new StudentEngagementReport(),
-            ReportType::TestResults => new TestResultsReport(),
-            ReportType::NotificationDelivery => new NotificationDeliveryReport(),
+            ReportType::StudentProgress => new StudentProgressReport,
+            ReportType::LevelCompletion => new LevelCompletionReport,
+            ReportType::QuestionDifficulty => new QuestionDifficultyReport,
+            ReportType::StudentEngagement => new StudentEngagementReport,
+            ReportType::TestResults => new TestResultsReport,
+            ReportType::NotificationDelivery => new NotificationDeliveryReport,
         };
     }
 }

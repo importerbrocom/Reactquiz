@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services\Import;
 
-use App\Enums\ContentStatus;
 use App\Models\Question;
 
 /**

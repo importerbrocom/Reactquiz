@@ -8,7 +8,6 @@ use App\Events\LevelTestGraded;
 use App\Jobs\RenderCertificatePdfJob;
 use App\Models\Certificate;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Support\Str;
 
 /**
  * Listens to LevelTestGraded and issues a certificate if:
@@ -41,7 +40,7 @@ class IssueCertificateOnPass implements ShouldQueue
         }
 
         // Generate unique serial number: QP-YYYY-NNNNNNN
-        $serial = 'QP-' . now()->year . '-' . str_pad(
+        $serial = 'QP-'.now()->year.'-'.str_pad(
             (string) (Certificate::count() + 1),
             7,
             '0',

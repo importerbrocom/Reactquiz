@@ -49,7 +49,7 @@ Route::prefix('admin')
 
         // Push subscription health (Phase 7)
         Route::get('push-subscriptions/health', function () {
-            $stats = PushSubscription::selectRaw("status, browser, count(*) as total")
+            $stats = PushSubscription::selectRaw('status, browser, count(*) as total')
                 ->groupBy('status', 'browser')
                 ->get();
 

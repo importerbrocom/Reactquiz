@@ -55,6 +55,7 @@ final readonly class ApproveQuestionImportAction
                     if (count($optionTexts) < 4) {
                         $item->update(['status' => ImportItemStatus::Skipped]);
                         $skipped++;
+
                         continue;
                     }
 
@@ -71,6 +72,7 @@ final readonly class ApproveQuestionImportAction
                             'question_hash' => $hash,
                         ]);
                         $skipped++;
+
                         continue;
                     }
 
@@ -102,7 +104,9 @@ final readonly class ApproveQuestionImportAction
 
                     foreach ($optionKeys as $i => $key) {
                         $text = $optionValues[$i] ?? '';
-                        if ($text === '') continue;
+                        if ($text === '') {
+                            continue;
+                        }
 
                         QuestionOption::create([
                             'question_id' => $question->id,

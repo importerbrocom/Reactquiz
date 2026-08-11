@@ -1,0 +1,60 @@
+name: Deploy API
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'api/**'
+      - 'deploy/**'
+
+concurrency:
+  group: deploy-api
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy API to Production
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd /var/www/quizpath/api
+
+            # Pull latest code
+            git pull origin main
+
+            # Install dependencies
+            export COMPOSER_ALLOW_SUPERUSER=1
+            composer install --no-dev --optimize-autoloader --classmap-authoritative --no-interaction
+
+            # Run migrations
+            php artisan migrate --force --step
+
+            # Cache configuration
+            php artisan config:cache
+            php artisan route:cache
+            php artisan event:cache
+            php artisan view:cache
+
+            # Ensure storage link
+            php artisan storage:link
+
+            # Restart workers gracefully
+            php artisan horizon:terminate
+            php artisan queue:restart
+
+            # Reload PHP-FPM (picks up OPcache changes)
+            sudo systemctl reload php8.4-fpm
+
+            # Post-deploy smoke test
+            curl -sf http://localhost/up > /dev/null || exit 1
+            echo "Deploy successful"

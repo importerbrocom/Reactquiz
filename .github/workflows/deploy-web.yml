@@ -1,0 +1,59 @@
+name: Deploy Web
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web/**'
+
+concurrency:
+  group: deploy-web
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build & Deploy Frontend
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: web
+
+      - name: Build
+        run: npm run build
+        working-directory: web
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+          VITE_API_CONTRACT_VERSION: ${{ secrets.VITE_API_CONTRACT_VERSION }}
+          VITE_VAPID_PUBLIC_KEY: ${{ secrets.VITE_VAPID_PUBLIC_KEY }}
+          VITE_APP_BUILD_ID: ${{ github.sha }}
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd /var/www/quizpath/web
+            git pull origin main
+            # Copy built assets (or use rsync from runner)
+
+      # For Cloudflare Pages deployment, replace the SSH step with:
+      # - name: Deploy to Cloudflare Pages
+      #   uses: cloudflare/pages-action@v1
+      #   with:
+      #     apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      #     accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      #     projectName: quizpath
+      #     directory: web/dist

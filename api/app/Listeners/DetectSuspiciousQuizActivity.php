@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Listeners;
 
 use App\Events\DailyQuizCompleted;
-use App\Models\QuizAttempt;
 use App\Models\QuizAttemptAnswer;
 use App\Services\Support\ActivityLogger;
 use Illuminate\Contracts\Queue\ShouldQueue;
