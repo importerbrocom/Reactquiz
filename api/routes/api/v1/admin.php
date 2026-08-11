@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Api\V1\Admin\CounterController;
 use App\Http\Controllers\Api\V1\Admin\NotificationCampaignController;
 use App\Http\Controllers\Api\V1\Admin\QuestionImportController;
+use App\Http\Controllers\Api\V1\Admin\ReportController;
 use App\Jobs\PruneExpiredSubscriptionsJob;
 use App\Models\PushSubscription;
 use App\Support\ApiResponse;
@@ -60,4 +61,12 @@ Route::prefix('admin')
 
             return ApiResponse::success(null, 'Pruning queued.', 202);
         })->name('push.prune');
+
+        // Reports (Phase 8)
+        Route::prefix('reports')->name('reports.')->group(function (): void {
+            Route::post('/', [ReportController::class, 'store'])->name('store');
+            Route::get('/', [ReportController::class, 'index'])->name('index');
+            Route::get('{uuid}', [ReportController::class, 'show'])->name('show');
+            Route::get('{uuid}/download', [ReportController::class, 'download'])->name('download');
+        });
     });
