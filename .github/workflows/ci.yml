@@ -55,6 +55,19 @@ jobs:
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist
         working-directory: api
+      - name: Prepare database
+        run: |
+          php artisan migrate:fresh --seed --force
+          php artisan config:clear
+        working-directory: api
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: quizpath_test
+          DB_USERNAME: root
+          DB_PASSWORD: secret
+          REDIS_HOST: 127.0.0.1
       - name: Run tests
         run: vendor/bin/pest --compact --parallel
         working-directory: api
