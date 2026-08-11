@@ -1,0 +1,39 @@
+# API .htaccess — placed in /home/uddjzwrz/mediprep.nokkoo.in/api/public/
+# Standard Laravel .htaccess
+
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # Send Requests To Front Controller...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "DENY"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# PHP settings
+<IfModule mod_php.c>
+    php_value upload_max_filesize 50M
+    php_value post_max_size 55M
+    php_value max_execution_time 120
+    php_value memory_limit 256M
+</IfModule>

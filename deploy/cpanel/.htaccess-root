@@ -1,0 +1,20 @@
+# Root .htaccess — placed in /home/uddjzwrz/mediprep.nokkoo.in/
+# Routes /api/* to Laravel, everything else to the React PWA
+
+RewriteEngine On
+
+# Force HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# API requests → Laravel public/
+RewriteCond %{REQUEST_URI} ^/api [NC]
+RewriteRule ^(.*)$ api/public/$1 [L]
+
+# Static frontend assets (if file exists, serve it)
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# SPA fallback — all non-file requests serve index.html
+RewriteRule ^ index.html [L]
