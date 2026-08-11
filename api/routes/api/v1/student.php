@@ -8,8 +8,10 @@ use App\Http\Controllers\Api\V1\Student\LevelProgressionController;
 use App\Http\Controllers\Api\V1\Student\LevelTestAnswerController;
 use App\Http\Controllers\Api\V1\Student\LevelTestController;
 use App\Http\Controllers\Api\V1\Student\MistakeController;
+use App\Http\Controllers\Api\V1\Student\NotificationController;
 use App\Http\Controllers\Api\V1\Student\OnboardingController;
 use App\Http\Controllers\Api\V1\Student\ProgressController;
+use App\Http\Controllers\Api\V1\Student\PushSubscriptionController;
 use App\Http\Controllers\Api\V1\Student\QuizAttemptController;
 use App\Http\Controllers\Api\V1\Student\QuizDayController;
 use Illuminate\Support\Facades\Route;
@@ -93,4 +95,17 @@ Route::middleware(['auth:sanctum', 'account', 'role:student', 'track-active'])
         // --- progression --------------------------------------------------- #
         Route::get('levels/next', [LevelProgressionController::class, 'show'])->name('levels.next');
         Route::post('levels/next', [LevelProgressionController::class, 'store'])->name('levels.advance');
+
+        // --- notifications (Phase 7) --------------------------------------- #
+        Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread');
+        Route::post('notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+        Route::post('notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+
+        // --- push subscriptions (Phase 7) ---------------------------------- #
+        Route::post('push-subscriptions', [PushSubscriptionController::class, 'store'])->name('push.store');
+        Route::delete('push-subscriptions', [PushSubscriptionController::class, 'destroy'])->name('push.destroy');
+        Route::post('push-subscriptions/test', [PushSubscriptionController::class, 'test'])
+            ->middleware('throttle:3,60')
+            ->name('push.test');
     });

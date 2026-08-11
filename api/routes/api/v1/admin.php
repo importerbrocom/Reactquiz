@@ -3,7 +3,12 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\Admin\CounterController;
+use App\Http\Controllers\Api\V1\Admin\NotificationCampaignController;
 use App\Http\Controllers\Api\V1\Admin\QuestionImportController;
+use App\Jobs\PruneExpiredSubscriptionsJob;
+use App\Models\PushSubscription;
+use App\Support\ApiResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -31,4 +36,28 @@ Route::prefix('admin')
             Route::post('{uuid}/retry', [QuestionImportController::class, 'retry'])->name('retry');
             Route::delete('{uuid}', [QuestionImportController::class, 'destroy'])->name('destroy');
         });
+
+        // Notification campaigns (Phase 7)
+        Route::prefix('notification-campaigns')->name('campaigns.')->group(function (): void {
+            Route::get('/', [NotificationCampaignController::class, 'index'])->name('index');
+            Route::post('/', [NotificationCampaignController::class, 'store'])->name('store');
+            Route::post('{id}/send', [NotificationCampaignController::class, 'send'])->name('send');
+            Route::post('{id}/cancel', [NotificationCampaignController::class, 'cancel'])->name('cancel');
+            Route::get('{id}/stats', [NotificationCampaignController::class, 'stats'])->name('stats');
+        });
+
+        // Push subscription health (Phase 7)
+        Route::get('push-subscriptions/health', function () {
+            $stats = PushSubscription::selectRaw("status, browser, count(*) as total")
+                ->groupBy('status', 'browser')
+                ->get();
+
+            return ApiResponse::success($stats);
+        })->name('push.health');
+
+        Route::post('push-subscriptions/prune', function () {
+            PruneExpiredSubscriptionsJob::dispatch();
+
+            return ApiResponse::success(null, 'Pruning queued.', 202);
+        })->name('push.prune');
     });
