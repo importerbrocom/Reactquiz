@@ -68,7 +68,7 @@ class RenderCertificatePdfJob implements ShouldQueue
     private function buildHtml(Certificate $cert): string
     {
         $name = $cert->user?->name ?? 'Student';
-        $level = $cert->level?->name ?? 'Level';
+        $level = $cert->level?->title ?? 'Level';
         $score = $cert->percentage.'%';
         $serial = $cert->serial;
         $date = $cert->created_at?->format('d F Y') ?? now()->format('d F Y');
