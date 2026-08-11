@@ -12,6 +12,6 @@ class NotificationDeliveryReport implements ReportGeneratorInterface
     {
         // TODO: Implement full query logic for this report type.
         // Placeholder CSV with header row.
-        return ['content' => "Report Type: {$report->type->value}\nGenerated: " . now()->toDateTimeString() . "\n", 'row_count' => 0];
+        return ['content' => "Report Type: {$report->type->value}\nGenerated: ".now()->toDateTimeString()."\n", 'row_count' => 0];
     }
 }

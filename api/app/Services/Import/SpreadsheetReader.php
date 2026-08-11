@@ -55,6 +55,7 @@ class SpreadsheetReader
                         fn ($cell) => self::normaliseHeader((string) ($cell ?? '')),
                         $cells,
                     );
+
                     continue;
                 }
 
@@ -65,6 +66,7 @@ class SpreadsheetReader
                     if ($blankStreak >= $maxBlankRows) {
                         break; // Abort — too many consecutive blank rows
                     }
+
                     continue;
                 }
 
@@ -91,9 +93,9 @@ class SpreadsheetReader
     private static function createReader(string $filePath, string $mimeType): CsvReader|XlsxReader
     {
         if (str_contains($mimeType, 'csv') || str_contains($mimeType, 'text/plain')) {
-            return new CsvReader();
+            return new CsvReader;
         }
 
-        return new XlsxReader();
+        return new XlsxReader;
     }
 }

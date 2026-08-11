@@ -6,7 +6,6 @@ namespace App\Jobs;
 
 use App\Enums\QueueName;
 use App\Enums\ReportStatus;
-use App\Enums\ReportType;
 use App\Models\ReportExport;
 use App\Services\Reports\ReportGeneratorFactory;
 use Illuminate\Bus\Queueable;

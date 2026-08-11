@@ -6,7 +6,6 @@ namespace App\Services\Reports;
 
 use App\Models\ReportExport;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Generates a student progress report (CSV format).

@@ -69,7 +69,7 @@ class RenderCertificatePdfJob implements ShouldQueue
     {
         $name = $cert->user?->name ?? 'Student';
         $level = $cert->level?->name ?? 'Level';
-        $score = $cert->percentage . '%';
+        $score = $cert->percentage.'%';
         $serial = $cert->serial;
         $date = $cert->created_at?->format('d F Y') ?? now()->format('d F Y');
 
