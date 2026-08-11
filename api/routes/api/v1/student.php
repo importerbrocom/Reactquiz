@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\Student\AnswerController;
+use App\Http\Controllers\Api\V1\Student\CertificateController;
 use App\Http\Controllers\Api\V1\Student\DashboardController;
 use App\Http\Controllers\Api\V1\Student\LevelProgressionController;
 use App\Http\Controllers\Api\V1\Student\LevelTestAnswerController;
@@ -108,4 +109,8 @@ Route::middleware(['auth:sanctum', 'account', 'role:student', 'track-active'])
         Route::post('push-subscriptions/test', [PushSubscriptionController::class, 'test'])
             ->middleware('throttle:3,60')
             ->name('push.test');
+
+        // --- certificates (Phase 8) ---------------------------------------- #
+        Route::get('certificates', [CertificateController::class, 'index'])->name('certificates.index');
+        Route::get('certificates/{uuid}/download', [CertificateController::class, 'download'])->name('certificates.download');
     });
