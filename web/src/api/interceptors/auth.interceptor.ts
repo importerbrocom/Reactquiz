@@ -1,13 +1,20 @@
 import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 
 /**
- * In-memory access token. Never persisted to disk — tab lifetime only.
+ * In-memory access token. Also persisted to localStorage for page reload recovery.
  * Exported setters allow the auth store and refresh interceptor to update it.
  */
-let accessToken: string | null = null;
+let accessToken: string | null = typeof window !== 'undefined' ? localStorage.getItem('qp_token') : null;
 
 export function setAccessToken(token: string | null): void {
   accessToken = token;
+  if (typeof window !== 'undefined') {
+    if (token) {
+      localStorage.setItem('qp_token', token);
+    } else {
+      localStorage.removeItem('qp_token');
+    }
+  }
 }
 
 export function getAccessToken(): string | null {
