@@ -104,6 +104,26 @@ td{padding:.8rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 /* Responsive */
 @media(max-width:900px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.sidebar{width:200px}.main{margin-left:200px;padding:1.5rem}.stat-grid{grid-template-columns:1fr 1fr}}
+
+/* ============ UPLOAD PAGE ============ */
+.drop-zone{border:2px dashed #334155;border-radius:14px;padding:3rem 2rem;text-align:center;cursor:pointer;transition:all .3s;background:#0f172a;margin-bottom:1.2rem}
+.drop-zone:hover,.drop-zone.drag-over{border-color:#818cf8;background:#1e1b4b}
+.drop-zone-icon{font-size:3rem;margin-bottom:.8rem}
+.drop-zone-text{font-size:1.1rem;color:#e2e8f0;font-weight:500;margin-bottom:.3rem}
+.drop-zone-sub{font-size:.85rem;color:#64748b}
+.upload-status{padding:1rem;border-radius:10px;margin-bottom:1rem;font-size:.95rem}
+.upload-status.success{background:#052e16;border:1px solid #16a34a;color:#86efac}
+.upload-status.error{background:#450a0a;border:1px solid #dc2626;color:#fca5a5}
+.upload-status.loading{background:#1e1b4b;border:1px solid #4f46e5;color:#a5b4fc}
+.btn-sm{padding:.5rem 1rem;border-radius:8px;border:none;cursor:pointer;font-size:.85rem;font-weight:600}
+.btn-confirm{background:#16a34a;color:#fff}
+.btn-confirm:hover{background:#15803d}
+.parsed-q{background:#0f172a;border-radius:10px;padding:1rem;margin-bottom:.6rem;border:1px solid #334155}
+.parsed-q-text{font-size:.95rem;color:#e2e8f0;margin-bottom:.4rem}
+.parsed-q-opts{font-size:.8rem;color:#94a3b8;margin-bottom:.3rem}
+.parsed-q-meta{display:flex;gap:.5rem;align-items:center;font-size:.75rem}
+.file-chip{display:inline-flex;align-items:center;gap:.5rem;background:#1e293b;border:1px solid #334155;border-radius:8px;padding:.5rem 1rem;margin-top:.8rem;font-size:.9rem;color:#e2e8f0}
+.file-chip .remove{color:#ef4444;cursor:pointer;font-weight:700}
 </style>
 </head>
 <body>
@@ -113,13 +133,14 @@ td{padding:.8rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <div class="login-box"><h1>QuizPath</h1><p class="sub">MediPrep - Exam Preparation</p>
 <div class="form-card"><div id="errorMsg" class="error-msg"></div>
 <form id="loginForm"><label>Email</label><input type="email" id="email" placeholder="Enter your email" required><label>Password</label><input type="password" id="password" placeholder="Enter password" required><button type="submit" class="btn btn-primary" id="loginBtn">Sign In</button></form>
-<p class="info-text">Admin: admin@quizpath.test / ChangeMe!2026<br>Student: student@mediprep.test / Student@123<br><small style="color:#334155">v2.1 — role routing enabled</small></p></div></div></div>
+<p class="info-text">Admin: admin@quizpath.test / ChangeMe!2026<br>Student: student@mediprep.test / Student@123<br><small style="color:#334155">v2.2 — PDF upload + role routing</small></p></div></div></div>
 
 <!-- ============ ADMIN PAGE ============ -->
 <div id="adminPage" class="app hidden">
 <aside class="sidebar"><h1>QuizPath</h1>
 <a class="nav-item active" onclick="showPage('dashboard',this)">📊 Dashboard</a>
 <a class="nav-item" onclick="showPage('questions',this)">❓ Questions</a>
+<a class="nav-item" onclick="showPage('upload',this)">📄 Upload PDF</a>
 <a class="nav-item" onclick="showPage('students',this)">👥 Students</a>
 <a class="nav-item" onclick="showPage('categories',this)">📁 Categories</a>
 <a class="nav-item" onclick="showPage('settings',this)">⚙️ Settings</a>
@@ -138,6 +159,43 @@ td{padding:.8rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <div id="pg-students" class="hidden"><div class="card"><h3>Registered Users</h3><div id="studentsList"></div></div></div>
 <div id="pg-categories" class="hidden"><div class="card"><h3>Exam Categories & Programmes</h3><div id="categoriesList"></div></div></div>
 <div id="pg-settings" class="hidden"><div class="card"><h3>Application Configuration</h3><div id="settingsInfo"></div></div></div>
+
+<!-- Upload PDF Page -->
+<div id="pg-upload" class="hidden">
+<div class="card">
+<h3>📄 Upload Questions from PDF / CSV</h3>
+<p style="margin-bottom:1.2rem">Upload an FMGE question PDF or a pre-formatted CSV file. Questions will be parsed and added to the student quiz pool.</p>
+
+<div id="dropZone" class="drop-zone">
+<div class="drop-zone-icon">📁</div>
+<p class="drop-zone-text">Drag & drop your PDF or CSV file here</p>
+<p class="drop-zone-sub">or click to browse</p>
+<input type="file" id="fileInput" accept=".pdf,.csv" style="display:none">
+</div>
+
+<div id="uploadStatus" class="upload-status hidden"></div>
+</div>
+
+<!-- Parsed Questions Preview -->
+<div id="parsedPreview" class="card hidden">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+<h3>Parsed Questions Preview</h3>
+<div>
+<span id="parsedCount" class="badge badge-teal" style="margin-right:.5rem"></span>
+<button class="btn-sm btn-confirm" onclick="confirmImport()">✓ Import All</button>
+</div>
+</div>
+<div id="parsedList"></div>
+</div>
+
+<!-- Import History -->
+<div class="card">
+<h3>Import History</h3>
+<div id="importHistory">
+<p style="color:#64748b;font-size:.9rem">No imports yet. Upload a PDF or CSV to get started.</p>
+</div>
+</div>
+</div>
 </main></div>
 
 <!-- ============ STUDENT PAGE ============ -->
@@ -278,6 +336,7 @@ function showPage(page,el){
   if(page==='students')loadStudents();
   if(page==='categories')loadCategories();
   if(page==='settings')loadSettings();
+  if(page==='upload')loadImportHistory();
 }
 
 async function apiFetch(u){
@@ -310,6 +369,20 @@ function loadCategories(){
 
 function loadSettings(){
   document.getElementById('settingsInfo').innerHTML=`<table><tr><td style="color:#94a3b8;width:40%">App Name</td><td>QuizPath</td></tr><tr><td style="color:#94a3b8">Domain</td><td>mediprep.nokkoo.in</td></tr><tr><td style="color:#94a3b8">API</td><td>/api/v1</td></tr><tr><td style="color:#94a3b8">Questions/Day</td><td>10</td></tr><tr><td style="color:#94a3b8">Days/Level</td><td>30</td></tr><tr><td style="color:#94a3b8">Total Levels</td><td>6</td></tr><tr><td style="color:#94a3b8">Timezone</td><td>Asia/Kolkata</td></tr><tr><td style="color:#94a3b8">Pass Requirement</td><td>10/10 (all correct)</td></tr><tr><td style="color:#94a3b8">Retry Mode</td><td>Requeue at end</td></tr></table>`;
+}
+
+async function loadImportHistory(){
+  try{
+    const d=await apiFetch('/admin/questions/imports');
+    if(d.data&&d.data.length>0){
+      const el=document.getElementById('importHistory');
+      let html='';
+      d.data.forEach(imp=>{
+        html+=`<div class="q-item"><div class="q-text">✓ Imported ${imp.count||imp.questions_count||'?'} questions</div><div class="q-meta">${imp.created_at||imp.date||''} · ${imp.filename||'file'}</div></div>`;
+      });
+      el.innerHTML=html;
+    }
+  }catch(e){}
 }
 
 // ============ STUDENT FUNCTIONS ============
@@ -373,6 +446,180 @@ function logout(){
   document.getElementById('loginPage').classList.remove('hidden');
   document.getElementById('adminPage').classList.add('hidden');
   document.getElementById('studentPage').classList.add('hidden');
+}
+
+// ============ PDF/CSV UPLOAD ============
+let parsedQuestions=[];
+const dropZone=document.getElementById('dropZone');
+const fileInput=document.getElementById('fileInput');
+
+if(dropZone){
+  dropZone.addEventListener('click',()=>fileInput.click());
+  dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('drag-over')});
+  dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('drag-over');handleFile(e.dataTransfer.files[0])});
+  fileInput.addEventListener('change',e=>{if(e.target.files[0])handleFile(e.target.files[0])});
+}
+
+function handleFile(file){
+  if(!file)return;
+  const status=document.getElementById('uploadStatus');
+  status.classList.remove('hidden','success','error');
+  status.classList.add('loading');
+  status.innerHTML='⏳ Processing: '+file.name+'...';
+
+  const ext=file.name.split('.').pop().toLowerCase();
+  if(ext==='csv'){
+    const reader=new FileReader();
+    reader.onload=e=>parseCSV(e.target.result,file.name);
+    reader.onerror=()=>showUploadError('Failed to read file');
+    reader.readAsText(file);
+  }else if(ext==='pdf'){
+    uploadPDF(file);
+  }else{
+    showUploadError('Unsupported file type. Please upload a .pdf or .csv file.');
+  }
+}
+
+function parseCSV(text,filename){
+  const lines=text.trim().split('\n');
+  if(lines.length<2){showUploadError('CSV file is empty or has no data rows');return}
+
+  const header=lines[0].toLowerCase();
+  if(!header.includes('questiontext')){showUploadError('Invalid CSV format. Expected header: questionText,optionA,optionB,optionC,optionD,correctOption,explanation,subject,imageUrl');return}
+
+  parsedQuestions=[];
+  for(let i=1;i<lines.length;i++){
+    const cols=parseCSVLine(lines[i]);
+    if(cols.length>=6&&cols[0].trim()){
+      parsedQuestions.push({
+        questionText:cols[0].trim(),
+        optionA:cols[1]?.trim()||'',
+        optionB:cols[2]?.trim()||'',
+        optionC:cols[3]?.trim()||'',
+        optionD:cols[4]?.trim()||'',
+        correctOption:cols[5]?.trim()||'A',
+        explanation:cols[6]?.trim()||'',
+        subject:cols[7]?.trim()||'General',
+        imageUrl:cols[8]?.trim()||''
+      });
+    }
+  }
+
+  if(parsedQuestions.length===0){showUploadError('No valid questions found in CSV');return}
+  showUploadSuccess(`✓ Parsed ${parsedQuestions.length} questions from ${filename}`);
+  showParsedPreview();
+}
+
+function parseCSVLine(line){
+  const result=[];let current='',inQuotes=false;
+  for(let i=0;i<line.length;i++){
+    const ch=line[i];
+    if(ch==='"'){inQuotes=!inQuotes}
+    else if(ch===','&&!inQuotes){result.push(current);current=''}
+    else{current+=ch}
+  }
+  result.push(current);
+  return result;
+}
+
+async function uploadPDF(file){
+  // Try uploading to API for server-side parsing
+  const formData=new FormData();
+  formData.append('file',file);
+  try{
+    const r=await fetch(API+'/admin/questions/import-pdf',{
+      method:'POST',
+      headers:{Authorization:'Bearer '+token,Accept:'application/json'},
+      body:formData
+    });
+    const d=await r.json();
+    if(r.ok&&d.data?.questions){
+      parsedQuestions=d.data.questions;
+      showUploadSuccess(`✓ Server parsed ${parsedQuestions.length} questions from ${file.name}`);
+      showParsedPreview();
+    }else if(r.ok&&d.data?.count){
+      showUploadSuccess(`✓ ${d.data.count} questions imported directly from ${file.name}`);
+      parsedQuestions=[];
+      document.getElementById('parsedPreview').classList.add('hidden');
+    }else{
+      // API doesn't support PDF parsing - show instructions
+      showUploadError(`PDF upload: ${d.message||'Server does not support direct PDF parsing yet.'}. Please convert your PDF to CSV format first using the parser tool, then upload the CSV.`);
+    }
+  }catch(e){
+    showUploadError('PDF upload failed. Convert your PDF to CSV using the parser tool (parse_fmge.py), then upload the CSV here.');
+  }
+}
+
+function showUploadSuccess(msg){
+  const status=document.getElementById('uploadStatus');
+  status.classList.remove('hidden','loading','error');
+  status.classList.add('success');
+  status.innerHTML=msg;
+}
+
+function showUploadError(msg){
+  const status=document.getElementById('uploadStatus');
+  status.classList.remove('hidden','loading','success');
+  status.classList.add('error');
+  status.innerHTML='❌ '+msg;
+}
+
+function showParsedPreview(){
+  const preview=document.getElementById('parsedPreview');
+  const list=document.getElementById('parsedList');
+  const count=document.getElementById('parsedCount');
+  preview.classList.remove('hidden');
+  count.textContent=parsedQuestions.length+' questions';
+
+  let html='';
+  const show=Math.min(parsedQuestions.length,20);
+  for(let i=0;i<show;i++){
+    const q=parsedQuestions[i];
+    html+=`<div class="parsed-q">
+      <div class="parsed-q-text"><strong>Q${i+1}:</strong> ${q.questionText.substring(0,120)}${q.questionText.length>120?'...':''}</div>
+      <div class="parsed-q-opts">A: ${q.optionA.substring(0,40)} | B: ${q.optionB.substring(0,40)} | C: ${q.optionC.substring(0,40)} | D: ${q.optionD.substring(0,40)}</div>
+      <div class="parsed-q-meta"><span class="badge badge-green">Ans: ${q.correctOption}</span><span class="badge badge-blue">${q.subject}</span></div>
+    </div>`;
+  }
+  if(parsedQuestions.length>20) html+=`<p style="color:#64748b;text-align:center;padding:.8rem">... and ${parsedQuestions.length-20} more questions</p>`;
+  list.innerHTML=html;
+}
+
+async function confirmImport(){
+  if(parsedQuestions.length===0){alert('No questions to import');return}
+  const status=document.getElementById('uploadStatus');
+  status.classList.remove('hidden','success','error');
+  status.classList.add('loading');
+  status.innerHTML='⏳ Importing '+parsedQuestions.length+' questions to quiz pool...';
+
+  try{
+    const r=await fetch(API+'/admin/questions/bulk-import',{
+      method:'POST',
+      headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',Accept:'application/json'},
+      body:JSON.stringify({questions:parsedQuestions})
+    });
+    const d=await r.json();
+    if(r.ok){
+      const imported=d.data?.imported||d.data?.count||parsedQuestions.length;
+      showUploadSuccess(`✓ Successfully imported ${imported} questions to the quiz pool!`);
+      document.getElementById('parsedPreview').classList.add('hidden');
+      addImportHistory(imported);
+      parsedQuestions=[];
+    }else{
+      showUploadError(d.message||'Import failed. Please try again.');
+    }
+  }catch(e){
+    showUploadError('Network error during import. Please check connection and try again.');
+  }
+}
+
+function addImportHistory(count){
+  const el=document.getElementById('importHistory');
+  const now=new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});
+  const entry=`<div class="q-item"><div class="q-text">✓ Imported ${count} questions</div><div class="q-meta">${now} · by ${currentUser?.name||'Admin'}</div></div>`;
+  if(el.querySelector('p')) el.innerHTML='';
+  el.insertAdjacentHTML('afterbegin',entry);
 }
 </script>
 </body>
