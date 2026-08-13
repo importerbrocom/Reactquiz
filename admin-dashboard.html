@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#4F46E5">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>QuizPath - MediPrep Admin</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,sans-serif;background:#0B1120;color:#f8fafc;min-height:100vh;font-size:16px}
+.app{display:flex;min-height:100vh}
+.sidebar{width:250px;background:#1e293b;border-right:1px solid #334155;padding:1.5rem 0;position:fixed;height:100vh;overflow-y:auto}
+.sidebar h1{color:#818cf8;font-size:1.6rem;padding:0 1.5rem;margin-bottom:2rem}
+.nav-item{display:block;padding:.9rem 1.5rem;color:#94a3b8;text-decoration:none;font-size:1rem;cursor:pointer;border-left:3px solid transparent;transition:all .2s}
+.nav-item:hover,.nav-item.active{color:#818cf8;background:#0f172a;border-left-color:#818cf8}
+.main{flex:1;margin-left:250px;padding:2rem 2.5rem}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;padding-bottom:1rem;border-bottom:1px solid #334155}
+.page-title{font-size:1.8rem;font-weight:700}
+.user-info{font-size:1rem;color:#94a3b8}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.2rem;margin-bottom:2rem}
+.stat-card{background:#1e293b;border-radius:12px;padding:1.5rem;border:1px solid #334155;text-align:center}
+.stat-value{font-size:2.2rem;font-weight:700;color:#818cf8}
+.stat-label{font-size:.9rem;color:#94a3b8;margin-top:.4rem}
+.card{background:#1e293b;border-radius:12px;padding:1.5rem;border:1px solid #334155;margin-bottom:1.5rem}
+.card h3{font-size:1.2rem;font-weight:600;margin-bottom:1rem;color:#e2e8f0}
+.card p{font-size:1rem;line-height:1.6;color:#94a3b8}
+table{width:100%;border-collapse:collapse;font-size:1rem}
+th{text-align:left;padding:.8rem;color:#94a3b8;border-bottom:1px solid #334155;font-size:.9rem}
+td{padding:.8rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
+.badge{display:inline-block;padding:.25rem .7rem;border-radius:9999px;font-size:.8rem;font-weight:500}
+.badge-green{background:#052e16;color:#86efac}
+.badge-blue{background:#1e1b4b;color:#a5b4fc}
+.hidden{display:none!important}
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh}
+.login-box{width:100%;max-width:420px;padding:2rem}
+.login-box h1{color:#818cf8;font-size:2.2rem;text-align:center;margin-bottom:.5rem}
+.login-box .sub{color:#94a3b8;text-align:center;margin-bottom:2rem;font-size:1.1rem}
+.form-card{background:#1e293b;border-radius:14px;padding:2rem;border:1px solid #334155}
+.error-msg{background:#450a0a;border:1px solid #dc2626;color:#fca5a5;padding:.8rem;border-radius:8px;margin-bottom:1rem;font-size:.95rem;display:none}
+label{display:block;color:#e2e8f0;font-size:1rem;margin-bottom:.5rem;font-weight:500}
+input{width:100%;padding:.85rem 1rem;background:#0f172a;border:1px solid #334155;border-radius:10px;color:#f8fafc;font-size:1.1rem;margin-bottom:1.2rem;outline:none}
+input:focus{border-color:#818cf8}
+.btn{padding:.85rem 1.2rem;border-radius:10px;border:none;cursor:pointer;font-size:1.1rem;font-weight:600;width:100%}
+.btn-primary{background:#4f46e5;color:#fff}
+.btn-primary:hover{background:#4338ca}
+.info-text{margin-top:1.5rem;text-align:center;color:#64748b;font-size:.9rem}
+.q-item{background:#0f172a;border-radius:10px;padding:1rem;margin-bottom:.7rem;border:1px solid #334155}
+.q-text{font-size:1rem;color:#e2e8f0;margin-bottom:.4rem}
+.q-meta{font-size:.8rem;color:#64748b}
+.install-banner{background:#1e1b4b;border:1px solid #4f46e5;border-radius:12px;padding:1.2rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between}
+.install-banner p{color:#a5b4fc;font-size:1rem}
+.install-btn{background:#4f46e5;color:#fff;border:none;padding:.7rem 1.5rem;border-radius:8px;font-size:.95rem;font-weight:600;cursor:pointer}
+.install-btn:hover{background:#4338ca}
+@media(max-width:900px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.sidebar{width:200px}.main{margin-left:200px;padding:1.5rem}.stat-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div id="loginPage" class="login-wrap">
+<div class="login-box"><h1>QuizPath</h1><p class="sub">MediPrep - Admin Panel</p>
+<div class="form-card"><div id="errorMsg" class="error-msg"></div>
+<form id="loginForm"><label>Email</label><input type="email" id="email" placeholder="admin@quizpath.test" required><label>Password</label><input type="password" id="password" placeholder="Enter password" required><button type="submit" class="btn btn-primary" id="loginBtn">Sign In</button></form>
+<p class="info-text">admin@quizpath.test / ChangeMe!2026</p></div></div></div>
+
+<div id="adminPage" class="app hidden">
+<aside class="sidebar"><h1>QuizPath</h1>
+<a class="nav-item active" onclick="showPage('dashboard',this)">📊 Dashboard</a>
+<a class="nav-item" onclick="showPage('questions',this)">❓ Questions</a>
+<a class="nav-item" onclick="showPage('students',this)">👥 Students</a>
+<a class="nav-item" onclick="showPage('categories',this)">📁 Categories</a>
+<a class="nav-item" onclick="showPage('settings',this)">⚙️ Settings</a>
+<a class="nav-item" style="color:#ef4444;margin-top:2rem" onclick="logout()">🚪 Sign Out</a>
+</aside>
+<main class="main">
+<div class="topbar"><h2 class="page-title" id="pageTitle">Dashboard</h2><span class="user-info" id="userInfo"></span></div>
+
+<div id="installBanner" class="install-banner hidden"><p>📱 Install QuizPath as an app for quick access</p><button class="install-btn" onclick="installApp()">Install App</button></div>
+
+<div id="pg-dashboard">
+<div class="stat-grid" id="statsGrid"></div>
+<div class="card"><h3>System Info</h3><p>QuizPath Medical Exam Preparation Platform. 300 FMGE questions loaded across 6 levels (30 days each, 10 questions per day). Students must master all 10 questions per day to unlock the next day.</p></div>
+</div>
+<div id="pg-questions" class="hidden"><div class="card"><h3>Questions - Level 1</h3><div id="questionsList"></div></div></div>
+<div id="pg-students" class="hidden"><div class="card"><h3>Registered Users</h3><div id="studentsList"></div></div></div>
+<div id="pg-categories" class="hidden"><div class="card"><h3>Exam Categories & Programmes</h3><div id="categoriesList"></div></div></div>
+<div id="pg-settings" class="hidden"><div class="card"><h3>Application Configuration</h3><div id="settingsInfo"></div></div></div>
+</main></div>
+
+<script>
+const API='/api/v1';let token=localStorage.getItem('qp_token'),currentUser=null,deferredPrompt=null;
+
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;document.getElementById('installBanner').classList.remove('hidden')});
+function installApp(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(r=>{deferredPrompt=null;document.getElementById('installBanner').classList.add('hidden')})}}
+
+if(token)checkAuth();
+document.getElementById('loginForm').addEventListener('submit',async e=>{e.preventDefault();const btn=document.getElementById('loginBtn'),err=document.getElementById('errorMsg');btn.disabled=true;btn.textContent='Signing in...';err.style.display='none';try{const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({email:document.getElementById('email').value,password:document.getElementById('password').value,device_name:'web'})});const d=await r.json();if(r.ok&&d.data?.access_token){token=d.data.access_token;localStorage.setItem('qp_token',token);currentUser=d.data.user;showAdmin()}else{err.textContent=d.message||'Login failed';err.style.display='block'}}catch(x){err.textContent='Network error';err.style.display='block'}btn.disabled=false;btn.textContent='Sign In'});
+async function checkAuth(){try{const r=await fetch(API+'/auth/me',{headers:{Authorization:'Bearer '+token,Accept:'application/json'}});if(r.ok){const d=await r.json();currentUser=d.data;showAdmin()}else{localStorage.removeItem('qp_token');token=null}}catch(e){localStorage.removeItem('qp_token');token=null}}
+function showAdmin(){document.getElementById('loginPage').classList.add('hidden');document.getElementById('adminPage').classList.remove('hidden');document.getElementById('userInfo').textContent=currentUser?.name||'Admin';loadDashboard()}
+function showPage(page,el){document.querySelectorAll('[id^=pg-]').forEach(e=>e.classList.add('hidden'));document.getElementById('pg-'+page).classList.remove('hidden');document.getElementById('pageTitle').textContent=page.charAt(0).toUpperCase()+page.slice(1);document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));if(el)el.classList.add('active');if(page==='dashboard')loadDashboard();if(page==='questions')loadQuestions();if(page==='students')loadStudents();if(page==='categories')loadCategories();if(page==='settings')loadSettings()}
+async function apiFetch(u){try{const r=await fetch(API+u,{headers:{Authorization:'Bearer '+token,Accept:'application/json'}});return await r.json()}catch(e){return{data:null}}}
+async function loadDashboard(){const g=document.getElementById('statsGrid');try{const d=await apiFetch('/admin/counters');if(d.data){g.innerHTML=`<div class="stat-card"><div class="stat-value">${d.data.students||0}</div><div class="stat-label">Students</div></div><div class="stat-card"><div class="stat-value">${d.data.active_students||0}</div><div class="stat-label">Active Today</div></div><div class="stat-card"><div class="stat-value">${d.data.questions||300}</div><div class="stat-label">Questions</div></div><div class="stat-card"><div class="stat-value">${d.data.levels||6}</div><div class="stat-label">Levels</div></div>`}else throw'no data'}catch(e){g.innerHTML='<div class="stat-card"><div class="stat-value">300</div><div class="stat-label">Questions</div></div><div class="stat-card"><div class="stat-value">6</div><div class="stat-label">Levels</div></div><div class="stat-card"><div class="stat-value">30</div><div class="stat-label">Days/Level</div></div><div class="stat-card"><div class="stat-value">10</div><div class="stat-label">Q/Day</div></div>'}}
+function loadQuestions(){const el=document.getElementById('questionsList');let h='';for(let i=1;i<=15;i++)h+=`<div class="q-item"><div class="q-text">Q${i}: FMGE Medical Science Question ${i}</div><div class="q-meta"><span class="badge badge-green">Active</span> Day ${Math.ceil(i/10)} · Level 1</div></div>`;el.innerHTML=h}
+function loadStudents(){document.getElementById('studentsList').innerHTML=`<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr></thead><tbody><tr><td>${currentUser?.name||'Admin'}</td><td>${currentUser?.email||''}</td><td><span class="badge badge-blue">Admin</span></td><td><span class="badge badge-green">Active</span></td></tr></tbody></table>`}
+function loadCategories(){document.getElementById('categoriesList').innerHTML=`<table><thead><tr><th>Category</th><th>Programme</th><th>Levels</th><th>Questions</th><th>Status</th></tr></thead><tbody><tr><td>FMGE</td><td>FMGE Complete - 6 Months</td><td>6</td><td>300</td><td><span class="badge badge-green">Active</span></td></tr></tbody></table>`}
+function loadSettings(){document.getElementById('settingsInfo').innerHTML=`<table><tr><td style="color:#94a3b8;width:40%">App Name</td><td>QuizPath</td></tr><tr><td style="color:#94a3b8">Domain</td><td>mediprep.nokkoo.in</td></tr><tr><td style="color:#94a3b8">API</td><td>/api/v1</td></tr><tr><td style="color:#94a3b8">Questions/Day</td><td>10</td></tr><tr><td style="color:#94a3b8">Days/Level</td><td>30</td></tr><tr><td style="color:#94a3b8">Total Levels</td><td>6</td></tr><tr><td style="color:#94a3b8">Timezone</td><td>Asia/Kolkata</td></tr><tr><td style="color:#94a3b8">Pass Requirement</td><td>10/10 (all correct)</td></tr><tr><td style="color:#94a3b8">Retry Mode</td><td>Requeue at end</td></tr></table>`}
+function logout(){fetch(API+'/auth/logout',{method:'POST',headers:{Authorization:'Bearer '+token,Accept:'application/json'}}).catch(()=>{});localStorage.removeItem('qp_token');token=null;currentUser=null;document.getElementById('loginPage').classList.remove('hidden');document.getElementById('adminPage').classList.add('hidden')}
+</script>
+</body>
+</html>
