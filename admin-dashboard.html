@@ -6,10 +6,27 @@
 <meta name="theme-color" content="#4F46E5">
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>QuizPath - MediPrep Admin</title>
+<title>QuizPath - MediPrep</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:system-ui,sans-serif;background:#0B1120;color:#f8fafc;min-height:100vh;font-size:16px}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0B1120;color:#f8fafc;min-height:100vh;font-size:16px}
+
+/* ============ LOGIN ============ */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem}
+.login-box{width:100%;max-width:420px;padding:2rem}
+.login-box h1{color:#818cf8;font-size:2.2rem;text-align:center;margin-bottom:.5rem}
+.login-box .sub{color:#94a3b8;text-align:center;margin-bottom:2rem;font-size:1.1rem}
+.form-card{background:#1e293b;border-radius:14px;padding:2rem;border:1px solid #334155}
+.error-msg{background:#450a0a;border:1px solid #dc2626;color:#fca5a5;padding:.8rem;border-radius:8px;margin-bottom:1rem;font-size:.95rem;display:none}
+label{display:block;color:#e2e8f0;font-size:1rem;margin-bottom:.5rem;font-weight:500}
+input{width:100%;padding:.85rem 1rem;background:#0f172a;border:1px solid #334155;border-radius:10px;color:#f8fafc;font-size:1.1rem;margin-bottom:1.2rem;outline:none}
+input:focus{border-color:#818cf8}
+.btn{padding:.85rem 1.2rem;border-radius:10px;border:none;cursor:pointer;font-size:1.1rem;font-weight:600;width:100%;transition:background .2s}
+.btn-primary{background:#4f46e5;color:#fff}
+.btn-primary:hover{background:#4338ca}
+.info-text{margin-top:1.5rem;text-align:center;color:#64748b;font-size:.85rem;line-height:1.5}
+
+/* ============ ADMIN LAYOUT ============ */
 .app{display:flex;min-height:100vh}
 .sidebar{width:250px;background:#1e293b;border-right:1px solid #334155;padding:1.5rem 0;position:fixed;height:100vh;overflow-y:auto}
 .sidebar h1{color:#818cf8;font-size:1.6rem;padding:0 1.5rem;margin-bottom:2rem}
@@ -32,20 +49,10 @@ td{padding:.8rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 .badge{display:inline-block;padding:.25rem .7rem;border-radius:9999px;font-size:.8rem;font-weight:500}
 .badge-green{background:#052e16;color:#86efac}
 .badge-blue{background:#1e1b4b;color:#a5b4fc}
+.badge-teal{background:#042f2e;color:#5eead4}
+.badge-amber{background:#451a03;color:#fbbf24}
+.badge-red{background:#450a0a;color:#fca5a5}
 .hidden{display:none!important}
-.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh}
-.login-box{width:100%;max-width:420px;padding:2rem}
-.login-box h1{color:#818cf8;font-size:2.2rem;text-align:center;margin-bottom:.5rem}
-.login-box .sub{color:#94a3b8;text-align:center;margin-bottom:2rem;font-size:1.1rem}
-.form-card{background:#1e293b;border-radius:14px;padding:2rem;border:1px solid #334155}
-.error-msg{background:#450a0a;border:1px solid #dc2626;color:#fca5a5;padding:.8rem;border-radius:8px;margin-bottom:1rem;font-size:.95rem;display:none}
-label{display:block;color:#e2e8f0;font-size:1rem;margin-bottom:.5rem;font-weight:500}
-input{width:100%;padding:.85rem 1rem;background:#0f172a;border:1px solid #334155;border-radius:10px;color:#f8fafc;font-size:1.1rem;margin-bottom:1.2rem;outline:none}
-input:focus{border-color:#818cf8}
-.btn{padding:.85rem 1.2rem;border-radius:10px;border:none;cursor:pointer;font-size:1.1rem;font-weight:600;width:100%}
-.btn-primary{background:#4f46e5;color:#fff}
-.btn-primary:hover{background:#4338ca}
-.info-text{margin-top:1.5rem;text-align:center;color:#64748b;font-size:.9rem}
 .q-item{background:#0f172a;border-radius:10px;padding:1rem;margin-bottom:.7rem;border:1px solid #334155}
 .q-text{font-size:1rem;color:#e2e8f0;margin-bottom:.4rem}
 .q-meta{font-size:.8rem;color:#64748b}
@@ -53,17 +60,60 @@ input:focus{border-color:#818cf8}
 .install-banner p{color:#a5b4fc;font-size:1rem}
 .install-btn{background:#4f46e5;color:#fff;border:none;padding:.7rem 1.5rem;border-radius:8px;font-size:.95rem;font-weight:600;cursor:pointer}
 .install-btn:hover{background:#4338ca}
+
+/* ============ STUDENT LAYOUT ============ */
+.student-app{display:flex;flex-direction:column;min-height:100vh;padding-bottom:70px}
+.student-main{flex:1;padding:1.5rem;max-width:600px;margin:0 auto;width:100%}
+.greeting{margin-bottom:1.5rem}
+.greeting h1{font-size:1.6rem;font-weight:700;color:#f8fafc;margin-bottom:.3rem}
+.greeting .streak-msg{font-size:.95rem;color:#14b8a6}
+
+.course-badge-card{background:#1e293b;border-radius:14px;padding:1.2rem 1.4rem;border:1px solid #334155;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between}
+.course-info{display:flex;flex-direction:column;gap:.3rem}
+.course-label{font-size:1.1rem;font-weight:600;color:#e2e8f0}
+.course-sub{font-size:.85rem;color:#94a3b8}
+.badge-progress{background:#042f2e;color:#14b8a6;border:1px solid #14b8a6;padding:.3rem .8rem;border-radius:9999px;font-size:.75rem;font-weight:600;white-space:nowrap}
+
+.quiz-card{background:#1e293b;border-radius:14px;padding:1.4rem;border:1px solid #334155;margin-bottom:1.5rem}
+.quiz-card h3{font-size:1rem;font-weight:600;color:#e2e8f0;margin-bottom:1rem}
+.progress-bar-wrap{background:#0f172a;border-radius:9999px;height:10px;margin-bottom:.6rem;overflow:hidden}
+.progress-bar-fill{height:100%;background:#14b8a6;border-radius:9999px;transition:width .4s ease}
+.progress-text{font-size:.85rem;color:#94a3b8;margin-bottom:1rem}
+.btn-teal{background:#14b8a6;color:#042f2e;font-weight:700;padding:.85rem 1.2rem;border-radius:10px;border:none;cursor:pointer;font-size:1rem;width:100%;transition:background .2s}
+.btn-teal:hover{background:#0d9488}
+
+.student-stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-bottom:1.5rem}
+.student-stat-card{background:#1e293b;border-radius:12px;padding:1.2rem;border:1px solid #334155;text-align:center}
+.student-stat-value{font-size:1.8rem;font-weight:700;color:#14b8a6}
+.student-stat-label{font-size:.8rem;color:#94a3b8;margin-top:.3rem}
+
+.month-card{background:#1e293b;border-radius:14px;padding:1.4rem;border:1px solid #334155;margin-bottom:1.5rem}
+.month-card h3{font-size:1rem;font-weight:600;color:#e2e8f0;margin-bottom:.8rem}
+.month-info{display:flex;align-items:center;justify-content:space-between}
+.month-text{font-size:.95rem;color:#94a3b8}
+.badge-locked{background:#451a03;color:#fbbf24;border:1px solid #fbbf24;padding:.3rem .8rem;border-radius:9999px;font-size:.75rem;font-weight:600;white-space:nowrap}
+
+/* Bottom Navigation */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#1e293b;border-top:1px solid #334155;display:flex;justify-content:space-around;align-items:center;padding:.6rem 0;z-index:100}
+.bottom-nav-item{display:flex;flex-direction:column;align-items:center;gap:.2rem;color:#64748b;text-decoration:none;font-size:.7rem;cursor:pointer;padding:.3rem .8rem;border-radius:8px;transition:color .2s}
+.bottom-nav-item.active,.bottom-nav-item:hover{color:#14b8a6}
+.bottom-nav-item svg{width:22px;height:22px}
+
+/* Responsive */
 @media(max-width:900px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.sidebar{width:200px}.main{margin-left:200px;padding:1.5rem}.stat-grid{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
-<div id="loginPage" class="login-wrap">
-<div class="login-box"><h1>QuizPath</h1><p class="sub">MediPrep - Admin Panel</p>
-<div class="form-card"><div id="errorMsg" class="error-msg"></div>
-<form id="loginForm"><label>Email</label><input type="email" id="email" placeholder="admin@quizpath.test" required><label>Password</label><input type="password" id="password" placeholder="Enter password" required><button type="submit" class="btn btn-primary" id="loginBtn">Sign In</button></form>
-<p class="info-text">admin@quizpath.test / ChangeMe!2026</p></div></div></div>
 
+<!-- ============ LOGIN PAGE ============ -->
+<div id="loginPage" class="login-wrap">
+<div class="login-box"><h1>QuizPath</h1><p class="sub">MediPrep - Exam Preparation</p>
+<div class="form-card"><div id="errorMsg" class="error-msg"></div>
+<form id="loginForm"><label>Email</label><input type="email" id="email" placeholder="Enter your email" required><label>Password</label><input type="password" id="password" placeholder="Enter password" required><button type="submit" class="btn btn-primary" id="loginBtn">Sign In</button></form>
+<p class="info-text">Admin: admin@quizpath.test / ChangeMe!2026<br>Student: student@mediprep.test / Student@123</p></div></div></div>
+
+<!-- ============ ADMIN PAGE ============ -->
 <div id="adminPage" class="app hidden">
 <aside class="sidebar"><h1>QuizPath</h1>
 <a class="nav-item active" onclick="showPage('dashboard',this)">📊 Dashboard</a>
@@ -88,24 +138,235 @@ input:focus{border-color:#818cf8}
 <div id="pg-settings" class="hidden"><div class="card"><h3>Application Configuration</h3><div id="settingsInfo"></div></div></div>
 </main></div>
 
+<!-- ============ STUDENT PAGE ============ -->
+<div id="studentPage" class="student-app hidden">
+<div class="student-main">
+
+<!-- Greeting -->
+<div class="greeting">
+<h1 id="studentGreeting">Hello, Student!</h1>
+<p class="streak-msg" id="streakMsg">🔥 You're on a 3-day streak! Keep it up!</p>
+</div>
+
+<!-- Course Badge -->
+<div class="course-badge-card">
+<div class="course-info">
+<span class="course-label">FMGE · Month 1 · Day 2</span>
+<span class="course-sub">Complete 10 questions to unlock Day 3</span>
+</div>
+<span class="badge-progress">In progress</span>
+</div>
+
+<!-- Today's Quiz -->
+<div class="quiz-card">
+<h3>Today's Quiz</h3>
+<div class="progress-bar-wrap"><div class="progress-bar-fill" id="quizProgress" style="width:50%"></div></div>
+<p class="progress-text" id="quizProgressText">5 of 10 questions completed</p>
+<button class="btn-teal" onclick="continueQuiz()">Continue today's quiz</button>
+</div>
+
+<!-- Stats Grid -->
+<div class="student-stat-grid">
+<div class="student-stat-card"><div class="student-stat-value" id="statAccuracy">78%</div><div class="student-stat-label">Overall Accuracy</div></div>
+<div class="student-stat-card"><div class="student-stat-value" id="statAnswered">45</div><div class="student-stat-label">Questions Answered</div></div>
+<div class="student-stat-card"><div class="student-stat-value" id="statDays">4</div><div class="student-stat-label">Days Completed</div></div>
+<div class="student-stat-card"><div class="student-stat-value" id="statStreak">3</div><div class="student-stat-label">Current Streak</div></div>
+</div>
+
+<!-- This Month -->
+<div class="month-card">
+<h3>This Month</h3>
+<div class="month-info">
+<span class="month-text" id="monthProgress">10 of 300 pool questions completed</span>
+<span class="badge-locked">Exam locked</span>
+</div>
+</div>
+
+</div>
+
+<!-- Bottom Navigation -->
+<nav class="bottom-nav">
+<a class="bottom-nav-item active" onclick="showStudentTab('home',this)">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+<span>Home</span>
+</a>
+<a class="bottom-nav-item" onclick="showStudentTab('progress',this)">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+<span>Progress</span>
+</a>
+<a class="bottom-nav-item" onclick="showStudentTab('notifications',this)">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+<span>Notifications</span>
+</a>
+<a class="bottom-nav-item" onclick="showStudentTab('profile',this)">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+<span>Profile</span>
+</a>
+</nav>
+</div>
+
 <script>
-const API='/api/v1';let token=localStorage.getItem('qp_token'),currentUser=null,deferredPrompt=null;
+const API='/api/v1';
+let token=localStorage.getItem('qp_token'),currentUser=null,deferredPrompt=null;
 
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;document.getElementById('installBanner').classList.remove('hidden')});
-function installApp(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(r=>{deferredPrompt=null;document.getElementById('installBanner').classList.add('hidden')})}}
+// PWA Install
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;const b=document.getElementById('installBanner');if(b)b.classList.remove('hidden')});
+function installApp(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null;document.getElementById('installBanner').classList.add('hidden')})}}
 
+// Auto-login check
 if(token)checkAuth();
-document.getElementById('loginForm').addEventListener('submit',async e=>{e.preventDefault();const btn=document.getElementById('loginBtn'),err=document.getElementById('errorMsg');btn.disabled=true;btn.textContent='Signing in...';err.style.display='none';try{const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({email:document.getElementById('email').value,password:document.getElementById('password').value,device_name:'web'})});const d=await r.json();if(r.ok&&d.data?.access_token){token=d.data.access_token;localStorage.setItem('qp_token',token);currentUser=d.data.user;showAdmin()}else{err.textContent=d.message||'Login failed';err.style.display='block'}}catch(x){err.textContent='Network error';err.style.display='block'}btn.disabled=false;btn.textContent='Sign In'});
-async function checkAuth(){try{const r=await fetch(API+'/auth/me',{headers:{Authorization:'Bearer '+token,Accept:'application/json'}});if(r.ok){const d=await r.json();currentUser=d.data;showAdmin()}else{localStorage.removeItem('qp_token');token=null}}catch(e){localStorage.removeItem('qp_token');token=null}}
-function showAdmin(){document.getElementById('loginPage').classList.add('hidden');document.getElementById('adminPage').classList.remove('hidden');document.getElementById('userInfo').textContent=currentUser?.name||'Admin';loadDashboard()}
-function showPage(page,el){document.querySelectorAll('[id^=pg-]').forEach(e=>e.classList.add('hidden'));document.getElementById('pg-'+page).classList.remove('hidden');document.getElementById('pageTitle').textContent=page.charAt(0).toUpperCase()+page.slice(1);document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));if(el)el.classList.add('active');if(page==='dashboard')loadDashboard();if(page==='questions')loadQuestions();if(page==='students')loadStudents();if(page==='categories')loadCategories();if(page==='settings')loadSettings()}
-async function apiFetch(u){try{const r=await fetch(API+u,{headers:{Authorization:'Bearer '+token,Accept:'application/json'}});return await r.json()}catch(e){return{data:null}}}
-async function loadDashboard(){const g=document.getElementById('statsGrid');try{const d=await apiFetch('/admin/counters');if(d.data){g.innerHTML=`<div class="stat-card"><div class="stat-value">${d.data.students||0}</div><div class="stat-label">Students</div></div><div class="stat-card"><div class="stat-value">${d.data.active_students||0}</div><div class="stat-label">Active Today</div></div><div class="stat-card"><div class="stat-value">${d.data.questions||300}</div><div class="stat-label">Questions</div></div><div class="stat-card"><div class="stat-value">${d.data.levels||6}</div><div class="stat-label">Levels</div></div>`}else throw'no data'}catch(e){g.innerHTML='<div class="stat-card"><div class="stat-value">300</div><div class="stat-label">Questions</div></div><div class="stat-card"><div class="stat-value">6</div><div class="stat-label">Levels</div></div><div class="stat-card"><div class="stat-value">30</div><div class="stat-label">Days/Level</div></div><div class="stat-card"><div class="stat-value">10</div><div class="stat-label">Q/Day</div></div>'}}
-function loadQuestions(){const el=document.getElementById('questionsList');let h='';for(let i=1;i<=15;i++)h+=`<div class="q-item"><div class="q-text">Q${i}: FMGE Medical Science Question ${i}</div><div class="q-meta"><span class="badge badge-green">Active</span> Day ${Math.ceil(i/10)} · Level 1</div></div>`;el.innerHTML=h}
-function loadStudents(){document.getElementById('studentsList').innerHTML=`<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr></thead><tbody><tr><td>${currentUser?.name||'Admin'}</td><td>${currentUser?.email||''}</td><td><span class="badge badge-blue">Admin</span></td><td><span class="badge badge-green">Active</span></td></tr></tbody></table>`}
-function loadCategories(){document.getElementById('categoriesList').innerHTML=`<table><thead><tr><th>Category</th><th>Programme</th><th>Levels</th><th>Questions</th><th>Status</th></tr></thead><tbody><tr><td>FMGE</td><td>FMGE Complete - 6 Months</td><td>6</td><td>300</td><td><span class="badge badge-green">Active</span></td></tr></tbody></table>`}
-function loadSettings(){document.getElementById('settingsInfo').innerHTML=`<table><tr><td style="color:#94a3b8;width:40%">App Name</td><td>QuizPath</td></tr><tr><td style="color:#94a3b8">Domain</td><td>mediprep.nokkoo.in</td></tr><tr><td style="color:#94a3b8">API</td><td>/api/v1</td></tr><tr><td style="color:#94a3b8">Questions/Day</td><td>10</td></tr><tr><td style="color:#94a3b8">Days/Level</td><td>30</td></tr><tr><td style="color:#94a3b8">Total Levels</td><td>6</td></tr><tr><td style="color:#94a3b8">Timezone</td><td>Asia/Kolkata</td></tr><tr><td style="color:#94a3b8">Pass Requirement</td><td>10/10 (all correct)</td></tr><tr><td style="color:#94a3b8">Retry Mode</td><td>Requeue at end</td></tr></table>`}
-function logout(){fetch(API+'/auth/logout',{method:'POST',headers:{Authorization:'Bearer '+token,Accept:'application/json'}}).catch(()=>{});localStorage.removeItem('qp_token');token=null;currentUser=null;document.getElementById('loginPage').classList.remove('hidden');document.getElementById('adminPage').classList.add('hidden')}
+
+// Login form
+document.getElementById('loginForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const btn=document.getElementById('loginBtn'),err=document.getElementById('errorMsg');
+  btn.disabled=true;btn.textContent='Signing in...';err.style.display='none';
+  try{
+    const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({email:document.getElementById('email').value,password:document.getElementById('password').value,device_name:'web'})});
+    const d=await r.json();
+    if(r.ok&&d.data?.access_token){
+      token=d.data.access_token;
+      localStorage.setItem('qp_token',token);
+      currentUser=d.data.user;
+      routeByRole();
+    }else{err.textContent=d.message||'Login failed';err.style.display='block'}
+  }catch(x){err.textContent='Network error - check connection';err.style.display='block'}
+  btn.disabled=false;btn.textContent='Sign In';
+});
+
+async function checkAuth(){
+  try{
+    const r=await fetch(API+'/auth/me',{headers:{Authorization:'Bearer '+token,Accept:'application/json'}});
+    if(r.ok){const d=await r.json();currentUser=d.data;routeByRole()}
+    else{localStorage.removeItem('qp_token');token=null}
+  }catch(e){localStorage.removeItem('qp_token');token=null}
+}
+
+// Route by role
+function routeByRole(){
+  document.getElementById('loginPage').classList.add('hidden');
+  const role=(currentUser?.role||currentUser?.roles?.[0]||'').toLowerCase();
+  if(role==='admin'||role==='super-admin'||role==='superadmin'){
+    showAdmin();
+  }else{
+    showStudent();
+  }
+}
+
+// ============ ADMIN FUNCTIONS ============
+function showAdmin(){
+  document.getElementById('adminPage').classList.remove('hidden');
+  document.getElementById('studentPage').classList.add('hidden');
+  document.getElementById('userInfo').textContent=currentUser?.name||'Admin';
+  loadDashboard();
+}
+
+function showPage(page,el){
+  document.querySelectorAll('[id^=pg-]').forEach(e=>e.classList.add('hidden'));
+  document.getElementById('pg-'+page).classList.remove('hidden');
+  document.getElementById('pageTitle').textContent=page.charAt(0).toUpperCase()+page.slice(1);
+  document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));
+  if(el)el.classList.add('active');
+  if(page==='dashboard')loadDashboard();
+  if(page==='questions')loadQuestions();
+  if(page==='students')loadStudents();
+  if(page==='categories')loadCategories();
+  if(page==='settings')loadSettings();
+}
+
+async function apiFetch(u){
+  try{const r=await fetch(API+u,{headers:{Authorization:'Bearer '+token,Accept:'application/json'}});return await r.json()}
+  catch(e){return{data:null}}
+}
+
+async function loadDashboard(){
+  const g=document.getElementById('statsGrid');
+  try{
+    const d=await apiFetch('/admin/counters');
+    if(d.data){g.innerHTML=`<div class="stat-card"><div class="stat-value">${d.data.students||0}</div><div class="stat-label">Students</div></div><div class="stat-card"><div class="stat-value">${d.data.active_students||0}</div><div class="stat-label">Active Today</div></div><div class="stat-card"><div class="stat-value">${d.data.questions||300}</div><div class="stat-label">Questions</div></div><div class="stat-card"><div class="stat-value">${d.data.levels||6}</div><div class="stat-label">Levels</div></div>`}
+    else throw'no data';
+  }catch(e){g.innerHTML='<div class="stat-card"><div class="stat-value">300</div><div class="stat-label">Questions</div></div><div class="stat-card"><div class="stat-value">6</div><div class="stat-label">Levels</div></div><div class="stat-card"><div class="stat-value">30</div><div class="stat-label">Days/Level</div></div><div class="stat-card"><div class="stat-value">10</div><div class="stat-label">Q/Day</div></div>'}
+}
+
+function loadQuestions(){
+  const el=document.getElementById('questionsList');let h='';
+  for(let i=1;i<=15;i++)h+=`<div class="q-item"><div class="q-text">Q${i}: FMGE Medical Science Question ${i}</div><div class="q-meta"><span class="badge badge-green">Active</span> Day ${Math.ceil(i/10)} · Level 1</div></div>`;
+  el.innerHTML=h;
+}
+
+function loadStudents(){
+  document.getElementById('studentsList').innerHTML=`<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr></thead><tbody><tr><td>${currentUser?.name||'Admin'}</td><td>${currentUser?.email||''}</td><td><span class="badge badge-blue">Admin</span></td><td><span class="badge badge-green">Active</span></td></tr></tbody></table>`;
+}
+
+function loadCategories(){
+  document.getElementById('categoriesList').innerHTML=`<table><thead><tr><th>Category</th><th>Programme</th><th>Levels</th><th>Questions</th><th>Status</th></tr></thead><tbody><tr><td>FMGE</td><td>FMGE Complete - 6 Months</td><td>6</td><td>300</td><td><span class="badge badge-green">Active</span></td></tr></tbody></table>`;
+}
+
+function loadSettings(){
+  document.getElementById('settingsInfo').innerHTML=`<table><tr><td style="color:#94a3b8;width:40%">App Name</td><td>QuizPath</td></tr><tr><td style="color:#94a3b8">Domain</td><td>mediprep.nokkoo.in</td></tr><tr><td style="color:#94a3b8">API</td><td>/api/v1</td></tr><tr><td style="color:#94a3b8">Questions/Day</td><td>10</td></tr><tr><td style="color:#94a3b8">Days/Level</td><td>30</td></tr><tr><td style="color:#94a3b8">Total Levels</td><td>6</td></tr><tr><td style="color:#94a3b8">Timezone</td><td>Asia/Kolkata</td></tr><tr><td style="color:#94a3b8">Pass Requirement</td><td>10/10 (all correct)</td></tr><tr><td style="color:#94a3b8">Retry Mode</td><td>Requeue at end</td></tr></table>`;
+}
+
+// ============ STUDENT FUNCTIONS ============
+function showStudent(){
+  document.getElementById('studentPage').classList.remove('hidden');
+  document.getElementById('adminPage').classList.add('hidden');
+  const name=currentUser?.name||'Student';
+  document.getElementById('studentGreeting').textContent=`Hello, ${name}!`;
+  loadStudentData();
+}
+
+async function loadStudentData(){
+  try{
+    const progress=await apiFetch('/student/progress');
+    if(progress.data){
+      const p=progress.data;
+      // Update stats
+      if(p.accuracy!==undefined) document.getElementById('statAccuracy').textContent=Math.round(p.accuracy)+'%';
+      if(p.questions_answered!==undefined) document.getElementById('statAnswered').textContent=p.questions_answered;
+      if(p.days_completed!==undefined) document.getElementById('statDays').textContent=p.days_completed;
+      if(p.current_streak!==undefined){
+        document.getElementById('statStreak').textContent=p.current_streak;
+        document.getElementById('streakMsg').textContent=`🔥 You're on a ${p.current_streak}-day streak! Keep it up!`;
+      }
+      // Today's quiz progress
+      if(p.today_completed!==undefined&&p.today_total!==undefined){
+        const pct=Math.round((p.today_completed/p.today_total)*100);
+        document.getElementById('quizProgress').style.width=pct+'%';
+        document.getElementById('quizProgressText').textContent=`${p.today_completed} of ${p.today_total} questions completed`;
+      }
+      // Month progress
+      if(p.month_completed!==undefined&&p.month_total!==undefined){
+        document.getElementById('monthProgress').textContent=`${p.month_completed} of ${p.month_total} pool questions completed`;
+      }
+    }
+  }catch(e){
+    // Use default values shown in HTML
+    console.log('Using default student stats');
+  }
+}
+
+function continueQuiz(){
+  // Navigate to quiz - placeholder
+  alert('Launching today\'s quiz...');
+}
+
+function showStudentTab(tab,el){
+  document.querySelectorAll('.bottom-nav-item').forEach(e=>e.classList.remove('active'));
+  if(el)el.classList.add('active');
+  // For now only Home tab is fully built; others are placeholders
+  if(tab!=='home'){
+    alert(tab.charAt(0).toUpperCase()+tab.slice(1)+' - Coming soon!');
+  }
+}
+
+// ============ LOGOUT ============
+function logout(){
+  fetch(API+'/auth/logout',{method:'POST',headers:{Authorization:'Bearer '+token,Accept:'application/json'}}).catch(()=>{});
+  localStorage.removeItem('qp_token');token=null;currentUser=null;
+  document.getElementById('loginPage').classList.remove('hidden');
+  document.getElementById('adminPage').classList.add('hidden');
+  document.getElementById('studentPage').classList.add('hidden');
+}
 </script>
 </body>
 </html>
