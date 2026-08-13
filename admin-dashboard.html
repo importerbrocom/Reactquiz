@@ -245,8 +245,23 @@ async function checkAuth(){
 // Route by role
 function routeByRole(){
   document.getElementById('loginPage').classList.add('hidden');
-  const role=(currentUser?.role||currentUser?.roles?.[0]||'').toLowerCase();
-  if(role==='admin'||role==='super-admin'||role==='superadmin'){
+  // Detect admin from multiple possible API structures
+  let isAdmin=false;
+  const roleStr=(currentUser?.role||'').toLowerCase();
+  if(roleStr==='admin'||roleStr==='super-admin'||roleStr==='superadmin') isAdmin=true;
+  // Check roles array (could be strings or objects with name/slug)
+  if(currentUser?.roles&&Array.isArray(currentUser.roles)){
+    currentUser.roles.forEach(r=>{
+      const rName=(typeof r==='string'?r:(r.name||r.slug||'')).toLowerCase();
+      if(rName==='admin'||rName==='super-admin'||rName==='superadmin') isAdmin=true;
+    });
+  }
+  // Check is_admin flag
+  if(currentUser?.is_admin===true||currentUser?.is_admin===1) isAdmin=true;
+  // Check email as fallback
+  if(currentUser?.email&&currentUser.email.includes('admin@')) isAdmin=true;
+
+  if(isAdmin){
     showAdmin();
   }else{
     showStudent();
@@ -353,8 +368,9 @@ function continueQuiz(){
 function showStudentTab(tab,el){
   document.querySelectorAll('.bottom-nav-item').forEach(e=>e.classList.remove('active'));
   if(el)el.classList.add('active');
-  // For now only Home tab is fully built; others are placeholders
-  if(tab!=='home'){
+  if(tab==='profile'){
+    if(confirm('Sign out of QuizPath?')) logout();
+  }else if(tab!=='home'){
     alert(tab.charAt(0).toUpperCase()+tab.slice(1)+' - Coming soon!');
   }
 }
