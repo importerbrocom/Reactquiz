@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-Ujx4pJCj.js";import{t}from"./cn-DojpP95n.js";var n=e();function r({className:e,variant:r=`default`,children:i,...a}){return(0,n.jsx)(`div`,{className:t(`rounded-xl p-5`,{default:`bg-surface-900`,elevated:`bg-surface-800 shadow-lg`,outlined:`border border-surface-700 bg-surface-900/50`}[r],e),...a,children:i})}export{r as t};
