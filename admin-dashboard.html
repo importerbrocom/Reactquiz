@@ -6,6 +6,8 @@
 <meta name="theme-color" content="#4F46E5">
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
 <title>QuizPath - MediPrep</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -111,7 +113,7 @@ td{padding:.8rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <div class="login-box"><h1>QuizPath</h1><p class="sub">MediPrep - Exam Preparation</p>
 <div class="form-card"><div id="errorMsg" class="error-msg"></div>
 <form id="loginForm"><label>Email</label><input type="email" id="email" placeholder="Enter your email" required><label>Password</label><input type="password" id="password" placeholder="Enter password" required><button type="submit" class="btn btn-primary" id="loginBtn">Sign In</button></form>
-<p class="info-text">Admin: admin@quizpath.test / ChangeMe!2026<br>Student: student@mediprep.test / Student@123</p></div></div></div>
+<p class="info-text">Admin: admin@quizpath.test / ChangeMe!2026<br>Student: student@mediprep.test / Student@123<br><small style="color:#334155">v2.1 — role routing enabled</small></p></div></div></div>
 
 <!-- ============ ADMIN PAGE ============ -->
 <div id="adminPage" class="app hidden">
@@ -215,6 +217,7 @@ function installApp(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.
 
 // Auto-login check
 if(token)checkAuth();
+else document.getElementById('loginPage').classList.remove('hidden');
 
 // Login form
 document.getElementById('loginForm').addEventListener('submit',async e=>{
@@ -245,21 +248,9 @@ async function checkAuth(){
 // Route by role
 function routeByRole(){
   document.getElementById('loginPage').classList.add('hidden');
-  // Detect admin from multiple possible API structures
-  let isAdmin=false;
-  const roleStr=(currentUser?.role||'').toLowerCase();
-  if(roleStr==='admin'||roleStr==='super-admin'||roleStr==='superadmin') isAdmin=true;
-  // Check roles array (could be strings or objects with name/slug)
-  if(currentUser?.roles&&Array.isArray(currentUser.roles)){
-    currentUser.roles.forEach(r=>{
-      const rName=(typeof r==='string'?r:(r.name||r.slug||'')).toLowerCase();
-      if(rName==='admin'||rName==='super-admin'||rName==='superadmin') isAdmin=true;
-    });
-  }
-  // Check is_admin flag
-  if(currentUser?.is_admin===true||currentUser?.is_admin===1) isAdmin=true;
-  // Check email as fallback
-  if(currentUser?.email&&currentUser.email.includes('admin@')) isAdmin=true;
+  // STRICT routing: only admin email goes to admin dashboard
+  const email=(currentUser?.email||'').toLowerCase().trim();
+  const isAdmin=(email==='admin@quizpath.test');
 
   if(isAdmin){
     showAdmin();
