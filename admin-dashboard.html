@@ -97,7 +97,7 @@ td{padding:.8rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <div class="login-box"><h1>QuizPath</h1><p class="sub">MediPrep - Exam Preparation</p>
 <div class="form-card"><div id="errorMsg" class="error-msg"></div>
 <form id="loginForm"><label>Email</label><input type="email" id="email" placeholder="Enter your email" required><label>Password</label><input type="password" id="password" placeholder="Enter password" required><button type="submit" class="btn btn-primary" id="loginBtn">Sign In</button></form>
-<p class="info-text">Admin: admin@quizpath.test / ChangeMe!2026<br>Student: student@mediprep.test / Student@123<br><small style="color:#334155">v3.2 — Aug 13</small></p></div></div></div>
+<p class="info-text">Admin: admin@quizpath.test / ChangeMe!2026<br>Student: student@mediprep.test / Student@123<br><small style="color:#334155">v3.3</small></p></div></div></div>
 
 <!-- ============ ADMIN PAGE ============ -->
 <div id="adminPage" class="app hidden">
@@ -111,7 +111,7 @@ td{padding:.8rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <a class="nav-item" style="color:#ef4444;margin-top:2rem" onclick="logout()">🚪 Sign Out</a>
 </aside>
 <main class="main">
-<div class="topbar"><h2 class="page-title" id="pageTitle">Dashboard</h2><span class="user-info" id="userInfo"></span></div>
+<div class="topbar"><h2 class="page-title" id="pageTitle">Dashboard</h2><div style="display:flex;align-items:center;gap:1rem"><span class="user-info" id="userInfo"></span><a onclick="logout()" style="color:#ef4444;cursor:pointer;font-size:.9rem;font-weight:500">Sign Out</a></div></div>
 
 <div id="installBanner" class="install-banner hidden"><p>📱 Install QuizPath as an app for quick access</p><button class="install-btn" onclick="installApp()">Install App</button></div>
 
@@ -173,7 +173,7 @@ td{padding:.8rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <a class="nav-item" style="color:#ef4444;margin-top:2rem" onclick="logout()">🚪 Sign Out</a>
 </aside>
 <main class="main">
-<div class="topbar"><h2 class="page-title" id="studentPageTitle">Dashboard</h2><span class="user-info" id="studentUserInfo"></span></div>
+<div class="topbar"><h2 class="page-title" id="studentPageTitle">Dashboard</h2><div style="display:flex;align-items:center;gap:1rem"><span class="user-info" id="studentUserInfo"></span><a onclick="logout()" style="color:#ef4444;cursor:pointer;font-size:.9rem;font-weight:500">Sign Out</a></div></div>
 
 <!-- Student Dashboard -->
 <div id="pg-s-dashboard">
