@@ -97,7 +97,7 @@ td{padding:.8rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <div class="login-box"><h1>QuizPath</h1><p class="sub">MediPrep - Exam Preparation</p>
 <div class="form-card"><div id="errorMsg" class="error-msg"></div>
 <form id="loginForm"><label>Email</label><input type="email" id="email" placeholder="Enter your email" required><label>Password</label><input type="password" id="password" placeholder="Enter password" required><button type="submit" class="btn btn-primary" id="loginBtn">Sign In</button></form>
-<p class="info-text">Admin: admin@quizpath.test / ChangeMe!2026<br>Student: student@mediprep.test / Student@123<br><small style="color:#334155">v3.0 — sidebar student dashboard</small></p></div></div></div>
+<p class="info-text">Admin: admin@quizpath.test / ChangeMe!2026<br>Student: student@mediprep.test / Student@123<br><small style="color:#334155">v3.1 — fixed role routing</small></p></div></div></div>
 
 <!-- ============ ADMIN PAGE ============ -->
 <div id="adminPage" class="app hidden">
@@ -278,7 +278,7 @@ document.getElementById('loginForm').addEventListener('submit',async e=>{
     if(r.ok&&d.data?.access_token){
       token=d.data.access_token;
       localStorage.setItem('qp_token',token);
-      currentUser=d.data.user;
+      currentUser=d.data.user||d.data;
       routeByRole();
     }else{err.textContent=d.message||'Login failed';err.style.display='block'}
   }catch(x){err.textContent='Network error - check connection';err.style.display='block'}
@@ -288,7 +288,7 @@ document.getElementById('loginForm').addEventListener('submit',async e=>{
 async function checkAuth(){
   try{
     const r=await fetch(API+'/auth/me',{headers:{Authorization:'Bearer '+token,Accept:'application/json'}});
-    if(r.ok){const d=await r.json();currentUser=d.data;routeByRole()}
+    if(r.ok){const d=await r.json();currentUser=d.data?.user||d.data||d.user||d;routeByRole()}
     else{localStorage.removeItem('qp_token');token=null}
   }catch(e){localStorage.removeItem('qp_token');token=null}
 }
@@ -296,9 +296,12 @@ async function checkAuth(){
 // Route by role
 function routeByRole(){
   document.getElementById('loginPage').classList.add('hidden');
-  // STRICT routing: only admin email goes to admin dashboard
-  const email=(currentUser?.email||'').toLowerCase().trim();
+  // Check user data - try multiple possible email locations
+  const email=(currentUser?.email||currentUser?.user?.email||'').toLowerCase().trim();
+  // STRICT: only admin@quizpath.test goes to admin
   const isAdmin=(email==='admin@quizpath.test');
+
+  console.log('Route by role:', {email, isAdmin, currentUser});
 
   if(isAdmin){
     showAdmin();
@@ -316,10 +319,10 @@ function showAdmin(){
 }
 
 function showPage(page,el){
-  document.querySelectorAll('[id^=pg-]').forEach(e=>e.classList.add('hidden'));
+  document.querySelectorAll('#adminPage [id^=pg-]').forEach(e=>e.classList.add('hidden'));
   document.getElementById('pg-'+page).classList.remove('hidden');
   document.getElementById('pageTitle').textContent=page.charAt(0).toUpperCase()+page.slice(1);
-  document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('#adminPage .nav-item').forEach(e=>e.classList.remove('active'));
   if(el)el.classList.add('active');
   if(page==='dashboard')loadDashboard();
   if(page==='questions')loadQuestions();
