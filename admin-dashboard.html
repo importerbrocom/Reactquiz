@@ -709,8 +709,10 @@ function showStudent(){
   document.getElementById('studentUserInfo').textContent=name;
   document.getElementById('profileName').textContent=currentUser?.name||'-';
   document.getElementById('profileEmail').textContent=currentUser?.email||'-';
-  // Load questions from server if not in localStorage
-  loadQuestionsFromServer();
+  // Load questions from server if not in localStorage (for new students)
+  loadQuestionsFromServer().then(()=>{
+    updateDashboardFromProgress();
+  });
   updateDashboardFromProgress();
   loadStudentData();
 }
@@ -801,14 +803,13 @@ function getTodayQuestions(){
   const stored=JSON.parse(localStorage.getItem('qp_questions')||'[]');
   if(stored.length===0) return getDemoQuestions();
 
-  const p=getProgress();
   const progressKey=getProgressKey();
 
   // Get list of already-used question indices for this student
   const usedKey=progressKey+'_used';
   let usedIndices=JSON.parse(localStorage.getItem(usedKey)||'[]');
 
-  // Get today's pre-selected questions (if already generated today)
+  // Get today's pre-selected questions (if already generated today) — per student!
   const todayKey=progressKey+'_today';
   const todayData=JSON.parse(localStorage.getItem(todayKey)||'{}');
   const today=new Date().toDateString();
@@ -834,9 +835,9 @@ function getTodayQuestions(){
     stored.forEach((q,i)=>available.push({...q,_poolIndex:i}));
   }
 
-  // Randomly select 10 questions
+  // Randomly select 10 questions using student-specific seed
   const shuffled=shuffleArray(available);
-  const selected=shuffled.slice(0,10);
+  const selected=shuffled.slice(0,Math.min(10,shuffled.length));
 
   // Mark these as used
   selected.forEach(q=>usedIndices.push(q._poolIndex));
@@ -852,18 +853,37 @@ function getTodayQuestions(){
 // Load questions from server for students on other devices
 async function loadQuestionsFromServer(){
   const stored=JSON.parse(localStorage.getItem('qp_questions')||'[]');
-  if(stored.length>0) return; // Already have questions locally
+  if(stored.length>0) return true; // Already have questions locally
 
   // Try loading from server JSON file
   try{
     const r=await fetch('/questions.json?t='+Date.now());
     if(r.ok){
-      const questions=await r.json();
-      if(Array.isArray(questions)&&questions.length>0){
-        localStorage.setItem('qp_questions',JSON.stringify(questions));
+      const text=await r.text();
+      if(text&&text.startsWith('[')){
+        const questions=JSON.parse(text);
+        if(Array.isArray(questions)&&questions.length>0){
+          localStorage.setItem('qp_questions',JSON.stringify(questions));
+          return true;
+        }
       }
     }
   }catch(e){}
+
+  // Try loading from API
+  try{
+    const r=await fetch(API+'/student/questions',{headers:{Authorization:'Bearer '+token,Accept:'application/json'}});
+    if(r.ok){
+      const d=await r.json();
+      const questions=d.data?.questions||d.data||[];
+      if(Array.isArray(questions)&&questions.length>0){
+        localStorage.setItem('qp_questions',JSON.stringify(questions));
+        return true;
+      }
+    }
+  }catch(e){}
+
+  return false;
 }
 
 function updateDashboardFromProgress(){
@@ -979,6 +999,9 @@ async function startQuiz(){
 
   const p=getProgress();
   const today=new Date().toDateString();
+
+  // Ensure questions are loaded (for new students on new devices)
+  await loadQuestionsFromServer();
 
   // Check if there are failed questions to retake (from previous attempt today)
   if(p.todayDate===today&&p.failedQs&&p.failedQs.length>0){
