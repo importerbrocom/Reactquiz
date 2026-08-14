@@ -883,31 +883,101 @@ function parseCSVLine(line){
 }
 
 async function uploadPDF(file){
-  // Try uploading to API for server-side parsing
-  const formData=new FormData();
-  formData.append('file',file);
+  const status=document.getElementById('uploadStatus');
+  status.classList.remove('hidden','success','error');
+  status.classList.add('loading');
+  status.innerHTML='⏳ Extracting text from PDF... This may take a moment.';
+
   try{
-    const r=await fetch(API+'/admin/questions/import-pdf',{
-      method:'POST',
-      headers:{Authorization:'Bearer '+token,Accept:'application/json'},
-      body:formData
-    });
-    const d=await r.json();
-    if(r.ok&&d.data?.questions){
-      parsedQuestions=d.data.questions;
-      showUploadSuccess(`✓ Server parsed ${parsedQuestions.length} questions from ${file.name}`);
+    // Load PDF.js
+    const pdfjsLib=window['pdfjs-dist/build/pdf']||await loadPdfJs();
+    const arrayBuffer=await file.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data:arrayBuffer}).promise;
+    let fullText='';
+
+    for(let i=1;i<=pdf.numPages;i++){
+      const page=await pdf.getPage(i);
+      const content=await page.getTextContent();
+      const pageText=content.items.map(item=>item.str).join(' ');
+      fullText+=pageText+'\n';
+    }
+
+    status.innerHTML=`⏳ Extracted ${pdf.numPages} pages. Parsing questions...`;
+
+    // Try to parse questions from the extracted text
+    parsedQuestions=parsePdfText(fullText);
+
+    if(parsedQuestions.length>0){
+      showUploadSuccess(`✓ Parsed ${parsedQuestions.length} questions from ${file.name} (${pdf.numPages} pages)`);
       showParsedPreview();
-    }else if(r.ok&&d.data?.count){
-      showUploadSuccess(`✓ ${d.data.count} questions imported directly from ${file.name}`);
-      parsedQuestions=[];
-      document.getElementById('parsedPreview').classList.add('hidden');
     }else{
-      // API doesn't support PDF parsing - show instructions
-      showUploadError(`PDF upload: ${d.message||'Server does not support direct PDF parsing yet.'}. Please convert your PDF to CSV format first using the parser tool, then upload the CSV.`);
+      showUploadError(`Could not parse questions from this PDF. The PDF format may not be supported. Try converting to CSV format first using the parser tool.`);
     }
   }catch(e){
-    showUploadError('PDF upload failed. Convert your PDF to CSV using the parser tool (parse_fmge.py), then upload the CSV here.');
+    console.error('PDF parse error:',e);
+    showUploadError('PDF parsing failed: '+e.message+'. Try converting to CSV format first.');
   }
+}
+
+async function loadPdfJs(){
+  return new Promise((resolve,reject)=>{
+    if(window.pdfjsLib){resolve(window.pdfjsLib);return}
+    const script=document.createElement('script');
+    script.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    script.onload=()=>{
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      resolve(window.pdfjsLib);
+    };
+    script.onerror=()=>reject(new Error('Failed to load PDF.js library'));
+    document.head.appendChild(script);
+  });
+}
+
+function parsePdfText(text){
+  const questions=[];
+  // Pattern 1: "Ques No: X" format (PrepLadder style)
+  const prepladderRe=/Ques\s*No\s*:\s*(\d+).*?Subject\s*:\s*(.*?)\s+Topic\s*:.*?Sub-Topic\s*:\s*(.*?)\s*O\s*1\s*:\s*(.*?)\s*O\s*2\s*:\s*(.*?)\s*O\s*3\s*:\s*(.*?)\s*O\s*4\s*:\s*(.*?)\s*Ans\s*:\s*(\d)/gs;
+  let m;
+  while((m=prepladderRe.exec(text))!==null){
+    const ans=parseInt(m[8]);
+    if(ans>=1&&ans<=4){
+      questions.push({
+        questionText:m[3].trim(),optionA:m[4].trim(),optionB:m[5].trim(),optionC:m[6].trim(),optionD:m[7].trim(),
+        correctOption:'ABCD'[ans-1],explanation:'',subject:m[2].trim(),imageUrl:''
+      });
+    }
+  }
+  if(questions.length>0)return questions;
+
+  // Pattern 2: Numbered questions with a/b/c/d or A/B/C/D options
+  const lines=text.split('\n').map(l=>l.trim()).filter(l=>l);
+  let currentQ=null;
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
+    // Match question start: "1." or "1)" or "Q1." or "Q1:"
+    const qMatch=line.match(/^(?:Q\.?\s*)?(\d+)[.):\s]+(.+)/i);
+    if(qMatch&&qMatch[2].length>15){
+      if(currentQ&&currentQ.optionA)questions.push(currentQ);
+      currentQ={questionText:qMatch[2].trim(),optionA:'',optionB:'',optionC:'',optionD:'',correctOption:'A',explanation:'',subject:'General',imageUrl:''};
+      continue;
+    }
+    if(!currentQ)continue;
+    // Match options
+    const optMatch=line.match(/^(?:\(?([a-dA-D])[.):\s]+)(.+)/);
+    if(optMatch){
+      const key=optMatch[1].toUpperCase();
+      if(key==='A')currentQ.optionA=optMatch[2].trim();
+      if(key==='B')currentQ.optionB=optMatch[2].trim();
+      if(key==='C')currentQ.optionC=optMatch[2].trim();
+      if(key==='D')currentQ.optionD=optMatch[2].trim();
+    }
+    // Match answer line
+    const ansMatch=line.match(/(?:Ans(?:wer)?|Correct)[:\s]*([A-Da-d])/i);
+    if(ansMatch&&currentQ)currentQ.correctOption=ansMatch[1].toUpperCase();
+  }
+  if(currentQ&&currentQ.optionA)questions.push(currentQ);
+
+  return questions;
 }
 
 function showUploadSuccess(msg){
