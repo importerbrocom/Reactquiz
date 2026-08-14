@@ -167,11 +167,13 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 
 <div id="pg-dashboard">
 <div class="stat-grid" id="statsGrid"></div>
-<div class="stat-grid" style="margin-bottom:1.5rem">
+<div class="stat-grid" style="margin-bottom:1.5rem;grid-template-columns:repeat(3,1fr)">
 <div class="stat-card" style="cursor:pointer" onclick="showPage('questions',document.querySelector('#adminPage .nav-item:nth-child(2)'))"><div style="font-size:1.5rem;margin-bottom:.3rem">📝</div><div class="stat-label">Questions</div></div>
-<div class="stat-card" style="cursor:pointer" onclick="showPage('upload',document.querySelector('#adminPage .nav-item:nth-child(3)'))"><div style="font-size:1.5rem;margin-bottom:.3rem">📄</div><div class="stat-label">Upload Questions</div></div>
+<div class="stat-card" style="cursor:pointer" onclick="showPage('upload',document.querySelector('#adminPage .nav-item:nth-child(3)'))"><div style="font-size:1.5rem;margin-bottom:.3rem">📄</div><div class="stat-label">Upload</div></div>
 <div class="stat-card" style="cursor:pointer" onclick="showPage('students',document.querySelector('#adminPage .nav-item:nth-child(4)'))"><div style="font-size:1.5rem;margin-bottom:.3rem">👥</div><div class="stat-label">Students</div></div>
 <div class="stat-card" style="cursor:pointer" onclick="showPage('exams',document.querySelector('#adminPage .nav-item:nth-child(5)'))"><div style="font-size:1.5rem;margin-bottom:.3rem">📋</div><div class="stat-label">Exams</div></div>
+<div class="stat-card" style="cursor:pointer" onclick="showPage('codes',document.querySelector('#adminPage .nav-item:nth-child(6)'))"><div style="font-size:1.5rem;margin-bottom:.3rem">🔑</div><div class="stat-label">Codes</div></div>
+<div class="stat-card" style="cursor:pointer" onclick="showPage('settings',document.querySelector('#adminPage .nav-item:nth-child(7)'))"><div style="font-size:1.5rem;margin-bottom:.3rem">⚙️</div><div class="stat-label">Settings</div></div>
 </div>
 </div>
 <div id="pg-questions" class="hidden"><div class="card"><h3>Questions - Level 1</h3><div id="questionsList"></div></div></div>
@@ -687,11 +689,20 @@ async function loadDashboard(){
   const exams=JSON.parse(localStorage.getItem('qp_exams')||'[]');
   const questions=JSON.parse(localStorage.getItem('qp_questions')||'[]');
   const students=JSON.parse(localStorage.getItem('qp_registered_students')||'[]');
+  const codes=JSON.parse(localStorage.getItem('qp_activation_codes')||'[]');
+  const activeCodes=codes.filter(c=>!c.used).length;
+  const usedCodes=codes.filter(c=>c.used).length;
+
   try{
     const d=await apiFetch('/admin/counters');
-    if(d.data){g.innerHTML=`<div class="stat-card" style="cursor:pointer" onclick="showPage('students')"><div class="stat-value">${d.data.students||students.length||0}</div><div class="stat-label">Students</div></div><div class="stat-card"><div class="stat-value">${d.data.active_students||0}</div><div class="stat-label">Active Today</div></div><div class="stat-card" style="cursor:pointer" onclick="showPage('questions')"><div class="stat-value">${d.data.questions||questions.length||0}</div><div class="stat-label">Questions</div></div><div class="stat-card" style="cursor:pointer" onclick="showPage('exams')"><div class="stat-value">${exams.length||d.data.levels||1}</div><div class="stat-label">Exams</div></div>`}
-    else throw'no data';
-  }catch(e){g.innerHTML=`<div class="stat-card" style="cursor:pointer" onclick="showPage('students')"><div class="stat-value">${students.length||1}</div><div class="stat-label">Students</div></div><div class="stat-card"><div class="stat-value">0</div><div class="stat-label">Active Today</div></div><div class="stat-card" style="cursor:pointer" onclick="showPage('questions')"><div class="stat-value">${questions.length||0}</div><div class="stat-label">Questions</div></div><div class="stat-card" style="cursor:pointer" onclick="showPage('exams')"><div class="stat-value">${exams.length||1}</div><div class="stat-label">Exams</div></div>`}
+    if(d.data){
+      const studentCount=d.data.students||students.length;
+      const questionCount=d.data.questions||questions.length;
+      g.innerHTML=`<div class="stat-card" style="cursor:pointer" onclick="showPage('students')"><div class="stat-value">${studentCount}</div><div class="stat-label">Students</div></div><div class="stat-card" style="cursor:pointer" onclick="showPage('questions')"><div class="stat-value">${questionCount}</div><div class="stat-label">Questions</div></div><div class="stat-card" style="cursor:pointer" onclick="showPage('exams')"><div class="stat-value">${exams.length}</div><div class="stat-label">Exams</div></div><div class="stat-card" style="cursor:pointer" onclick="showPage('codes')"><div class="stat-value">${activeCodes}</div><div class="stat-label">Active Codes</div></div>`;
+    }else throw'no data';
+  }catch(e){
+    g.innerHTML=`<div class="stat-card" style="cursor:pointer" onclick="showPage('students')"><div class="stat-value">${students.length}</div><div class="stat-label">Students</div></div><div class="stat-card" style="cursor:pointer" onclick="showPage('questions')"><div class="stat-value">${questions.length}</div><div class="stat-label">Questions</div></div><div class="stat-card" style="cursor:pointer" onclick="showPage('exams')"><div class="stat-value">${exams.length}</div><div class="stat-label">Exams</div></div><div class="stat-card" style="cursor:pointer" onclick="showPage('codes')"><div class="stat-value">${activeCodes}</div><div class="stat-label">Active Codes</div></div>`;
+  }
 }
 
 function loadQuestions(){
