@@ -40,7 +40,8 @@ input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.1)}
 .page-title{font-size:1.5rem;font-weight:700}
 .user-info{font-size:.85rem;color:#94a3b8}
 .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}
-.stat-card{background:#1e293b;border-radius:16px;padding:1.3rem;border:1px solid #334155;text-align:center}
+.stat-card{background:#1e293b;border-radius:16px;padding:1.3rem;border:1px solid #334155;text-align:center;transition:all .2s}
+.stat-card[style*="cursor:pointer"]:hover,.stat-card:hover{border-color:#3b82f6;transform:translateY(-2px);box-shadow:0 4px 12px rgba(59,130,246,.1)}
 .stat-value{font-size:2rem;font-weight:700;color:#3b82f6}
 .stat-label{font-size:.8rem;color:#94a3b8;margin-top:.3rem;text-transform:uppercase;letter-spacing:.3px}
 .card{background:#1e293b;border-radius:16px;padding:1.5rem;border:1px solid #334155;margin-bottom:1.2rem}
@@ -165,6 +166,12 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 
 <div id="pg-dashboard">
 <div class="stat-grid" id="statsGrid"></div>
+<div class="stat-grid" style="margin-bottom:1.5rem">
+<div class="stat-card" style="cursor:pointer" onclick="showPage('questions',document.querySelector('#adminPage .nav-item:nth-child(2)'))"><div style="font-size:1.5rem;margin-bottom:.3rem">📝</div><div class="stat-label">Questions</div></div>
+<div class="stat-card" style="cursor:pointer" onclick="showPage('upload',document.querySelector('#adminPage .nav-item:nth-child(3)'))"><div style="font-size:1.5rem;margin-bottom:.3rem">📄</div><div class="stat-label">Upload Questions</div></div>
+<div class="stat-card" style="cursor:pointer" onclick="showPage('students',document.querySelector('#adminPage .nav-item:nth-child(4)'))"><div style="font-size:1.5rem;margin-bottom:.3rem">👥</div><div class="stat-label">Students</div></div>
+<div class="stat-card" style="cursor:pointer" onclick="showPage('exams',document.querySelector('#adminPage .nav-item:nth-child(5)'))"><div style="font-size:1.5rem;margin-bottom:.3rem">📋</div><div class="stat-label">Exams</div></div>
+</div>
 <div class="card"><h3>System Info</h3><p>ERO (Elior Research Orbit) — Illuminating Knowledge. 300 FMGE questions loaded across 6 levels (30 days each, 10 questions per day). Students must master all 10 questions per day to unlock the next day.</p></div>
 </div>
 <div id="pg-questions" class="hidden"><div class="card"><h3>Questions - Level 1</h3><div id="questionsList"></div></div></div>
@@ -263,10 +270,17 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 </div>
 
 <div class="stat-grid" id="studentStatsGrid">
-<div class="stat-card"><div class="stat-value" id="statAccuracy">0%</div><div class="stat-label">Overall Accuracy</div></div>
-<div class="stat-card"><div class="stat-value" id="statAnswered">0</div><div class="stat-label">Questions Answered</div></div>
-<div class="stat-card"><div class="stat-value" id="statDays">0</div><div class="stat-label">Days Completed</div></div>
-<div class="stat-card"><div class="stat-value" id="statStreak">0</div><div class="stat-label">Current Streak</div></div>
+<div class="stat-card" style="cursor:pointer" onclick="showStudentPage('s-progress',document.querySelector('#studentPage .nav-item:nth-child(3)'))"><div class="stat-value" id="statAccuracy">0%</div><div class="stat-label">Overall Accuracy</div></div>
+<div class="stat-card" style="cursor:pointer" onclick="showStudentPage('s-progress',document.querySelector('#studentPage .nav-item:nth-child(3)'))"><div class="stat-value" id="statAnswered">0</div><div class="stat-label">Questions Answered</div></div>
+<div class="stat-card" style="cursor:pointer" onclick="showStudentPage('s-progress',document.querySelector('#studentPage .nav-item:nth-child(3)'))"><div class="stat-value" id="statDays">0</div><div class="stat-label">Days Completed</div></div>
+<div class="stat-card" style="cursor:pointer" onclick="showStudentPage('s-quiz',document.querySelector('#studentPage .nav-item:nth-child(2)'))"><div class="stat-value" id="statStreak">0</div><div class="stat-label">Current Streak</div></div>
+</div>
+
+<!-- Quick Actions for Student -->
+<div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:1.2rem">
+<div class="stat-card" style="cursor:pointer" onclick="showStudentPage('s-quiz',document.querySelector('#studentPage .nav-item:nth-child(2)'))"><div style="font-size:1.5rem;margin-bottom:.3rem">📝</div><div class="stat-label">Today's Quiz</div></div>
+<div class="stat-card" style="cursor:pointer" onclick="showStudentPage('s-progress',document.querySelector('#studentPage .nav-item:nth-child(3)'))"><div style="font-size:1.5rem;margin-bottom:.3rem">📈</div><div class="stat-label">Progress</div></div>
+<div class="stat-card" style="cursor:pointer" onclick="showStudentPage('s-profile',document.querySelector('#studentPage .nav-item:nth-child(5)'))"><div style="font-size:1.5rem;margin-bottom:.3rem">👤</div><div class="stat-label">Profile</div></div>
 </div>
 
 <div class="card">
@@ -626,11 +640,14 @@ async function apiFetch(u){
 
 async function loadDashboard(){
   const g=document.getElementById('statsGrid');
+  const exams=JSON.parse(localStorage.getItem('qp_exams')||'[]');
+  const questions=JSON.parse(localStorage.getItem('qp_questions')||'[]');
+  const students=JSON.parse(localStorage.getItem('qp_registered_students')||'[]');
   try{
     const d=await apiFetch('/admin/counters');
-    if(d.data){g.innerHTML=`<div class="stat-card"><div class="stat-value">${d.data.students||0}</div><div class="stat-label">Students</div></div><div class="stat-card"><div class="stat-value">${d.data.active_students||0}</div><div class="stat-label">Active Today</div></div><div class="stat-card"><div class="stat-value">${d.data.questions||300}</div><div class="stat-label">Questions</div></div><div class="stat-card"><div class="stat-value">${d.data.levels||6}</div><div class="stat-label">Levels</div></div>`}
+    if(d.data){g.innerHTML=`<div class="stat-card" style="cursor:pointer" onclick="showPage('students')"><div class="stat-value">${d.data.students||students.length||0}</div><div class="stat-label">Students</div></div><div class="stat-card"><div class="stat-value">${d.data.active_students||0}</div><div class="stat-label">Active Today</div></div><div class="stat-card" style="cursor:pointer" onclick="showPage('questions')"><div class="stat-value">${d.data.questions||questions.length||0}</div><div class="stat-label">Questions</div></div><div class="stat-card" style="cursor:pointer" onclick="showPage('exams')"><div class="stat-value">${exams.length||d.data.levels||1}</div><div class="stat-label">Exams</div></div>`}
     else throw'no data';
-  }catch(e){g.innerHTML='<div class="stat-card"><div class="stat-value">300</div><div class="stat-label">Questions</div></div><div class="stat-card"><div class="stat-value">6</div><div class="stat-label">Levels</div></div><div class="stat-card"><div class="stat-value">30</div><div class="stat-label">Days/Level</div></div><div class="stat-card"><div class="stat-value">10</div><div class="stat-label">Q/Day</div></div>'}
+  }catch(e){g.innerHTML=`<div class="stat-card" style="cursor:pointer" onclick="showPage('students')"><div class="stat-value">${students.length||1}</div><div class="stat-label">Students</div></div><div class="stat-card"><div class="stat-value">0</div><div class="stat-label">Active Today</div></div><div class="stat-card" style="cursor:pointer" onclick="showPage('questions')"><div class="stat-value">${questions.length||0}</div><div class="stat-label">Questions</div></div><div class="stat-card" style="cursor:pointer" onclick="showPage('exams')"><div class="stat-value">${exams.length||1}</div><div class="stat-label">Exams</div></div>`}
 }
 
 function loadQuestions(){
