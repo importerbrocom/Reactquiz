@@ -65,6 +65,15 @@ td{padding:.8rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 
 /* ============ STUDENT LAYOUT (uses same .app, .sidebar, .main as admin) ============ */
 
+/* Quiz Options */
+.quiz-option{display:block;width:100%;text-align:left;padding:1rem 1.2rem;margin-bottom:.6rem;background:#0f172a;border:2px solid #334155;border-radius:10px;color:#e2e8f0;font-size:1rem;cursor:pointer;transition:all .2s;line-height:1.4}
+.quiz-option:hover{border-color:#818cf8;background:#1e1b4b}
+.quiz-option.selected{border-color:#818cf8;background:#1e1b4b;color:#fff}
+.quiz-option.correct{border-color:#16a34a;background:#052e16;color:#86efac}
+.quiz-option.wrong{border-color:#dc2626;background:#450a0a;color:#fca5a5}
+.quiz-option.disabled{pointer-events:none;opacity:.8}
+.quiz-option .opt-label{font-weight:700;margin-right:.5rem;color:#818cf8}
+
 /* Responsive */
 @media(max-width:900px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.sidebar{width:200px}.main{margin-left:200px;padding:1.5rem}.stat-grid{grid-template-columns:1fr 1fr}}
@@ -207,13 +216,55 @@ td{padding:.8rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 
 <!-- Student Quiz Page -->
 <div id="pg-s-quiz" class="hidden">
+<div id="quizLanding">
 <div class="card">
 <h3 style="margin-bottom:1rem">Today's Quiz</h3>
 <div style="background:#0f172a;border-radius:9999px;height:12px;margin-bottom:.8rem;overflow:hidden"><div id="quizProgress" style="height:100%;background:#818cf8;border-radius:9999px;width:50%;transition:width .4s ease"></div></div>
 <p id="quizProgressText" style="color:#94a3b8;margin-bottom:1.2rem">5 of 10 questions completed</p>
-<button class="btn btn-primary" onclick="continueQuiz()">Continue today's quiz</button>
+<button class="btn btn-primary" onclick="startQuiz()">Continue today's quiz</button>
 </div>
 <div class="card"><h3>Quiz Rules</h3><p>Complete all 10 questions correctly to unlock the next day. Incorrect answers are requeued at the end. You must master every question to progress.</p></div>
+</div>
+
+<!-- Active Quiz Interface -->
+<div id="quizActive" class="hidden">
+<div class="card" style="border:1px solid #334155">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
+<span class="badge badge-blue" id="quizQNum">Question 1 of 10</span>
+<span class="badge badge-teal" id="quizSubject">Subject</span>
+</div>
+<p id="quizQuestionText" style="font-size:1.1rem;color:#f8fafc;line-height:1.6;margin-bottom:1.5rem;font-weight:500"></p>
+<div id="quizImage" style="margin-bottom:1rem;display:none"><img id="quizImg" style="max-width:100%;border-radius:8px;border:1px solid #334155" /></div>
+<div id="quizOptions"></div>
+<div id="quizFeedback" class="hidden" style="margin-top:1rem;padding:1rem;border-radius:10px"></div>
+<div style="display:flex;gap:1rem;margin-top:1.5rem">
+<button id="quizSubmitBtn" class="btn btn-primary" onclick="submitAnswer()" disabled>Submit Answer</button>
+<button id="quizNextBtn" class="btn btn-primary hidden" onclick="nextQuestion()" style="background:#16a34a">Next Question →</button>
+</div>
+</div>
+<div class="card" style="padding:1rem">
+<div style="display:flex;justify-content:space-between;align-items:center">
+<span style="color:#94a3b8;font-size:.85rem" id="quizScoreText">Score: 0 correct</span>
+<span style="color:#94a3b8;font-size:.85rem" id="quizTimer"></span>
+</div>
+</div>
+</div>
+
+<!-- Quiz Complete -->
+<div id="quizComplete" class="hidden">
+<div class="card" style="text-align:center;padding:2.5rem">
+<div style="font-size:3rem;margin-bottom:1rem">🎉</div>
+<h3 style="font-size:1.5rem;margin-bottom:.5rem">Quiz Complete!</h3>
+<p style="color:#94a3b8;margin-bottom:1.5rem" id="quizResultText">Great job!</p>
+<div class="stat-grid" style="margin-bottom:1.5rem">
+<div class="stat-card"><div class="stat-value" id="resultCorrect">0</div><div class="stat-label">Correct</div></div>
+<div class="stat-card"><div class="stat-value" id="resultWrong">0</div><div class="stat-label">Wrong</div></div>
+<div class="stat-card"><div class="stat-value" id="resultAccuracy">0%</div><div class="stat-label">Accuracy</div></div>
+<div class="stat-card"><div class="stat-value" id="resultTime">0s</div><div class="stat-label">Time</div></div>
+</div>
+<button class="btn btn-primary" onclick="backToQuizLanding()">Back to Dashboard</button>
+</div>
+</div>
 </div>
 
 <!-- Student Progress Page -->
@@ -443,8 +494,162 @@ async function loadStudentData(){
   }catch(e){console.log('Using default student stats')}
 }
 
-function continueQuiz(){
-  alert('Launching today\'s quiz...');
+// ============ QUIZ ENGINE ============
+let quizQuestions=[],quizIndex=0,quizScore=0,quizWrong=0,selectedOption=null,quizStartTime=null,quizAnswered=false;
+
+function continueQuiz(){startQuiz();}
+
+async function startQuiz(){
+  document.getElementById('quizLanding').classList.add('hidden');
+  document.getElementById('quizActive').classList.remove('hidden');
+  document.getElementById('quizComplete').classList.add('hidden');
+  quizIndex=0;quizScore=0;quizWrong=0;selectedOption=null;quizStartTime=Date.now();
+
+  // Try to load questions from API
+  try{
+    const d=await apiFetch('/student/quiz/today');
+    if(d.data&&d.data.questions&&d.data.questions.length>0){
+      quizQuestions=d.data.questions;
+    }else throw 'no questions';
+  }catch(e){
+    // Try alternate endpoints
+    try{
+      const d2=await apiFetch('/student/courses/1/quiz-days/1');
+      if(d2.data&&d2.data.questions&&d2.data.questions.length>0){
+        quizQuestions=d2.data.questions;
+      }else throw 'no questions';
+    }catch(e2){
+      // Use demo questions as fallback
+      quizQuestions=getDemoQuestions();
+    }
+  }
+  renderQuestion();
+}
+
+function getDemoQuestions(){
+  return [
+    {id:1,questionText:"Which of the following is the use of the Mallampatti classification?",optionA:"Endotracheal intubation",optionB:"To evaluate the risk of surgery",optionC:"To evaluate the pros and cons of surgery",optionD:"To evaluate the fitness of the patient",correctOption:"A",explanation:"The Mallampati classification predicts the difficulty of endotracheal intubation by grading the visibility of oral cavity structures.",subject:"Anaesthesia"},
+    {id:2,questionText:"Which of the following is the most common drug used in day care surgery/TIVA?",optionA:"Sodium thiopentone",optionB:"Propofol",optionC:"Halothane",optionD:"Ketamine",correctOption:"B",explanation:"Propofol is preferred for daycare surgery and TIVA because of its rapid onset, quick recovery and lower incidence of postoperative nausea and vomiting.",subject:"Anaesthesia"},
+    {id:3,questionText:"Which of the following topical local anesthetics is commonly used in cataract surgery?",optionA:"Proparacaine 0.5%",optionB:"Bupivacaine 0.5%",optionC:"Halothane",optionD:"Nitrous Oxide",correctOption:"A",explanation:"Proparacaine 0.5% has a rapid onset and short duration with minimal systemic effects, suiting the brief nature of cataract surgery.",subject:"Anaesthesia"},
+    {id:4,questionText:"Which of the following is the mechanism of action of Local anesthetics?",optionA:"Blocks Na+ channels",optionB:"Stimulate Ca+ Channels",optionC:"Block Cl- Channels",optionD:"Stimulate K+ channels",correctOption:"A",explanation:"Local anaesthetics block the inactivation gates of sodium channels, preventing depolarisation and propagation of nerve impulses.",subject:"Anaesthesia"},
+    {id:5,questionText:"Zellweger syndrome is associated with which cellular organelle?",optionA:"Peroxisomes",optionB:"Nucleosomes",optionC:"Lysosomes",optionD:"Ribosomes",correctOption:"A",explanation:"Zellweger syndrome is a peroxisome biogenesis disorder caused by PEX gene mutations, causing very long-chain fatty acid accumulation.",subject:"Biochemistry"},
+    {id:6,questionText:"A 3-month-old baby presents with severe hepatomegaly, cataracts in both eyes, lethargy, and hypotonia. Which enzyme deficiency is most likely involved?",optionA:"Galactokinase",optionB:"Hepatic Kinase",optionC:"Hepatic Glucose-6-Phosphatase",optionD:"Galactose-1-Phosphate Uridyl Transferase",correctOption:"D",explanation:"Classic galactosemia results from GALT deficiency, presenting with hepatomegaly, oil-drop cataracts, lethargy and hypotonia.",subject:"Biochemistry"},
+    {id:7,questionText:"A child with a sore throat starts developing skin lesions. Which of the following is the diagnosis?",optionA:"Guttate psoriasis",optionB:"Pustular psoriasis",optionC:"Erythrodermic psoriasis",optionD:"Inverse psoriasis",correctOption:"A",explanation:"Guttate psoriasis follows streptococcal throat infection in children, with small raindrop-like erythematous scaly plaques on the trunk.",subject:"Dermatology"},
+    {id:8,questionText:"What is the most commonly used test for newborn hearing screening?",optionA:"Otoacoustic Emissions (OAE)",optionB:"Brainstem Evoked Response Audiometry (BERA)",optionC:"Pure Tone Audiometry (PTA)",optionD:"Tympanometry",correctOption:"A",explanation:"OAE is the standard newborn hearing screening test; BERA is used to confirm hearing loss in neonates who fail OAE.",subject:"ENT"},
+    {id:9,questionText:"During measurement of a rifled barrel weapon, the caliber depends on?",optionA:"Distance between two opposite lands",optionB:"Distance between two opposite grooves",optionC:"Number of lead pellets",optionD:"Mass and velocity",correctOption:"A",explanation:"Caliber of a rifled firearm is the bore diameter measured between two opposing lands.",subject:"Forensic Medicine"},
+    {id:10,questionText:"The Barberio test is used to detect the presence of?",optionA:"Spermine (sperm identification)",optionB:"Blood group antigens",optionC:"Arsenic poisoning",optionD:"Alcohol levels",correctOption:"A",explanation:"The Barberio test detects prostatic spermine, forming yellow needle-shaped spermine picrate crystals.",subject:"Forensic Medicine"}
+  ];
+}
+
+function renderQuestion(){
+  if(quizIndex>=quizQuestions.length){showQuizResults();return}
+  const q=quizQuestions[quizIndex];
+  selectedOption=null;quizAnswered=false;
+  document.getElementById('quizQNum').textContent=`Question ${quizIndex+1} of ${quizQuestions.length}`;
+  document.getElementById('quizSubject').textContent=q.subject||'General';
+  document.getElementById('quizQuestionText').textContent=q.questionText||q.question_text||q.text||'';
+
+  // Image
+  const imgWrap=document.getElementById('quizImage');
+  if(q.imageUrl||q.image_url){imgWrap.style.display='block';document.getElementById('quizImg').src=q.imageUrl||q.image_url}
+  else{imgWrap.style.display='none'}
+
+  // Options
+  const opts=document.getElementById('quizOptions');
+  const options=[
+    {key:'A',text:q.optionA||q.option_a||''},
+    {key:'B',text:q.optionB||q.option_b||''},
+    {key:'C',text:q.optionC||q.option_c||''},
+    {key:'D',text:q.optionD||q.option_d||''}
+  ];
+  opts.innerHTML=options.map(o=>`<button class="quiz-option" data-key="${o.key}" onclick="selectOption('${o.key}',this)"><span class="opt-label">${o.key}.</span>${o.text}</button>`).join('');
+
+  // Reset buttons
+  document.getElementById('quizSubmitBtn').disabled=true;
+  document.getElementById('quizSubmitBtn').classList.remove('hidden');
+  document.getElementById('quizNextBtn').classList.add('hidden');
+  document.getElementById('quizFeedback').classList.add('hidden');
+  document.getElementById('quizScoreText').textContent=`Score: ${quizScore} correct, ${quizWrong} wrong`;
+}
+
+function selectOption(key,el){
+  if(quizAnswered)return;
+  selectedOption=key;
+  document.querySelectorAll('.quiz-option').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('quizSubmitBtn').disabled=false;
+}
+
+async function submitAnswer(){
+  if(!selectedOption||quizAnswered)return;
+  quizAnswered=true;
+  const q=quizQuestions[quizIndex];
+  const correct=q.correctOption||q.correct_option||'A';
+  const isCorrect=(selectedOption===correct);
+
+  // Highlight correct/wrong
+  document.querySelectorAll('.quiz-option').forEach(o=>{
+    o.classList.add('disabled');
+    if(o.dataset.key===correct) o.classList.add('correct');
+    if(o.dataset.key===selectedOption&&!isCorrect) o.classList.add('wrong');
+  });
+
+  // Update score
+  if(isCorrect){quizScore++}else{quizWrong++}
+
+  // Show feedback
+  const fb=document.getElementById('quizFeedback');
+  fb.classList.remove('hidden');
+  if(isCorrect){
+    fb.style.background='#052e16';fb.style.border='1px solid #16a34a';fb.style.color='#86efac';
+    fb.innerHTML='<strong>✓ Correct!</strong>'+(q.explanation?'<br><span style="font-size:.9rem;opacity:.9">'+q.explanation+'</span>':'');
+  }else{
+    fb.style.background='#450a0a';fb.style.border='1px solid #dc2626';fb.style.color='#fca5a5';
+    fb.innerHTML=`<strong>✗ Wrong!</strong> Correct answer: <strong>${correct}</strong>`+(q.explanation?'<br><span style="font-size:.9rem;opacity:.9">'+q.explanation+'</span>':'');
+  }
+
+  // Try to submit to API
+  try{
+    await fetch(API+'/student/quiz-attempts/answers',{
+      method:'POST',
+      headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',Accept:'application/json'},
+      body:JSON.stringify({question_id:q.id,selected_option:selectedOption,is_correct:isCorrect})
+    });
+  }catch(e){}
+
+  // Show next button
+  document.getElementById('quizSubmitBtn').classList.add('hidden');
+  document.getElementById('quizNextBtn').classList.remove('hidden');
+  document.getElementById('quizScoreText').textContent=`Score: ${quizScore} correct, ${quizWrong} wrong`;
+}
+
+function nextQuestion(){
+  quizIndex++;
+  renderQuestion();
+}
+
+function showQuizResults(){
+  document.getElementById('quizActive').classList.add('hidden');
+  document.getElementById('quizComplete').classList.remove('hidden');
+  const total=quizQuestions.length;
+  const accuracy=total>0?Math.round((quizScore/total)*100):0;
+  const timeSec=Math.round((Date.now()-quizStartTime)/1000);
+  const timeStr=timeSec>=60?Math.floor(timeSec/60)+'m '+timeSec%60+'s':timeSec+'s';
+
+  document.getElementById('resultCorrect').textContent=quizScore;
+  document.getElementById('resultWrong').textContent=quizWrong;
+  document.getElementById('resultAccuracy').textContent=accuracy+'%';
+  document.getElementById('resultTime').textContent=timeStr;
+
+  if(accuracy===100) document.getElementById('quizResultText').textContent='🔥 Perfect score! Day unlocked!';
+  else if(accuracy>=70) document.getElementById('quizResultText').textContent='Good job! Keep practicing to unlock the next day.';
+  else document.getElementById('quizResultText').textContent='Keep trying! You need 10/10 to unlock the next day.';
+}
+
+function backToQuizLanding(){
+  document.getElementById('quizLanding').classList.remove('hidden');
+  document.getElementById('quizActive').classList.add('hidden');
+  document.getElementById('quizComplete').classList.add('hidden');
 }
 
 // ============ LOGOUT ============
