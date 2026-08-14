@@ -186,14 +186,14 @@ td{padding:.8rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <div id="pg-s-dashboard">
 <div class="card" style="border-left:3px solid #818cf8;margin-bottom:1.5rem">
 <h3 id="studentGreeting" style="font-size:1.4rem;margin-bottom:.3rem">Hello, Student!</h3>
-<p id="streakMsg" style="color:#818cf8;font-size:.95rem">🔥 You're on a 3-day streak! Keep it up!</p>
+<p id="streakMsg" style="color:#818cf8;font-size:.95rem">Start your first quiz to begin your streak!</p>
 </div>
 
 <div class="stat-grid" id="studentStatsGrid">
-<div class="stat-card"><div class="stat-value" id="statAccuracy">78%</div><div class="stat-label">Overall Accuracy</div></div>
-<div class="stat-card"><div class="stat-value" id="statAnswered">45</div><div class="stat-label">Questions Answered</div></div>
-<div class="stat-card"><div class="stat-value" id="statDays">4</div><div class="stat-label">Days Completed</div></div>
-<div class="stat-card"><div class="stat-value" id="statStreak">3</div><div class="stat-label">Current Streak</div></div>
+<div class="stat-card"><div class="stat-value" id="statAccuracy">0%</div><div class="stat-label">Overall Accuracy</div></div>
+<div class="stat-card"><div class="stat-value" id="statAnswered">0</div><div class="stat-label">Questions Answered</div></div>
+<div class="stat-card"><div class="stat-value" id="statDays">0</div><div class="stat-label">Days Completed</div></div>
+<div class="stat-card"><div class="stat-value" id="statStreak">0</div><div class="stat-label">Current Streak</div></div>
 </div>
 
 <div class="card">
@@ -208,7 +208,7 @@ td{padding:.8rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <div class="card">
 <h3 style="margin-bottom:.8rem">This Month</h3>
 <div style="display:flex;justify-content:space-between;align-items:center">
-<p id="monthProgress">10 of 300 pool questions completed</p>
+<p id="monthProgress">0 of 300 pool questions completed</p>
 <span class="badge badge-blue">Exam locked</span>
 </div>
 </div>
@@ -219,9 +219,9 @@ td{padding:.8rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <div id="quizLanding">
 <div class="card">
 <h3 style="margin-bottom:1rem">Today's Quiz</h3>
-<div style="background:#0f172a;border-radius:9999px;height:12px;margin-bottom:.8rem;overflow:hidden"><div id="quizProgress" style="height:100%;background:#818cf8;border-radius:9999px;width:50%;transition:width .4s ease"></div></div>
-<p id="quizProgressText" style="color:#94a3b8;margin-bottom:1.2rem">5 of 10 questions completed</p>
-<button class="btn btn-primary" onclick="startQuiz()">Continue today's quiz</button>
+<div style="background:#0f172a;border-radius:9999px;height:12px;margin-bottom:.8rem;overflow:hidden"><div id="quizProgress" style="height:100%;background:#818cf8;border-radius:9999px;width:0%;transition:width .4s ease"></div></div>
+<p id="quizProgressText" style="color:#94a3b8;margin-bottom:1.2rem">0 of 10 questions completed</p>
+<button class="btn btn-primary" onclick="startQuiz()">Start today's quiz</button>
 </div>
 <div class="card"><h3>Quiz Rules</h3><p>Complete all 10 questions correctly to unlock the next day. Incorrect answers are requeued at the end. You must master every question to progress.</p></div>
 </div>
@@ -270,10 +270,10 @@ td{padding:.8rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <!-- Student Progress Page -->
 <div id="pg-s-progress" class="hidden">
 <div class="stat-grid">
-<div class="stat-card"><div class="stat-value" id="statAccuracy2">78%</div><div class="stat-label">Overall Accuracy</div></div>
-<div class="stat-card"><div class="stat-value" id="statAnswered2">45</div><div class="stat-label">Questions Answered</div></div>
-<div class="stat-card"><div class="stat-value" id="statDays2">4</div><div class="stat-label">Days Completed</div></div>
-<div class="stat-card"><div class="stat-value" id="statStreak2">3</div><div class="stat-label">Current Streak</div></div>
+<div class="stat-card"><div class="stat-value" id="statAccuracy2">0%</div><div class="stat-label">Overall Accuracy</div></div>
+<div class="stat-card"><div class="stat-value" id="statAnswered2">0</div><div class="stat-label">Questions Answered</div></div>
+<div class="stat-card"><div class="stat-value" id="statDays2">0</div><div class="stat-label">Days Completed</div></div>
+<div class="stat-card"><div class="stat-value" id="statStreak2">0</div><div class="stat-label">Current Streak</div></div>
 </div>
 <div class="card"><h3>Level Progress</h3>
 <table><thead><tr><th>Level</th><th>Days</th><th>Questions</th><th>Status</th></tr></thead>
@@ -621,6 +621,13 @@ async function submitAnswer(){
   document.getElementById('quizSubmitBtn').classList.add('hidden');
   document.getElementById('quizNextBtn').classList.remove('hidden');
   document.getElementById('quizScoreText').textContent=`Score: ${quizScore} correct, ${quizWrong} wrong`;
+
+  // Update progress bar
+  const answered=quizIndex+1;
+  const total=quizQuestions.length;
+  const pct=Math.round((answered/total)*100);
+  document.getElementById('quizProgress').style.width=pct+'%';
+  document.getElementById('quizProgressText').textContent=`${answered} of ${total} questions completed`;
 }
 
 function nextQuestion(){
@@ -644,6 +651,24 @@ function showQuizResults(){
   if(accuracy===100) document.getElementById('quizResultText').textContent='🔥 Perfect score! Day unlocked!';
   else if(accuracy>=70) document.getElementById('quizResultText').textContent='Good job! Keep practicing to unlock the next day.';
   else document.getElementById('quizResultText').textContent='Keep trying! You need 10/10 to unlock the next day.';
+
+  // Update dashboard stats
+  document.getElementById('statAccuracy').textContent=accuracy+'%';
+  document.getElementById('statAccuracy2').textContent=accuracy+'%';
+  document.getElementById('statAnswered').textContent=total;
+  document.getElementById('statAnswered2').textContent=total;
+  document.getElementById('monthProgress').textContent=`${total} of 300 pool questions completed`;
+  if(accuracy===100){
+    document.getElementById('statDays').textContent='1';
+    document.getElementById('statDays2').textContent='1';
+    document.getElementById('statStreak').textContent='1';
+    document.getElementById('statStreak2').textContent='1';
+    document.getElementById('streakMsg').textContent='🔥 You\'re on a 1-day streak! Keep it up!';
+  }
+
+  // Update progress bar to 100%
+  document.getElementById('quizProgress').style.width='100%';
+  document.getElementById('quizProgressText').textContent=`${total} of ${total} questions completed`;
 }
 
 function backToQuizLanding(){
