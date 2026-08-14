@@ -285,7 +285,7 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 </div>
 <div id="activationError" class="error-msg"></div>
 <label>Activation Code</label>
-<input type="text" id="activationCodeInput" placeholder="000000" maxlength="6" pattern="[0-9]{6}" style="font-family:monospace;font-size:1.8rem;letter-spacing:6px;text-align:center;padding:1rem">
+<input type="text" id="activationCodeInput" placeholder="ABC123" maxlength="6" style="font-family:monospace;font-size:1.8rem;letter-spacing:6px;text-align:center;padding:1rem;text-transform:uppercase">
 <button class="btn btn-primary" onclick="submitActivation()">Activate Account</button>
 <p style="text-align:center;margin-top:1.2rem;color:#64748b;font-size:.8rem">Don't have a code? Contact your admin.</p>
 <a onclick="logout()" style="display:block;text-align:center;margin-top:.8rem;color:#ef4444;cursor:pointer;font-size:.85rem">Sign Out</a>
@@ -944,7 +944,7 @@ function showActivationScreen(){
 }
 
 async function submitActivation(){
-  const code=document.getElementById('activationCodeInput').value.trim();
+  const code=document.getElementById('activationCodeInput').value.trim().toUpperCase();
   const err=document.getElementById('activationError');
 
   if(!code||code.length!==6){
@@ -1879,11 +1879,12 @@ function generateCodes(){
 
   for(let i=0;i<count;i++){
     let code='';
-    for(let j=0;j<6;j++) code+=Math.floor(Math.random()*10);
+    const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    for(let j=0;j<6;j++) code+=chars.charAt(Math.floor(Math.random()*chars.length));
     // Ensure unique
     while(codes.some(c=>c.code===code)){
       code='';
-      for(let j=0;j<6;j++) code+=Math.floor(Math.random()*10);
+      for(let j=0;j<6;j++) code+=chars.charAt(Math.floor(Math.random()*chars.length));
     }
     const entry={code,created:new Date().toISOString(),used:false,usedBy:null,usedAt:null};
     codes.push(entry);
