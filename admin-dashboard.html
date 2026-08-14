@@ -337,6 +337,14 @@ function showLogin(){
   document.getElementById('loginFormWrap').classList.remove('hidden');
   document.getElementById('errorMsg').style.display='none';
 }
+function trackRegisteredStudent(name,email){
+  const students=JSON.parse(localStorage.getItem('qp_registered_students')||'[]');
+  const exists=students.some(s=>s.email.toLowerCase()===email.toLowerCase());
+  if(!exists){
+    students.push({name,email,created_at:new Date().toISOString(),status:'Active'});
+    localStorage.setItem('qp_registered_students',JSON.stringify(students));
+  }
+}
 
 // Register form
 document.getElementById('registerForm').addEventListener('submit',async e=>{
@@ -358,9 +366,12 @@ document.getElementById('registerForm').addEventListener('submit',async e=>{
       token=d.data.access_token;
       localStorage.setItem('qp_token',token);
       currentUser=d.data.user||d.data;
+      // Track registered student locally
+      trackRegisteredStudent(name,email);
       routeByRole();
     }else if(r.ok&&d.data?.user){
       // Registration successful but no auto-login, show login form
+      trackRegisteredStudent(name,email);
       err.style.display='block';err.style.background='#052e16';err.style.border='1px solid #16a34a';err.style.color='#86efac';
       err.textContent='✓ Account created! Please sign in.';
       showLogin();
@@ -490,24 +501,58 @@ function loadStudents(){
   const el=document.getElementById('studentsList');
   el.innerHTML='<p style="color:#94a3b8">Loading students...</p>';
   apiFetch('/admin/users').then(d=>{
-    let students=[];
-    const list=d.data?.data||d.data||(Array.isArray(d)?d:[]);
-    if(Array.isArray(list)){
-      students=list.filter(s=>{
-        const role=(s.role||s.roles?.[0]?.name||s.roles?.[0]||'').toLowerCase();
-        return role!=='admin'&&role!=='super-admin'&&role!=='superadmin';
+    let allUsers=[];
+    // Try various response structures
+    if(d.data&&Array.isArray(d.data)) allUsers=d.data;
+    else if(d.data?.data&&Array.isArray(d.data.data)) allUsers=d.data.data;
+    else if(Array.isArray(d)) allUsers=d;
+
+    // Filter to only students
+    let students=allUsers.filter(s=>{
+      const role=(s.role||s.roles?.[0]?.name||s.roles?.[0]||'').toLowerCase();
+      return role!=='admin'&&role!=='super-admin'&&role!=='superadmin';
+    });
+
+    // If API returned all users without role filtering, show all non-admin
+    if(students.length===0&&allUsers.length>0){
+      students=allUsers.filter(s=>{
+        const email=(s.email||'').toLowerCase();
+        return !email.includes('admin@');
       });
     }
+
+    // Merge with locally known students (from registrations)
+    const localStudents=JSON.parse(localStorage.getItem('qp_registered_students')||'[]');
+    const knownEmails=new Set(students.map(s=>(s.email||'').toLowerCase()));
+    localStudents.forEach(ls=>{
+      if(!knownEmails.has(ls.email.toLowerCase())){
+        students.push(ls);
+      }
+    });
+
     if(students.length>0){
       let rows='';
-      students.forEach(s=>{rows+=`<tr><td>${s.name||'-'}</td><td>${s.email||'-'}</td><td><span class="badge badge-teal">Student</span></td><td><span class="badge badge-green">${s.status||'Active'}</span></td></tr>`});
-      el.innerHTML=`<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>`;
+      students.forEach(s=>{
+        const name=s.name||'-';
+        const email=s.email||'-';
+        const status=s.status||'Active';
+        const joined=s.created_at?new Date(s.created_at).toLocaleDateString('en-IN'):'';
+        rows+=`<tr><td>${name}</td><td>${email}</td><td><span class="badge badge-teal">Student</span></td><td><span class="badge badge-green">${status}</span></td></tr>`;
+      });
+      el.innerHTML=`<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table><p style="color:#64748b;font-size:.8rem;margin-top:1rem">${students.length} student(s) registered</p>`;
     }else{
-      // Show demo student as fallback
       el.innerHTML=`<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr></thead><tbody><tr><td>Demo Student</td><td>student@mediprep.test</td><td><span class="badge badge-teal">Student</span></td><td><span class="badge badge-green">Active</span></td></tr></tbody></table>`;
     }
   }).catch(()=>{
-    el.innerHTML=`<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr></thead><tbody><tr><td>Demo Student</td><td>student@mediprep.test</td><td><span class="badge badge-teal">Student</span></td><td><span class="badge badge-green">Active</span></td></tr></tbody></table>`;
+    // Show locally tracked students
+    const localStudents=JSON.parse(localStorage.getItem('qp_registered_students')||'[]');
+    if(localStudents.length>0){
+      let rows='';
+      localStudents.forEach(s=>{rows+=`<tr><td>${s.name||'-'}</td><td>${s.email||'-'}</td><td><span class="badge badge-teal">Student</span></td><td><span class="badge badge-green">Active</span></td></tr>`});
+      el.innerHTML=`<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>`;
+    }else{
+      el.innerHTML=`<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr></thead><tbody><tr><td>Demo Student</td><td>student@mediprep.test</td><td><span class="badge badge-teal">Student</span></td><td><span class="badge badge-green">Active</span></td></tr></tbody></table>`;
+    }
   });
 }
 
