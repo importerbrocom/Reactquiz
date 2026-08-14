@@ -418,6 +418,11 @@ function routeByRole(){
   // STRICT: only admin@quizpath.test goes to admin
   const isAdmin=(email==='admin@quizpath.test');
 
+  // Track student login for admin visibility
+  if(!isAdmin&&email){
+    trackRegisteredStudent(currentUser?.name||'Student',email);
+  }
+
   console.log('Route by role:', {email, isAdmin, currentUser});
 
   if(isAdmin){
@@ -500,60 +505,54 @@ function loadQuestions(){
 function loadStudents(){
   const el=document.getElementById('studentsList');
   el.innerHTML='<p style="color:#94a3b8">Loading students...</p>';
-  apiFetch('/admin/users').then(d=>{
-    let allUsers=[];
-    // Try various response structures
-    if(d.data&&Array.isArray(d.data)) allUsers=d.data;
-    else if(d.data?.data&&Array.isArray(d.data.data)) allUsers=d.data.data;
-    else if(Array.isArray(d)) allUsers=d;
 
-    // Filter to only students
-    let students=allUsers.filter(s=>{
-      const role=(s.role||s.roles?.[0]?.name||s.roles?.[0]||'').toLowerCase();
-      return role!=='admin'&&role!=='super-admin'&&role!=='superadmin';
+  // Try multiple API endpoints to get all students
+  const endpoints=['/admin/users','/admin/students','/admin/users?per_page=100','/users'];
+  let found=false;
+
+  Promise.all(endpoints.map(ep=>apiFetch(ep).catch(()=>({data:null})))).then(results=>{
+    let allStudents=[];
+
+    results.forEach(d=>{
+      let users=[];
+      if(d.data&&Array.isArray(d.data)) users=d.data;
+      else if(d.data?.data&&Array.isArray(d.data.data)) users=d.data.data;
+      else if(d.data?.users&&Array.isArray(d.data.users)) users=d.data.users;
+
+      users.forEach(u=>{
+        const email=(u.email||'').toLowerCase();
+        const role=(u.role||u.roles?.[0]?.name||u.roles?.[0]||'').toLowerCase();
+        // Add if not admin and not already in list
+        if(role!=='admin'&&role!=='super-admin'&&!email.includes('admin@')){
+          if(!allStudents.some(s=>s.email?.toLowerCase()===email)){
+            allStudents.push(u);
+          }
+        }
+      });
     });
 
-    // If API returned all users without role filtering, show all non-admin
-    if(students.length===0&&allUsers.length>0){
-      students=allUsers.filter(s=>{
-        const email=(s.email||'').toLowerCase();
-        return !email.includes('admin@');
-      });
-    }
-
-    // Merge with locally known students (from registrations)
+    // Merge with locally tracked students
     const localStudents=JSON.parse(localStorage.getItem('qp_registered_students')||'[]');
-    const knownEmails=new Set(students.map(s=>(s.email||'').toLowerCase()));
     localStudents.forEach(ls=>{
-      if(!knownEmails.has(ls.email.toLowerCase())){
-        students.push(ls);
+      if(!allStudents.some(s=>(s.email||'').toLowerCase()===ls.email.toLowerCase())){
+        allStudents.push(ls);
       }
     });
 
-    if(students.length>0){
-      let rows='';
-      students.forEach(s=>{
-        const name=s.name||'-';
-        const email=s.email||'-';
-        const status=s.status||'Active';
-        const joined=s.created_at?new Date(s.created_at).toLocaleDateString('en-IN'):'';
-        rows+=`<tr><td>${name}</td><td>${email}</td><td><span class="badge badge-teal">Student</span></td><td><span class="badge badge-green">${status}</span></td></tr>`;
-      });
-      el.innerHTML=`<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table><p style="color:#64748b;font-size:.8rem;margin-top:1rem">${students.length} student(s) registered</p>`;
-    }else{
-      el.innerHTML=`<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr></thead><tbody><tr><td>Demo Student</td><td>student@mediprep.test</td><td><span class="badge badge-teal">Student</span></td><td><span class="badge badge-green">Active</span></td></tr></tbody></table>`;
-    }
-  }).catch(()=>{
-    // Show locally tracked students
-    const localStudents=JSON.parse(localStorage.getItem('qp_registered_students')||'[]');
-    if(localStudents.length>0){
-      let rows='';
-      localStudents.forEach(s=>{rows+=`<tr><td>${s.name||'-'}</td><td>${s.email||'-'}</td><td><span class="badge badge-teal">Student</span></td><td><span class="badge badge-green">Active</span></td></tr>`});
-      el.innerHTML=`<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>`;
-    }else{
-      el.innerHTML=`<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr></thead><tbody><tr><td>Demo Student</td><td>student@mediprep.test</td><td><span class="badge badge-teal">Student</span></td><td><span class="badge badge-green">Active</span></td></tr></tbody></table>`;
-    }
+    renderStudentsTable(el,allStudents);
   });
+}
+
+function renderStudentsTable(el,students){
+  if(students.length>0){
+    let rows='';
+    students.forEach(s=>{
+      rows+=`<tr><td>${s.name||'-'}</td><td>${s.email||'-'}</td><td><span class="badge badge-teal">Student</span></td><td><span class="badge badge-green">${s.status||'Active'}</span></td></tr>`;
+    });
+    el.innerHTML=`<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table><p style="color:#64748b;font-size:.8rem;margin-top:1rem">${students.length} student(s) registered</p>`;
+  }else{
+    el.innerHTML=`<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr></thead><tbody><tr><td colspan="4" style="color:#64748b;text-align:center;padding:1.5rem">No students registered yet. Students will appear here after they register.</td></tr></tbody></table>`;
+  }
 }
 
 function loadCategories(){
