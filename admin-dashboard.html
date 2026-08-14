@@ -1898,30 +1898,32 @@ function generateCodes(){
   newCodes.forEach(c=>{
     html+=`<div style="display:flex;align-items:center;justify-content:space-between;background:#0f172a;border-radius:8px;padding:.6rem 1rem;margin-bottom:.4rem">
       <span style="font-family:monospace;font-size:1.2rem;color:#f8fafc;letter-spacing:3px;font-weight:700">${c.code}</span>
-      <button onclick="shareCode('${c.code}')" style="background:linear-gradient(135deg,#3b82f6,#7c3aed);color:#fff;border:none;padding:.4rem .8rem;border-radius:8px;font-size:.75rem;cursor:pointer;font-weight:600">Share</button>
+      <button onclick="shareCode('${c.code}')" style="background:linear-gradient(135deg,#3b82f6,#7c3aed);color:#fff;border:none;padding:.4rem .8rem;border-radius:8px;font-size:.75rem;cursor:pointer;font-weight:600">Copy</button>
     </div>`;
   });
-  html+=`<button onclick="shareAllCodes([${newCodes.map(c=>"'"+c.code+"'").join(',')}])" style="background:#334155;color:#f8fafc;border:none;padding:.6rem 1rem;border-radius:8px;font-size:.85rem;cursor:pointer;font-weight:500;margin-top:.5rem;width:100%">Share All ${count} Codes</button></div>`;
+  html+=`<button onclick="shareAllCodes([${newCodes.map(c=>"'"+c.code+"'").join(',')}])" style="background:#334155;color:#f8fafc;border:none;padding:.6rem 1rem;border-radius:8px;font-size:.85rem;cursor:pointer;font-weight:500;margin-top:.5rem;width:100%">Copy All ${count} Codes</button></div>`;
   document.getElementById('generatedCodes').innerHTML=html;
 
   loadActivationCodes();
 }
 
 function shareCode(code){
-  const text=`Your ERO activation code is: ${code}\n\nUse this code to activate your account at: https://mediprep.nokkoo.in\n\nThis code can only be used once.`;
-  if(navigator.share){
-    navigator.share({title:'ERO Activation Code',text}).catch(()=>{});
+  const text=`${code}`;
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(text).then(()=>{
+      alert('Code copied: '+code);
+    }).catch(()=>prompt('Copy this code:',code));
   }else{
-    navigator.clipboard.writeText(text).then(()=>alert('Code copied to clipboard:\n'+code)).catch(()=>prompt('Copy this code:',code));
+    prompt('Copy this code:',code);
   }
 }
 
 function shareAllCodes(codes){
-  const text=`ERO Activation Codes:\n\n${codes.map((c,i)=>`${i+1}. ${c}`).join('\n')}\n\nActivate at: https://mediprep.nokkoo.in\nEach code can only be used once.`;
-  if(navigator.share){
-    navigator.share({title:'ERO Activation Codes',text}).catch(()=>{});
+  const text=codes.join('\n');
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(text).then(()=>alert('All codes copied!\n\n'+text)).catch(()=>prompt('Copy codes:',text));
   }else{
-    navigator.clipboard.writeText(text).then(()=>alert('All codes copied to clipboard!')).catch(()=>prompt('Copy codes:',text));
+    prompt('Copy codes:',text);
   }
 }
 
@@ -1950,7 +1952,7 @@ function renderActivationCodes(){
       html+=`<div class="q-item" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
         <div><span style="font-family:monospace;font-size:1.1rem;color:#f8fafc;letter-spacing:2px;font-weight:700">${c.code}</span><span style="font-size:.75rem;color:#64748b;margin-left:.8rem">${created}</span></div>
         <div style="display:flex;gap:.5rem">
-          <button onclick="shareCode('${c.code}')" style="background:linear-gradient(135deg,#3b82f6,#7c3aed);color:#fff;border:none;padding:.3rem .7rem;border-radius:6px;font-size:.75rem;cursor:pointer">Share</button>
+          <button onclick="shareCode('${c.code}')" style="background:linear-gradient(135deg,#3b82f6,#7c3aed);color:#fff;border:none;padding:.3rem .7rem;border-radius:6px;font-size:.75rem;cursor:pointer">Copy</button>
           <button onclick="deleteCode('${c.code}')" style="background:#450a0a;border:1px solid #dc2626;color:#fca5a5;padding:.3rem .7rem;border-radius:6px;font-size:.75rem;cursor:pointer">Delete</button>
         </div>
       </div>`;
