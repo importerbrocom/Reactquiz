@@ -1,4 +1,4 @@
-const CACHE_NAME = 'quizpath-v1';
+const CACHE_NAME = 'ero-v1';
 const ASSETS = [
   '/',
   '/index.html',

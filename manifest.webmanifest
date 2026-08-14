@@ -1,11 +1,11 @@
 {
-  "name": "QuizPath - MediPrep",
-  "short_name": "QuizPath",
-  "description": "Daily medical exam preparation - 10 questions a day",
+  "name": "ERO - Elior Research Orbit",
+  "short_name": "ERO",
+  "description": "Illuminating Knowledge - Daily medical exam preparation",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0B1120",
-  "theme_color": "#4F46E5",
+  "theme_color": "#1e3a8a",
   "orientation": "portrait",
   "icons": [
     {
