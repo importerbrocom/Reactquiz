@@ -929,11 +929,10 @@ function updateDashboardFromProgress(){
     document.getElementById('quizStartBtn').style.opacity='0.7';
     document.getElementById('quizStartBtn').style.cursor='not-allowed';
   }else if(p.todayDate===today&&p.failedQs&&p.failedQs.length>0){
-    // Has failed questions to retake
-    const failCount=p.failedQs.length;
+    // Has to retake all 10 questions
     document.getElementById('quizProgress').style.width='0%';
-    document.getElementById('quizProgressText').textContent=`${failCount} failed question${failCount>1?'s':''} to retake · Day ${p.day}`;
-    document.getElementById('quizStartBtn').textContent=`Retake ${failCount} failed question${failCount>1?'s':''}`;
+    document.getElementById('quizProgressText').textContent=`Need 10/10 to pass · Day ${p.day}`;
+    document.getElementById('quizStartBtn').textContent='Retake quiz (new order)';
     document.getElementById('quizStartBtn').style.background='#dc2626';
     document.getElementById('quizStartBtn').disabled=false;
     document.getElementById('quizStartBtn').style.opacity='1';
@@ -1005,8 +1004,8 @@ async function startQuiz(){
 
   // Check if there are failed questions to retake (from previous attempt today)
   if(p.todayDate===today&&p.failedQs&&p.failedQs.length>0){
-    // RETAKE MODE: only show failed questions with shuffled options
-    quizQuestions=p.failedQs.map(q=>shuffleOptions(q));
+    // RETAKE MODE: show ALL 10 same questions in new random order with shuffled options
+    quizQuestions=shuffleArray(p.failedQs).map(q=>shuffleOptions(q));
     // Clear failed list (will be rebuilt if they fail again)
     p.failedQs=[];
     p.todayAnswered=0;
@@ -1197,10 +1196,10 @@ function showQuizResults(){
     if(p.day>30){p.day=1;p.month++;} // Move to next month after 30 days
     document.getElementById('quizResultText').textContent=`🔥 Perfect score! Day ${p.day} quiz will be available tomorrow. Today's quiz is now closed.`;
   }else{
-    // NOT PERFECT — Save failed questions for retake with shuffled options
+    // NOT PERFECT — Save ALL 10 questions for retake (new order + shuffled options)
     p.todayCompleted=false;
-    p.failedQs=failedQuestions; // Store original questions (will be shuffled on retake)
-    document.getElementById('quizResultText').textContent=`You got ${quizScore}/${total} correct. You must retake the ${quizWrong} failed question${quizWrong>1?'s':''} with shuffled options to unlock Day ${p.day+1}.`;
+    p.failedQs=quizQuestions; // Store ALL questions (will be reshuffled on retake)
+    document.getElementById('quizResultText').textContent=`You got ${quizScore}/${total} correct. Retake all 10 questions in a new order with shuffled options to unlock Day ${p.day+1}.`;
   }
 
   saveProgress(p);
@@ -1208,7 +1207,7 @@ function showQuizResults(){
 
   // Update progress bar
   document.getElementById('quizProgress').style.width=accuracy===100?'100%':'0%';
-  document.getElementById('quizProgressText').textContent=accuracy===100?`✓ Today's quiz completed · Day ${p.day}`:`${quizWrong} question${quizWrong>1?'s':''} to retake · Day ${p.day}`;
+  document.getElementById('quizProgressText').textContent=accuracy===100?`✓ Today's quiz completed · Day ${p.day}`:`Need 10/10 to pass · Retake available`;
 }
 
 function backToQuizLanding(){
