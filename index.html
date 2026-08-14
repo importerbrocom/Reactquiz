@@ -175,7 +175,7 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 </div>
 <div id="pg-questions" class="hidden"><div class="card"><h3>Questions - Level 1</h3><div id="questionsList"></div></div></div>
 <div id="pg-students" class="hidden"><div class="card"><h3>Registered Users</h3><div id="studentsList"></div></div></div>
-<div id="pg-categories" class="hidden">
+<div id="pg-exams" class="hidden">
 <div class="card">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
 <h3>Exams</h3>
@@ -626,8 +626,7 @@ function showPage(page,el){
   if(page==='dashboard')loadDashboard();
   if(page==='questions')loadQuestions();
   if(page==='students')loadStudents();
-  if(page==='categories')loadExams();
-  if(page==='exams'){document.getElementById('pg-categories').classList.remove('hidden');loadExams()}
+  if(page==='exams')loadExams();
   if(page==='settings')loadSettings();
   if(page==='upload')loadImportHistory();
 }
