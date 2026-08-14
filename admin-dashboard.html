@@ -1077,9 +1077,21 @@ function showQuizResults(){
   // Save progress
   const p=getProgress();
   const today=new Date().toDateString();
-  p.totalAnswered+=total;
-  p.totalCorrect+=quizScore;
-  p.questionsThisMonth+=total;
+  // Only count new questions (not retakes) toward total
+  if(!p.todayDate||p.todayDate!==today){
+    // Fresh day - count all questions
+    p.totalAnswered+=total;
+    p.totalCorrect+=quizScore;
+    p.questionsThisMonth+=total;
+  }else if(p.failedQs&&p.failedQs.length>0){
+    // Retake - only count the retake correct answers (don't add to totalAnswered again)
+    p.totalCorrect+=quizScore;
+  }else{
+    // First attempt today
+    p.totalAnswered+=total;
+    p.totalCorrect+=quizScore;
+    p.questionsThisMonth+=total;
+  }
   p.todayDate=today;
   p.todayAnswered=total;
 
