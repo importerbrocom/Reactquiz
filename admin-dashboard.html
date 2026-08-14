@@ -750,6 +750,7 @@ async function loadStudentData(){
 
 // ============ QUIZ ENGINE ============
 let quizQuestions=[],quizIndex=0,quizScore=0,quizWrong=0,selectedOption=null,quizStartTime=null,quizAnswered=false;
+let failedQuestions=[]; // Track failed questions for retake
 
 // Persistent progress using localStorage (per-user)
 function getProgressKey(){
@@ -758,9 +759,68 @@ function getProgressKey(){
 }
 function getProgress(){
   const saved=localStorage.getItem(getProgressKey());
-  return saved?JSON.parse(saved):{day:1,month:1,daysCompleted:0,streak:0,totalAnswered:0,totalCorrect:0,questionsThisMonth:0,todayCompleted:false,todayDate:'',todayAnswered:0};
+  return saved?JSON.parse(saved):{day:1,month:1,daysCompleted:0,streak:0,totalAnswered:0,totalCorrect:0,questionsThisMonth:0,todayCompleted:false,todayDate:'',todayAnswered:0,failedQs:[]};
 }
 function saveProgress(p){localStorage.setItem(getProgressKey(),JSON.stringify(p))}
+
+// Shuffle array (Fisher-Yates)
+function shuffleArray(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
+  return a;
+}
+
+// Shuffle options of a question (for retakes)
+function shuffleOptions(q){
+  const options=[
+    {key:'A',text:q.optionA||q.option_a||''},
+    {key:'B',text:q.optionB||q.option_b||''},
+    {key:'C',text:q.optionC||q.option_c||''},
+    {key:'D',text:q.optionD||q.option_d||''}
+  ];
+  const correctKey=q.correctOption||q.correct_option||'A';
+  const correctText=options.find(o=>o.key===correctKey)?.text||'';
+  const shuffled=shuffleArray(options);
+  const newCorrectKey=shuffled.findIndex(o=>o.text===correctText);
+  const keys=['A','B','C','D'];
+  const newQ={...q,
+    optionA:shuffled[0].text,optionB:shuffled[1].text,
+    optionC:shuffled[2].text,optionD:shuffled[3].text,
+    correctOption:keys[newCorrectKey],
+    option_a:shuffled[0].text,option_b:shuffled[1].text,
+    option_c:shuffled[2].text,option_d:shuffled[3].text,
+    correct_option:keys[newCorrectKey]
+  };
+  return newQ;
+}
+
+// Get today's 10 questions (no repetition across days)
+function getTodayQuestions(){
+  const stored=JSON.parse(localStorage.getItem('qp_questions')||'[]');
+  if(stored.length===0) return getDemoQuestions();
+
+  const p=getProgress();
+  const day=p.day; // Current day (1-based)
+  const questionsPerDay=10;
+  const startIdx=(day-1)*questionsPerDay;
+
+  // If we've exhausted the pool, cycle back
+  if(startIdx>=stored.length){
+    // Wrap around for levels beyond the pool
+    const wrappedStart=startIdx%stored.length;
+    return stored.slice(wrappedStart,wrappedStart+questionsPerDay);
+  }
+
+  const todayQs=stored.slice(startIdx,startIdx+questionsPerDay);
+
+  // If not enough questions remaining, pad from start (shouldn't happen with 300 pool)
+  if(todayQs.length<questionsPerDay){
+    const remaining=questionsPerDay-todayQs.length;
+    todayQs.push(...stored.slice(0,remaining));
+  }
+
+  return todayQs;
+}
 
 function updateDashboardFromProgress(){
   const p=getProgress();
@@ -791,8 +851,15 @@ function updateDashboardFromProgress(){
   if(p.todayCompleted&&p.todayDate===today){
     document.getElementById('quizProgress').style.width='100%';
     document.getElementById('quizProgressText').textContent=`✓ Today's quiz completed · Day ${p.day}`;
-    document.getElementById('quizStartBtn').textContent='Retake quiz';
-    document.getElementById('quizStartBtn').style.background='#334155';
+    document.getElementById('quizStartBtn').textContent='Quiz completed ✓';
+    document.getElementById('quizStartBtn').style.background='#16a34a';
+  }else if(p.todayDate===today&&p.failedQs&&p.failedQs.length>0){
+    // Has failed questions to retake
+    const failCount=p.failedQs.length;
+    document.getElementById('quizProgress').style.width='0%';
+    document.getElementById('quizProgressText').textContent=`${failCount} failed question${failCount>1?'s':''} to retake · Day ${p.day}`;
+    document.getElementById('quizStartBtn').textContent=`Retake ${failCount} failed question${failCount>1?'s':''}`;
+    document.getElementById('quizStartBtn').style.background='#dc2626';
   }else{
     const answered=p.todayDate===today?(p.todayAnswered||0):0;
     const pct=Math.round((answered/10)*100);
@@ -839,47 +906,41 @@ async function startQuiz(){
   document.getElementById('quizActive').classList.remove('hidden');
   document.getElementById('quizComplete').classList.add('hidden');
   quizIndex=0;quizScore=0;quizWrong=0;selectedOption=null;quizStartTime=Date.now();
+  failedQuestions=[];
 
-  // Reset today's partial progress
-  const pp=getProgress();
-  pp.todayAnswered=0;
-  pp.todayDate=new Date().toDateString();
-  pp.todayCompleted=false;
-  saveProgress(pp);
+  const p=getProgress();
+  const today=new Date().toDateString();
 
-  // Try to load questions from API first
-  let loaded=false;
-  try{
-    const d=await apiFetch('/student/quiz/today');
-    if(d.data&&d.data.questions&&d.data.questions.length>0){
-      quizQuestions=d.data.questions;loaded=true;
-    }
-  }catch(e){}
-  if(!loaded){
+  // Check if there are failed questions to retake (from previous attempt today)
+  if(p.todayDate===today&&p.failedQs&&p.failedQs.length>0){
+    // RETAKE MODE: only show failed questions with shuffled options
+    quizQuestions=p.failedQs.map(q=>shuffleOptions(q));
+    // Clear failed list (will be rebuilt if they fail again)
+    p.failedQs=[];
+    p.todayAnswered=0;
+    p.todayCompleted=false;
+    saveProgress(p);
+  }else{
+    // FRESH START: get today's 10 unique questions
+    // Reset today's state
+    p.todayAnswered=0;
+    p.todayDate=today;
+    p.todayCompleted=false;
+    p.failedQs=[];
+    saveProgress(p);
+
+    // Try API first
+    let loaded=false;
     try{
-      const d2=await apiFetch('/student/courses/1/quiz-days/1');
-      if(d2.data&&d2.data.questions&&d2.data.questions.length>0){
-        quizQuestions=d2.data.questions;loaded=true;
+      const d=await apiFetch('/student/quiz/today');
+      if(d.data&&d.data.questions&&d.data.questions.length>0){
+        quizQuestions=d.data.questions;loaded=true;
       }
-    }catch(e2){}
-  }
-  if(!loaded){
-    // Load from localStorage (imported CSV questions)
-    const stored=JSON.parse(localStorage.getItem('qp_questions')||'[]');
-    if(stored.length>0){
-      // Pick 10 questions for today based on current day
-      const p=getProgress();
-      const startIdx=((p.day-1)*10)%stored.length;
-      quizQuestions=[];
-      for(let i=0;i<10;i++){
-        quizQuestions.push(stored[(startIdx+i)%stored.length]);
-      }
-      loaded=true;
+    }catch(e){}
+    if(!loaded){
+      // Load from localStorage pool (no repetition)
+      quizQuestions=getTodayQuestions();
     }
-  }
-  if(!loaded){
-    // Fallback to hardcoded demo questions
-    quizQuestions=getDemoQuestions();
   }
   renderQuestion();
 }
@@ -953,7 +1014,7 @@ async function submitAnswer(){
   });
 
   // Update score
-  if(isCorrect){quizScore++}else{quizWrong++}
+  if(isCorrect){quizScore++}else{quizWrong++;failedQuestions.push(q)}
 
   // Show feedback
   const fb=document.getElementById('quizFeedback');
@@ -1019,29 +1080,31 @@ function showQuizResults(){
   p.totalAnswered+=total;
   p.totalCorrect+=quizScore;
   p.questionsThisMonth+=total;
-  p.todayCompleted=true;
   p.todayDate=today;
   p.todayAnswered=total;
 
   if(quizScore===total){
-    // Perfect score — unlock next day!
+    // PERFECT SCORE — Day completed! Unlock next day!
     p.daysCompleted++;
     p.streak++;
     p.day++;
+    p.todayCompleted=true;
+    p.failedQs=[]; // Clear failed questions
     if(p.day>30){p.day=1;p.month++;} // Move to next month after 30 days
-    document.getElementById('quizResultText').textContent='🔥 Perfect score! Day '+(p.day)+' unlocked!';
-  }else if(accuracy>=70){
-    document.getElementById('quizResultText').textContent=`Good job! But you need 10/10 to unlock Day ${p.day+1}. Try again!`;
+    document.getElementById('quizResultText').textContent=`🔥 Perfect score! Day ${p.day} unlocked!`;
   }else{
-    document.getElementById('quizResultText').textContent=`Keep trying! You scored ${quizScore}/${total}. Need 10/10 to progress.`;
+    // NOT PERFECT — Save failed questions for retake with shuffled options
+    p.todayCompleted=false;
+    p.failedQs=failedQuestions; // Store original questions (will be shuffled on retake)
+    document.getElementById('quizResultText').textContent=`You got ${quizScore}/${total} correct. You must retake the ${quizWrong} failed question${quizWrong>1?'s':''} with shuffled options to unlock Day ${p.day+1}.`;
   }
 
   saveProgress(p);
   updateDashboardFromProgress();
 
-  // Update progress bar to 100%
-  document.getElementById('quizProgress').style.width='100%';
-  document.getElementById('quizProgressText').textContent=`${total} of ${total} questions completed · Day ${p.day}`;
+  // Update progress bar
+  document.getElementById('quizProgress').style.width=accuracy===100?'100%':'0%';
+  document.getElementById('quizProgressText').textContent=accuracy===100?`✓ Today's quiz completed · Day ${p.day}`:`${quizWrong} question${quizWrong>1?'s':''} to retake · Day ${p.day}`;
 }
 
 function backToQuizLanding(){
