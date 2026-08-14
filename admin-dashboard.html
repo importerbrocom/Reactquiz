@@ -407,7 +407,21 @@ function loadQuestions(){
       const text=q.questionText||q.question_text||'Question '+(i+1);
       const subject=q.subject||'General';
       const day=Math.floor(i/10)+1;
-      h+=`<div class="q-item"><div class="q-text">Q${i+1}: ${text.substring(0,100)}${text.length>100?'...':''}</div><div class="q-meta"><span class="badge badge-green">Active</span> Day ${day} · ${subject}</div></div>`;
+      const correct=q.correctOption||q.correct_option||'—';
+      const optA=q.optionA||q.option_a||'';
+      const optB=q.optionB||q.option_b||'';
+      const optC=q.optionC||q.option_c||'';
+      const optD=q.optionD||q.option_d||'';
+      h+=`<div class="q-item">
+        <div class="q-text">Q${i+1}: ${text}</div>
+        <div style="margin:.6rem 0;font-size:.85rem;color:#94a3b8;line-height:1.6">
+          <span style="color:${correct==='A'?'#86efac':'#94a3b8'}">A: ${optA}</span><br>
+          <span style="color:${correct==='B'?'#86efac':'#94a3b8'}">B: ${optB}</span><br>
+          <span style="color:${correct==='C'?'#86efac':'#94a3b8'}">C: ${optC}</span><br>
+          <span style="color:${correct==='D'?'#86efac':'#94a3b8'}">D: ${optD}</span>
+        </div>
+        <div class="q-meta"><span class="badge badge-green">Ans: ${correct}</span> <span class="badge badge-blue">${subject}</span> Day ${day}</div>
+      </div>`;
     });
     el.innerHTML=h;
     document.querySelector('#pg-questions .card h3').textContent=`Questions (${stored.length} total)`;
