@@ -709,6 +709,8 @@ function showStudent(){
   document.getElementById('studentUserInfo').textContent=name;
   document.getElementById('profileName').textContent=currentUser?.name||'-';
   document.getElementById('profileEmail').textContent=currentUser?.email||'-';
+  // Load questions from server if not in localStorage
+  loadQuestionsFromServer();
   updateDashboardFromProgress();
   loadStudentData();
 }
@@ -806,20 +808,36 @@ function getTodayQuestions(){
 
   // If we've exhausted the pool, cycle back
   if(startIdx>=stored.length){
-    // Wrap around for levels beyond the pool
     const wrappedStart=startIdx%stored.length;
     return stored.slice(wrappedStart,wrappedStart+questionsPerDay);
   }
 
   const todayQs=stored.slice(startIdx,startIdx+questionsPerDay);
 
-  // If not enough questions remaining, pad from start (shouldn't happen with 300 pool)
+  // If not enough questions remaining, pad from start
   if(todayQs.length<questionsPerDay){
     const remaining=questionsPerDay-todayQs.length;
     todayQs.push(...stored.slice(0,remaining));
   }
 
   return todayQs;
+}
+
+// Load questions from server for students on other devices
+async function loadQuestionsFromServer(){
+  const stored=JSON.parse(localStorage.getItem('qp_questions')||'[]');
+  if(stored.length>0) return; // Already have questions locally
+
+  // Try loading from server JSON file
+  try{
+    const r=await fetch('/questions.json?t='+Date.now());
+    if(r.ok){
+      const questions=await r.json();
+      if(Array.isArray(questions)&&questions.length>0){
+        localStorage.setItem('qp_questions',JSON.stringify(questions));
+      }
+    }
+  }catch(e){}
 }
 
 function updateDashboardFromProgress(){
@@ -1381,22 +1399,26 @@ async function confirmImport(){
   const merged=[...existing,...parsedQuestions];
   localStorage.setItem('qp_questions',JSON.stringify(merged));
 
+  // Save to server as JSON file so ALL students on ALL devices can access
+  let serverSaved=false;
+  try{
+    const r=await fetch('/save-questions.php',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({questions:merged})});
+    if(r.ok) serverSaved=true;
+  }catch(e){}
+
   // Try API endpoints
-  let apiSuccess=false;
-  const endpoints=['/admin/questions/bulk-import','/admin/questions/import','/admin/questions'];
-  for(const ep of endpoints){
-    try{
-      const r=await fetch(API+ep,{
-        method:'POST',
-        headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',Accept:'application/json'},
-        body:JSON.stringify({questions:parsedQuestions})
-      });
-      if(r.ok){apiSuccess=true;break}
-    }catch(e){}
+  if(!serverSaved){
+    const endpoints=['/admin/questions/bulk-import','/admin/questions/import','/admin/questions'];
+    for(const ep of endpoints){
+      try{
+        const r=await fetch(API+ep,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({questions:parsedQuestions})});
+        if(r.ok){serverSaved=true;break}
+      }catch(e){}
+    }
   }
 
   const count=parsedQuestions.length;
-  showUploadSuccess(`✓ Successfully imported ${count} questions to the quiz pool!`+(apiSuccess?'':' (saved locally — API sync pending)'));
+  showUploadSuccess(`✓ Successfully imported ${count} questions!`+(serverSaved?' Available to all students.':' Saved locally. Create save-questions.php for all devices.'));
   document.getElementById('parsedPreview').classList.add('hidden');
   addImportHistory(count);
   parsedQuestions=[];
