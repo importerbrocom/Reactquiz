@@ -953,7 +953,10 @@ async function confirmImport(){
 function addImportHistory(count){
   const el=document.getElementById('importHistory');
   const now=new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});
-  const entry={count,date:now,by:currentUser?.name||'Admin'};
+  const entry={count,date:now,by:currentUser?.name||'Admin',startIndex:0};
+  // Track where these questions start in the pool
+  const existing=JSON.parse(localStorage.getItem('qp_questions')||'[]');
+  entry.startIndex=existing.length-count; // questions were just appended
   // Save to localStorage
   const history=JSON.parse(localStorage.getItem('qp_import_history')||'[]');
   history.unshift(entry);
@@ -988,14 +991,30 @@ function clearQuizPool(){
 }
 
 function removeImport(index){
-  if(!confirm('Remove this import record?'))return;
+  if(!confirm('Remove this import and its questions from the quiz pool?'))return;
   const history=JSON.parse(localStorage.getItem('qp_import_history')||'[]');
+  const entry=history[index];
+  const count=entry?.count||0;
+
+  // Remove questions from the pool
+  const questions=JSON.parse(localStorage.getItem('qp_questions')||'[]');
+  if(count>0&&questions.length>=count){
+    // Remove the last 'count' questions if this was the most recent import,
+    // otherwise remove from the tracked startIndex
+    const start=entry.startIndex!==undefined?entry.startIndex:questions.length-count;
+    questions.splice(start,count);
+    localStorage.setItem('qp_questions',JSON.stringify(questions));
+  }
+
+  // Remove history entry
   history.splice(index,1);
   localStorage.setItem('qp_import_history',JSON.stringify(history));
-  if(history.length===0){
+
+  if(questions.length===0){
     localStorage.removeItem('qp_questions');
   }
   renderImportHistory();
+  showUploadSuccess(`Removed ${count} questions. ${questions.length} questions remaining in pool.`);
 }
 </script>
 </body>
