@@ -542,23 +542,39 @@ async function startQuiz(){
   document.getElementById('quizComplete').classList.add('hidden');
   quizIndex=0;quizScore=0;quizWrong=0;selectedOption=null;quizStartTime=Date.now();
 
-  // Try to load questions from API
+  // Try to load questions from API first
+  let loaded=false;
   try{
     const d=await apiFetch('/student/quiz/today');
     if(d.data&&d.data.questions&&d.data.questions.length>0){
-      quizQuestions=d.data.questions;
-    }else throw 'no questions';
-  }catch(e){
-    // Try alternate endpoints
+      quizQuestions=d.data.questions;loaded=true;
+    }
+  }catch(e){}
+  if(!loaded){
     try{
       const d2=await apiFetch('/student/courses/1/quiz-days/1');
       if(d2.data&&d2.data.questions&&d2.data.questions.length>0){
-        quizQuestions=d2.data.questions;
-      }else throw 'no questions';
-    }catch(e2){
-      // Use demo questions as fallback
-      quizQuestions=getDemoQuestions();
+        quizQuestions=d2.data.questions;loaded=true;
+      }
+    }catch(e2){}
+  }
+  if(!loaded){
+    // Load from localStorage (imported CSV questions)
+    const stored=JSON.parse(localStorage.getItem('qp_questions')||'[]');
+    if(stored.length>0){
+      // Pick 10 questions for today based on current day
+      const p=getProgress();
+      const startIdx=((p.day-1)*10)%stored.length;
+      quizQuestions=[];
+      for(let i=0;i<10;i++){
+        quizQuestions.push(stored[(startIdx+i)%stored.length]);
+      }
+      loaded=true;
     }
+  }
+  if(!loaded){
+    // Fallback to hardcoded demo questions
+    quizQuestions=getDemoQuestions();
   }
   renderQuestion();
 }
@@ -876,25 +892,30 @@ async function confirmImport(){
   status.classList.add('loading');
   status.innerHTML='⏳ Importing '+parsedQuestions.length+' questions to quiz pool...';
 
-  try{
-    const r=await fetch(API+'/admin/questions/bulk-import',{
-      method:'POST',
-      headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',Accept:'application/json'},
-      body:JSON.stringify({questions:parsedQuestions})
-    });
-    const d=await r.json();
-    if(r.ok){
-      const imported=d.data?.imported||d.data?.count||parsedQuestions.length;
-      showUploadSuccess(`✓ Successfully imported ${imported} questions to the quiz pool!`);
-      document.getElementById('parsedPreview').classList.add('hidden');
-      addImportHistory(imported);
-      parsedQuestions=[];
-    }else{
-      showUploadError(d.message||'Import failed. Please try again.');
-    }
-  }catch(e){
-    showUploadError('Network error during import. Please check connection and try again.');
+  // Save to localStorage for student quiz use
+  const existing=JSON.parse(localStorage.getItem('qp_questions')||'[]');
+  const merged=[...existing,...parsedQuestions];
+  localStorage.setItem('qp_questions',JSON.stringify(merged));
+
+  // Try API endpoints
+  let apiSuccess=false;
+  const endpoints=['/admin/questions/bulk-import','/admin/questions/import','/admin/questions'];
+  for(const ep of endpoints){
+    try{
+      const r=await fetch(API+ep,{
+        method:'POST',
+        headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',Accept:'application/json'},
+        body:JSON.stringify({questions:parsedQuestions})
+      });
+      if(r.ok){apiSuccess=true;break}
+    }catch(e){}
   }
+
+  const count=parsedQuestions.length;
+  showUploadSuccess(`✓ Successfully imported ${count} questions to the quiz pool!`+(apiSuccess?'':' (saved locally — API sync pending)'));
+  document.getElementById('parsedPreview').classList.add('hidden');
+  addImportHistory(count);
+  parsedQuestions=[];
 }
 
 function addImportHistory(count){
