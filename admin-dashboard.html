@@ -105,8 +105,15 @@ td{padding:.8rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <div id="loginPage" class="login-wrap">
 <div class="login-box"><h1>QuizPath</h1><p class="sub">MediPrep - Exam Preparation</p>
 <div class="form-card"><div id="errorMsg" class="error-msg"></div>
+<div id="loginFormWrap">
 <form id="loginForm"><label>Email</label><input type="email" id="email" placeholder="Enter your email" required><label>Password</label><input type="password" id="password" placeholder="Enter password" required><button type="submit" class="btn btn-primary" id="loginBtn">Sign In</button></form>
-<p class="info-text">Admin: admin@quizpath.test / ChangeMe!2026<br>Student: student@mediprep.test / Student@123<br><small style="color:#334155">v3.3</small></p></div></div></div>
+<p style="text-align:center;margin-top:1.2rem;color:#94a3b8;font-size:.95rem">Don't have an account? <a onclick="showRegister()" style="color:#818cf8;cursor:pointer;font-weight:600">Register</a></p>
+</div>
+<div id="registerFormWrap" class="hidden">
+<form id="registerForm"><label>Full Name</label><input type="text" id="regName" placeholder="Enter your full name" required><label>Email</label><input type="email" id="regEmail" placeholder="Enter your email" required><label>Password</label><input type="password" id="regPassword" placeholder="Min 8 characters" required minlength="8"><label>Confirm Password</label><input type="password" id="regConfirm" placeholder="Confirm password" required><button type="submit" class="btn btn-primary" id="regBtn">Create Account</button></form>
+<p style="text-align:center;margin-top:1.2rem;color:#94a3b8;font-size:.95rem">Already have an account? <a onclick="showLogin()" style="color:#818cf8;cursor:pointer;font-weight:600">Sign In</a></p>
+</div>
+<p class="info-text">Admin: admin@quizpath.test / ChangeMe!2026<br>Student: student@mediprep.test / Student@123</p></div></div></div>
 
 <!-- ============ ADMIN PAGE ============ -->
 <div id="adminPage" class="app hidden">
@@ -318,6 +325,53 @@ function installApp(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.
 // Auto-login check
 if(token)checkAuth();
 else document.getElementById('loginPage').classList.remove('hidden');
+
+// Show/hide login and register forms
+function showRegister(){
+  document.getElementById('loginFormWrap').classList.add('hidden');
+  document.getElementById('registerFormWrap').classList.remove('hidden');
+  document.getElementById('errorMsg').style.display='none';
+}
+function showLogin(){
+  document.getElementById('registerFormWrap').classList.add('hidden');
+  document.getElementById('loginFormWrap').classList.remove('hidden');
+  document.getElementById('errorMsg').style.display='none';
+}
+
+// Register form
+document.getElementById('registerForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const btn=document.getElementById('regBtn'),err=document.getElementById('errorMsg');
+  const name=document.getElementById('regName').value.trim();
+  const email=document.getElementById('regEmail').value.trim();
+  const password=document.getElementById('regPassword').value;
+  const confirm=document.getElementById('regConfirm').value;
+
+  if(password!==confirm){err.textContent='Passwords do not match';err.style.display='block';return}
+  if(password.length<8){err.textContent='Password must be at least 8 characters';err.style.display='block';return}
+
+  btn.disabled=true;btn.textContent='Creating account...';err.style.display='none';
+  try{
+    const r=await fetch(API+'/auth/register',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({name,email,password,password_confirmation:confirm,device_name:'web'})});
+    const d=await r.json();
+    if(r.ok&&d.data?.access_token){
+      token=d.data.access_token;
+      localStorage.setItem('qp_token',token);
+      currentUser=d.data.user||d.data;
+      routeByRole();
+    }else if(r.ok&&d.data?.user){
+      // Registration successful but no auto-login, show login form
+      err.style.display='block';err.style.background='#052e16';err.style.border='1px solid #16a34a';err.style.color='#86efac';
+      err.textContent='✓ Account created! Please sign in.';
+      showLogin();
+      document.getElementById('email').value=email;
+    }else{
+      const msg=d.message||d.errors?Object.values(d.errors||{}).flat().join(', '):'Registration failed';
+      err.textContent=msg;err.style.display='block';
+    }
+  }catch(x){err.textContent='Network error - check connection';err.style.display='block'}
+  btn.disabled=false;btn.textContent='Create Account';
+});
 
 // Login form
 document.getElementById('loginForm').addEventListener('submit',async e=>{
