@@ -908,20 +908,14 @@ async function loadImportHistory(){
 function showStudent(){
   const email=currentUser?.email||'default';
 
-  // Check if account is activated
+  // Check if account is activated — NO ACCESS without activation
   const isActivated=localStorage.getItem('qp_activated_'+email);
   if(!isActivated){
     showActivationScreen();
     return;
   }
 
-  // Check if exam is selected (onboarding)
-  const selectedExam=localStorage.getItem('qp_exam_'+email);
-  if(!selectedExam){
-    showOnboarding();
-    return;
-  }
-
+  // Activated — show dashboard with quiz
   document.getElementById('activationPage').classList.add('hidden');
   document.getElementById('onboardingPage').classList.add('hidden');
   document.getElementById('studentPage').classList.remove('hidden');
@@ -937,6 +931,8 @@ function showStudent(){
   });
   updateDashboardFromProgress();
   loadStudentData();
+  // Go directly to Today's Quiz page
+  showStudentPage('s-quiz',document.querySelector('#studentPage .nav-item:nth-child(2)'));
 }
 
 function showActivationScreen(){
@@ -969,6 +965,7 @@ function submitActivation(){
   localStorage.setItem('qp_activated_'+email,'true');
   err.style.display='none';
   document.getElementById('activationPage').classList.add('hidden');
+  // Go directly to student dashboard with quiz
   showStudent();
 }
 
