@@ -586,6 +586,7 @@ function updateLevelProgress(p){
   const tbody=document.getElementById('levelProgressBody');
   if(!tbody)return;
   let daysLeft=p.daysCompleted;
+  let currentFound=false;
   let html='';
   for(let lvl=1;lvl<=6;lvl++){
     let days,questions,status,badge;
@@ -593,10 +594,11 @@ function updateLevelProgress(p){
       // This level is fully completed
       days='30 / 30';questions='300 / 300';status='Completed';badge='badge-teal';
       daysLeft-=30;
-    }else if(daysLeft>0){
-      // This level is in progress
+    }else if(!currentFound){
+      // This is the current level (in progress)
       days=`${daysLeft} / 30`;questions=`${daysLeft*10} / 300`;status='In Progress';badge='badge-blue';
       daysLeft=0;
+      currentFound=true;
     }else{
       // This level is locked
       days='0 / 30';questions='0 / 300';status='Locked';badge='badge-green';
