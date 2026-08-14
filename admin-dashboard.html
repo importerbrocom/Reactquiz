@@ -274,7 +274,8 @@ td{padding:.8rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <div class="stat-card"><div class="stat-value" id="resultAccuracy">0%</div><div class="stat-label">Accuracy</div></div>
 <div class="stat-card"><div class="stat-value" id="resultTime">0s</div><div class="stat-label">Time</div></div>
 </div>
-<button class="btn btn-primary" onclick="backToQuizLanding()">Back to Dashboard</button>
+<button class="btn btn-primary" id="quizResultBtn" onclick="backToQuizLanding()">Back to Dashboard</button>
+<button class="btn btn-primary hidden" id="quizRetakeBtn" onclick="retakeQuiz()" style="background:#dc2626;margin-top:.8rem">Retake Quiz (new order)</button>
 </div>
 </div>
 </div>
@@ -1195,11 +1196,17 @@ function showQuizResults(){
     p.failedQs=[]; // Clear failed questions
     if(p.day>30){p.day=1;p.month++;} // Move to next month after 30 days
     document.getElementById('quizResultText').textContent=`🔥 Perfect score! Day ${p.day} quiz will be available tomorrow. Today's quiz is now closed.`;
+    // Show "Back to Dashboard" button, hide retake
+    document.getElementById('quizResultBtn').classList.remove('hidden');
+    document.getElementById('quizRetakeBtn').classList.add('hidden');
   }else{
     // NOT PERFECT — Save ALL 10 questions for retake (new order + shuffled options)
     p.todayCompleted=false;
     p.failedQs=quizQuestions; // Store ALL questions (will be reshuffled on retake)
-    document.getElementById('quizResultText').textContent=`You got ${quizScore}/${total} correct. Retake all 10 questions in a new order with shuffled options to unlock Day ${p.day+1}.`;
+    document.getElementById('quizResultText').textContent=`You got ${quizScore}/${total} correct. You need 10/10 to pass. Retake all questions in a new order.`;
+    // Show "Retake" button, hide back to dashboard
+    document.getElementById('quizResultBtn').classList.add('hidden');
+    document.getElementById('quizRetakeBtn').classList.remove('hidden');
   }
 
   saveProgress(p);
@@ -1218,6 +1225,24 @@ function backToQuizLanding(){
   document.getElementById('quizProgress').style.width='0%';
   document.getElementById('quizProgressText').textContent=`0 of 10 questions completed · Day ${p.day}`;
   showStudentPage('s-dashboard',document.querySelector('#studentPage .nav-item'));
+}
+
+function retakeQuiz(){
+  // Immediately restart with same questions in new order + shuffled options
+  const p=getProgress();
+  if(p.failedQs&&p.failedQs.length>0){
+    document.getElementById('quizComplete').classList.add('hidden');
+    document.getElementById('quizActive').classList.remove('hidden');
+    quizIndex=0;quizScore=0;quizWrong=0;selectedOption=null;quizStartTime=Date.now();
+    failedQuestions=[];
+    // Shuffle question order AND shuffle each question's options
+    quizQuestions=shuffleArray(p.failedQs).map(q=>shuffleOptions(q));
+    // Clear saved failed list
+    p.failedQs=[];
+    p.todayAnswered=0;
+    saveProgress(p);
+    renderQuestion();
+  }
 }
 
 // ============ LOGOUT ============
