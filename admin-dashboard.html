@@ -199,10 +199,10 @@ td{padding:.8rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <div class="card">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
 <h3>Course Progress</h3>
-<span class="badge badge-blue">In progress</span>
+<span class="badge badge-blue" id="courseBadge">In progress</span>
 </div>
-<p style="font-size:1.05rem;color:#e2e8f0;margin-bottom:.3rem">FMGE · Month 1 · Day 2</p>
-<p style="color:#94a3b8">Complete 10 questions to unlock Day 3</p>
+<p id="courseDay" style="font-size:1.05rem;color:#e2e8f0;margin-bottom:.3rem">FMGE · Month 1 · Day 1</p>
+<p id="courseSub" style="color:#94a3b8">Complete 10 questions to unlock Day 2</p>
 </div>
 
 <div class="card">
@@ -457,6 +457,7 @@ function showStudent(){
   document.getElementById('studentUserInfo').textContent=name;
   document.getElementById('profileName').textContent=currentUser?.name||'-';
   document.getElementById('profileEmail').textContent=currentUser?.email||'-';
+  updateDashboardFromProgress();
   loadStudentData();
 }
 
@@ -496,6 +497,42 @@ async function loadStudentData(){
 
 // ============ QUIZ ENGINE ============
 let quizQuestions=[],quizIndex=0,quizScore=0,quizWrong=0,selectedOption=null,quizStartTime=null,quizAnswered=false;
+
+// Persistent progress using localStorage
+function getProgress(){
+  const saved=localStorage.getItem('qp_progress');
+  return saved?JSON.parse(saved):{day:1,month:1,daysCompleted:0,streak:0,totalAnswered:0,totalCorrect:0,questionsThisMonth:0};
+}
+function saveProgress(p){localStorage.setItem('qp_progress',JSON.stringify(p))}
+
+function updateDashboardFromProgress(){
+  const p=getProgress();
+  const accuracy=p.totalAnswered>0?Math.round((p.totalCorrect/p.totalAnswered)*100):0;
+  document.getElementById('statAccuracy').textContent=accuracy+'%';
+  document.getElementById('statAccuracy2').textContent=accuracy+'%';
+  document.getElementById('statAnswered').textContent=p.totalAnswered;
+  document.getElementById('statAnswered2').textContent=p.totalAnswered;
+  document.getElementById('statDays').textContent=p.daysCompleted;
+  document.getElementById('statDays2').textContent=p.daysCompleted;
+  document.getElementById('statStreak').textContent=p.streak;
+  document.getElementById('statStreak2').textContent=p.streak;
+  document.getElementById('monthProgress').textContent=`${p.questionsThisMonth} of 300 pool questions completed`;
+
+  // Course progress card
+  document.getElementById('courseDay').textContent=`FMGE · Month ${p.month} · Day ${p.day}`;
+  document.getElementById('courseSub').textContent=`Complete 10 questions to unlock Day ${p.day+1}`;
+
+  // Streak message
+  if(p.streak>0){
+    document.getElementById('streakMsg').textContent=`🔥 You're on a ${p.streak}-day streak! Keep it up!`;
+  }else{
+    document.getElementById('streakMsg').textContent='Start your first quiz to begin your streak!';
+  }
+
+  // Quiz landing progress
+  document.getElementById('quizProgress').style.width='0%';
+  document.getElementById('quizProgressText').textContent=`0 of 10 questions completed · Day ${p.day}`;
+}
 
 function continueQuiz(){startQuiz();}
 
@@ -648,33 +685,41 @@ function showQuizResults(){
   document.getElementById('resultAccuracy').textContent=accuracy+'%';
   document.getElementById('resultTime').textContent=timeStr;
 
-  if(accuracy===100) document.getElementById('quizResultText').textContent='🔥 Perfect score! Day unlocked!';
-  else if(accuracy>=70) document.getElementById('quizResultText').textContent='Good job! Keep practicing to unlock the next day.';
-  else document.getElementById('quizResultText').textContent='Keep trying! You need 10/10 to unlock the next day.';
+  // Save progress
+  const p=getProgress();
+  p.totalAnswered+=total;
+  p.totalCorrect+=quizScore;
+  p.questionsThisMonth+=total;
 
-  // Update dashboard stats
-  document.getElementById('statAccuracy').textContent=accuracy+'%';
-  document.getElementById('statAccuracy2').textContent=accuracy+'%';
-  document.getElementById('statAnswered').textContent=total;
-  document.getElementById('statAnswered2').textContent=total;
-  document.getElementById('monthProgress').textContent=`${total} of 300 pool questions completed`;
-  if(accuracy===100){
-    document.getElementById('statDays').textContent='1';
-    document.getElementById('statDays2').textContent='1';
-    document.getElementById('statStreak').textContent='1';
-    document.getElementById('statStreak2').textContent='1';
-    document.getElementById('streakMsg').textContent='🔥 You\'re on a 1-day streak! Keep it up!';
+  if(quizScore===total){
+    // Perfect score — unlock next day!
+    p.daysCompleted++;
+    p.streak++;
+    p.day++;
+    if(p.day>30){p.day=1;p.month++;} // Move to next month after 30 days
+    document.getElementById('quizResultText').textContent='🔥 Perfect score! Day '+(p.day)+' unlocked!';
+  }else if(accuracy>=70){
+    document.getElementById('quizResultText').textContent=`Good job! But you need 10/10 to unlock Day ${p.day+1}. Try again!`;
+  }else{
+    document.getElementById('quizResultText').textContent=`Keep trying! You scored ${quizScore}/${total}. Need 10/10 to progress.`;
   }
+
+  saveProgress(p);
+  updateDashboardFromProgress();
 
   // Update progress bar to 100%
   document.getElementById('quizProgress').style.width='100%';
-  document.getElementById('quizProgressText').textContent=`${total} of ${total} questions completed`;
+  document.getElementById('quizProgressText').textContent=`${total} of ${total} questions completed · Day ${p.day}`;
 }
 
 function backToQuizLanding(){
   document.getElementById('quizLanding').classList.remove('hidden');
   document.getElementById('quizActive').classList.add('hidden');
   document.getElementById('quizComplete').classList.add('hidden');
+  const p=getProgress();
+  document.getElementById('quizProgress').style.width='0%';
+  document.getElementById('quizProgressText').textContent=`0 of 10 questions completed · Day ${p.day}`;
+  showStudentPage('s-dashboard',document.querySelector('#studentPage .nav-item'));
 }
 
 // ============ LOGOUT ============
