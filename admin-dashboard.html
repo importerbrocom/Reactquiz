@@ -971,12 +971,31 @@ function renderImportHistory(){
   }
   let html='';
   if(stored.length>0){
-    html+=`<div class="q-item" style="border-left:3px solid #16a34a"><div class="q-text">📚 ${stored.length} questions in quiz pool</div><div class="q-meta">Available for student quizzes</div></div>`;
+    html+=`<div class="q-item" style="border-left:3px solid #16a34a;display:flex;justify-content:space-between;align-items:center"><div><div class="q-text">📚 ${stored.length} questions in quiz pool</div><div class="q-meta">Available for student quizzes</div></div><button onclick="clearQuizPool()" style="background:#450a0a;border:1px solid #dc2626;color:#fca5a5;padding:.4rem .8rem;border-radius:6px;font-size:.75rem;cursor:pointer;font-weight:600">Remove All</button></div>`;
   }
-  history.forEach(h=>{
-    html+=`<div class="q-item"><div class="q-text">✓ Imported ${h.count} questions</div><div class="q-meta">${h.date} · by ${h.by}</div></div>`;
+  history.forEach((h,i)=>{
+    html+=`<div class="q-item" style="display:flex;justify-content:space-between;align-items:center"><div><div class="q-text">✓ Imported ${h.count} questions</div><div class="q-meta">${h.date} · by ${h.by}</div></div><button onclick="removeImport(${i})" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:1.1rem;padding:.3rem" title="Remove">✕</button></div>`;
   });
   el.innerHTML=html;
+}
+
+function clearQuizPool(){
+  if(!confirm('Remove all imported questions from the quiz pool? Students will get demo questions instead.'))return;
+  localStorage.removeItem('qp_questions');
+  localStorage.removeItem('qp_import_history');
+  renderImportHistory();
+  showUploadSuccess('Quiz pool cleared. Upload a new CSV to add questions.');
+}
+
+function removeImport(index){
+  if(!confirm('Remove this import record?'))return;
+  const history=JSON.parse(localStorage.getItem('qp_import_history')||'[]');
+  history.splice(index,1);
+  localStorage.setItem('qp_import_history',JSON.stringify(history));
+  if(history.length===0){
+    localStorage.removeItem('qp_questions');
+  }
+  renderImportHistory();
 }
 </script>
 </body>
