@@ -767,11 +767,24 @@ function loadExams(){
   const exams=getExams();
   const el=document.getElementById('categoriesList');
   if(exams.length===0){el.innerHTML='<p style="color:#64748b">No exams added yet. Click "+ Add Exam" to create one.</p>';return}
-  let html='<table><thead><tr><th>Exam</th><th>Description</th><th>Levels</th><th>Questions</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+  let html='';
   exams.forEach((ex,i)=>{
-    html+=`<tr><td>${ex.name}</td><td>${ex.desc}</td><td>${ex.levels}</td><td>${ex.qPerLevel}</td><td><span class="badge badge-green">${ex.status||'Active'}</span></td><td><a onclick="editExam(${i})" style="color:#3b82f6;cursor:pointer;margin-right:.8rem">Edit</a><a onclick="deleteExam(${i})" style="color:#ef4444;cursor:pointer">Delete</a></td></tr>`;
+    html+=`<div class="q-item" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.8rem">
+      <div style="flex:1;min-width:150px">
+        <div style="font-size:1rem;font-weight:600;color:#f8fafc;margin-bottom:.3rem">${ex.name}</div>
+        <div style="font-size:.8rem;color:#94a3b8">${ex.desc}</div>
+        <div style="display:flex;gap:.5rem;margin-top:.4rem;flex-wrap:wrap">
+          <span class="badge badge-blue">${ex.levels} levels</span>
+          <span class="badge badge-teal">${ex.qPerLevel} questions</span>
+          <span class="badge badge-green">${ex.status||'Active'}</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:.6rem">
+        <button onclick="editExam(${i})" style="background:#172554;border:1px solid #3b82f6;color:#3b82f6;padding:.4rem .8rem;border-radius:8px;font-size:.8rem;cursor:pointer;font-weight:500">Edit</button>
+        <button onclick="deleteExam(${i})" style="background:#450a0a;border:1px solid #dc2626;color:#fca5a5;padding:.4rem .8rem;border-radius:8px;font-size:.8rem;cursor:pointer;font-weight:500">Delete</button>
+      </div>
+    </div>`;
   });
-  html+='</tbody></table>';
   el.innerHTML=html;
 }
 
