@@ -941,6 +941,12 @@ function showActivationScreen(){
   document.getElementById('studentPage').classList.add('hidden');
   document.getElementById('onboardingPage').classList.add('hidden');
   document.getElementById('activationPage').classList.remove('hidden');
+  // Auto-fill code from URL parameter
+  const urlParams=new URLSearchParams(window.location.search);
+  const codeFromUrl=urlParams.get('code');
+  if(codeFromUrl){
+    document.getElementById('activationCodeInput').value=codeFromUrl.toUpperCase();
+  }
 }
 
 async function submitActivation(){
@@ -1908,25 +1914,22 @@ function generateCodes(){
 }
 
 function shareCode(code){
-  const text=`Your ERO activation code is:\n\n*${code}*\n\nActivate your account at:\nhttps://mediprep.nokkoo.in\n\nThis code can only be used once.`;
+  const url=`https://mediprep.nokkoo.in?code=${code}`;
+  const text=`Your ERO activation code is: ${code}\n\nClick to activate:\n${url}\n\nThis code can only be used once.`;
   if(navigator.share){
-    navigator.share({title:'ERO Activation Code',text}).catch(()=>{
-      navigator.clipboard.writeText(code).then(()=>alert('Code copied: '+code));
-    });
+    navigator.share({title:'ERO Activation Code',text,url}).catch(()=>{});
   }else{
-    navigator.clipboard.writeText(code).then(()=>alert('Code copied: '+code)).catch(()=>prompt('Copy this code:',code));
+    navigator.clipboard.writeText(url).then(()=>alert('Link copied!')).catch(()=>prompt('Copy:',url));
   }
 }
 
 function shareAllCodes(codes){
-  const codeList=codes.join('\n');
-  const text=`ERO Activation Codes:\n\n${codes.map((c,i)=>`${i+1}. *${c}*`).join('\n')}\n\nActivate at:\nhttps://mediprep.nokkoo.in\n\nEach code can only be used once.`;
+  const links=codes.map((c,i)=>`${i+1}. https://mediprep.nokkoo.in?code=${c}`).join('\n');
+  const text=`ERO Activation Codes:\n\n${links}\n\nEach code can only be used once.`;
   if(navigator.share){
-    navigator.share({title:'ERO Activation Codes',text}).catch(()=>{
-      navigator.clipboard.writeText(codeList).then(()=>alert('Codes copied!'));
-    });
+    navigator.share({title:'ERO Activation Codes',text}).catch(()=>{});
   }else{
-    navigator.clipboard.writeText(codeList).then(()=>alert('Codes copied!')).catch(()=>prompt('Copy:',codeList));
+    navigator.clipboard.writeText(links).then(()=>alert('Links copied!')).catch(()=>prompt('Copy:',links));
   }
 }
 
