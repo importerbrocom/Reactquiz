@@ -1,33 +1,1546 @@
-<!doctype html>
-<html lang="en" dir="ltr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#4F46E5" />
-    <meta name="description" content="Complete 10 questions a day, master every one, and unlock the next day." />
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#4F46E5">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<title>QuizPath - MediPrep</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0B1120;color:#f8fafc;min-height:100vh;font-size:16px}
 
-    <!-- PWA manifest -->
-    <link rel="manifest" href="/manifest.webmanifest" />
+/* ============ LOGIN ============ */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem}
+.login-box{width:100%;max-width:420px;padding:2rem}
+.login-box h1{color:#818cf8;font-size:2.2rem;text-align:center;margin-bottom:.5rem}
+.login-box .sub{color:#94a3b8;text-align:center;margin-bottom:2rem;font-size:1.1rem}
+.form-card{background:#1e293b;border-radius:14px;padding:2rem;border:1px solid #334155}
+.error-msg{background:#450a0a;border:1px solid #dc2626;color:#fca5a5;padding:.8rem;border-radius:8px;margin-bottom:1rem;font-size:.95rem;display:none}
+label{display:block;color:#e2e8f0;font-size:1rem;margin-bottom:.5rem;font-weight:500}
+input{width:100%;padding:.85rem 1rem;background:#0f172a;border:1px solid #334155;border-radius:10px;color:#f8fafc;font-size:1.1rem;margin-bottom:1.2rem;outline:none}
+input:focus{border-color:#818cf8}
+.btn{padding:.85rem 1.2rem;border-radius:10px;border:none;cursor:pointer;font-size:1.1rem;font-weight:600;width:100%;transition:background .2s}
+.btn-primary{background:#4f46e5;color:#fff}
+.btn-primary:hover{background:#4338ca}
+.info-text{margin-top:1.5rem;text-align:center;color:#64748b;font-size:.85rem;line-height:1.5}
 
-    <!-- Preconnect to API -->
-    <link rel="preconnect" href="http://localhost:8000" crossorigin />
+/* ============ ADMIN LAYOUT ============ */
+.app{display:flex;min-height:100vh}
+.sidebar{width:250px;background:#1e293b;border-right:1px solid #334155;padding:1.5rem 0;position:fixed;height:100vh;overflow-y:auto}
+.sidebar h1{color:#818cf8;font-size:1.6rem;padding:0 1.5rem;margin-bottom:2rem}
+.nav-item{display:block;padding:.9rem 1.5rem;color:#94a3b8;text-decoration:none;font-size:1rem;cursor:pointer;border-left:3px solid transparent;transition:all .2s}
+.nav-item:hover,.nav-item.active{color:#818cf8;background:#0f172a;border-left-color:#818cf8}
+.main{flex:1;margin-left:250px;padding:2rem 2.5rem}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;padding-bottom:1rem;border-bottom:1px solid #334155}
+.page-title{font-size:1.8rem;font-weight:700}
+.user-info{font-size:1rem;color:#94a3b8}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.2rem;margin-bottom:2rem}
+.stat-card{background:#1e293b;border-radius:12px;padding:1.5rem;border:1px solid #334155;text-align:center}
+.stat-value{font-size:2.2rem;font-weight:700;color:#818cf8}
+.stat-label{font-size:.9rem;color:#94a3b8;margin-top:.4rem}
+.card{background:#1e293b;border-radius:12px;padding:1.5rem;border:1px solid #334155;margin-bottom:1.5rem}
+.card h3{font-size:1.2rem;font-weight:600;margin-bottom:1rem;color:#e2e8f0}
+.card p{font-size:1rem;line-height:1.6;color:#94a3b8}
+table{width:100%;border-collapse:collapse;font-size:1rem}
+th{text-align:left;padding:.8rem;color:#94a3b8;border-bottom:1px solid #334155;font-size:.9rem}
+td{padding:.8rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
+.badge{display:inline-block;padding:.25rem .7rem;border-radius:9999px;font-size:.8rem;font-weight:500}
+.badge-green{background:#052e16;color:#86efac}
+.badge-blue{background:#1e1b4b;color:#a5b4fc}
+.badge-teal{background:#042f2e;color:#5eead4}
+.badge-amber{background:#451a03;color:#fbbf24}
+.badge-red{background:#450a0a;color:#fca5a5}
+.hidden{display:none!important}
+.q-item{background:#0f172a;border-radius:10px;padding:1rem;margin-bottom:.7rem;border:1px solid #334155}
+.q-text{font-size:1rem;color:#e2e8f0;margin-bottom:.4rem}
+.q-meta{font-size:.8rem;color:#64748b}
+.install-banner{background:#1e1b4b;border:1px solid #4f46e5;border-radius:12px;padding:1.2rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between}
+.install-banner p{color:#a5b4fc;font-size:1rem}
+.install-btn{background:#4f46e5;color:#fff;border:none;padding:.7rem 1.5rem;border-radius:8px;font-size:.95rem;font-weight:600;cursor:pointer}
+.install-btn:hover{background:#4338ca}
 
-    <!-- iOS PWA support -->
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="QuizPath" />
-    <link rel="apple-touch-icon" href="/icons/apple-touch-180.png" />
+/* ============ STUDENT LAYOUT (uses same .app, .sidebar, .main as admin) ============ */
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/icons/favicon.svg" />
+/* Quiz Options */
+.quiz-option{display:block;width:100%;text-align:left;padding:1rem 1.2rem;margin-bottom:.6rem;background:#0f172a;border:2px solid #334155;border-radius:10px;color:#e2e8f0;font-size:1rem;cursor:pointer;transition:all .2s;line-height:1.4}
+.quiz-option:hover{border-color:#818cf8;background:#1e1b4b}
+.quiz-option.selected{border-color:#818cf8;background:#1e1b4b;color:#fff}
+.quiz-option.correct{border-color:#16a34a;background:#052e16;color:#86efac}
+.quiz-option.wrong{border-color:#dc2626;background:#450a0a;color:#fca5a5}
+.quiz-option.disabled{pointer-events:none;opacity:.8}
+.quiz-option .opt-label{font-weight:700;margin-right:.5rem;color:#818cf8}
 
-    <title>QuizPath — Daily Exam Practice</title>
-    <script type="module" crossorigin src="/assets/index-B337vYjT.js"></script>
-    <link rel="modulepreload" crossorigin href="/assets/jsx-runtime-Ujx4pJCj.js">
-    <link rel="modulepreload" crossorigin href="/assets/client-BVlR6Fea.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-jlQPnWqU.css">
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+/* Responsive */
+@media(max-width:900px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.sidebar{width:200px}.main{margin-left:200px;padding:1.5rem}.stat-grid{grid-template-columns:1fr 1fr}}
+
+/* ============ UPLOAD PAGE ============ */
+.drop-zone{border:2px dashed #334155;border-radius:14px;padding:3rem 2rem;text-align:center;cursor:pointer;transition:all .3s;background:#0f172a;margin-bottom:1.2rem}
+.drop-zone:hover,.drop-zone.drag-over{border-color:#818cf8;background:#1e1b4b}
+.drop-zone-icon{font-size:3rem;margin-bottom:.8rem}
+.drop-zone-text{font-size:1.1rem;color:#e2e8f0;font-weight:500;margin-bottom:.3rem}
+.drop-zone-sub{font-size:.85rem;color:#64748b}
+.upload-status{padding:1rem;border-radius:10px;margin-bottom:1rem;font-size:.95rem}
+.upload-status.success{background:#052e16;border:1px solid #16a34a;color:#86efac}
+.upload-status.error{background:#450a0a;border:1px solid #dc2626;color:#fca5a5}
+.upload-status.loading{background:#1e1b4b;border:1px solid #4f46e5;color:#a5b4fc}
+.btn-sm{padding:.5rem 1rem;border-radius:8px;border:none;cursor:pointer;font-size:.85rem;font-weight:600}
+.btn-confirm{background:#16a34a;color:#fff}
+.btn-confirm:hover{background:#15803d}
+.parsed-q{background:#0f172a;border-radius:10px;padding:1rem;margin-bottom:.6rem;border:1px solid #334155}
+.parsed-q-text{font-size:.95rem;color:#e2e8f0;margin-bottom:.4rem}
+.parsed-q-opts{font-size:.8rem;color:#94a3b8;margin-bottom:.3rem}
+.parsed-q-meta{display:flex;gap:.5rem;align-items:center;font-size:.75rem}
+.file-chip{display:inline-flex;align-items:center;gap:.5rem;background:#1e293b;border:1px solid #334155;border-radius:8px;padding:.5rem 1rem;margin-top:.8rem;font-size:.9rem;color:#e2e8f0}
+.file-chip .remove{color:#ef4444;cursor:pointer;font-weight:700}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN PAGE ============ -->
+<div id="loginPage" class="login-wrap">
+<div class="login-box"><h1>QuizPath</h1><p class="sub">MediPrep - Exam Preparation</p>
+<div class="form-card"><div id="errorMsg" class="error-msg"></div>
+<div id="loginFormWrap">
+<form id="loginForm"><label>Email</label><input type="email" id="email" placeholder="Enter your email" required><label>Password</label><input type="password" id="password" placeholder="Enter password" required><button type="submit" class="btn btn-primary" id="loginBtn">Sign In</button></form>
+<div style="display:flex;align-items:center;margin:1.2rem 0;gap:.8rem"><div style="flex:1;height:1px;background:#334155"></div><span style="color:#64748b;font-size:.85rem">or</span><div style="flex:1;height:1px;background:#334155"></div></div>
+<button onclick="googleSignIn()" class="btn" style="background:#fff;color:#333;display:flex;align-items:center;justify-content:center;gap:.6rem;font-weight:600;border:1px solid #e2e8f0"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Continue with Google</button>
+<p style="text-align:center;margin-top:1.2rem;color:#94a3b8;font-size:.95rem">Don't have an account? <a onclick="showRegister()" style="color:#818cf8;cursor:pointer;font-weight:600">Register</a></p>
+</div>
+<div id="registerFormWrap" class="hidden">
+<form id="registerForm"><label>Full Name</label><input type="text" id="regName" placeholder="Enter your full name" required><label>Email</label><input type="email" id="regEmail" placeholder="Enter your email" required><label>Password</label><input type="password" id="regPassword" placeholder="Min 8 characters" required minlength="8"><label>Confirm Password</label><input type="password" id="regConfirm" placeholder="Confirm password" required><button type="submit" class="btn btn-primary" id="regBtn">Create Account</button></form>
+<div style="display:flex;align-items:center;margin:1.2rem 0;gap:.8rem"><div style="flex:1;height:1px;background:#334155"></div><span style="color:#64748b;font-size:.85rem">or</span><div style="flex:1;height:1px;background:#334155"></div></div>
+<button onclick="googleSignIn()" class="btn" style="background:#fff;color:#333;display:flex;align-items:center;justify-content:center;gap:.6rem;font-weight:600;border:1px solid #e2e8f0"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Sign up with Google</button>
+<p style="text-align:center;margin-top:1.2rem;color:#94a3b8;font-size:.95rem">Already have an account? <a onclick="showLogin()" style="color:#818cf8;cursor:pointer;font-weight:600">Sign In</a></p>
+</div>
+<p class="info-text">Admin: admin@quizpath.test / ChangeMe!2026<br>Student: student@mediprep.test / Student@123</p></div></div></div>
+
+<!-- ============ ADMIN PAGE ============ -->
+<div id="adminPage" class="app hidden">
+<aside class="sidebar"><h1>QuizPath</h1>
+<a class="nav-item active" onclick="showPage('dashboard',this)">📊 Dashboard</a>
+<a class="nav-item" onclick="showPage('questions',this)">❓ Questions</a>
+<a class="nav-item" onclick="showPage('upload',this)">📄 Upload Questions</a>
+<a class="nav-item" onclick="showPage('students',this)">👥 Students</a>
+<a class="nav-item" onclick="showPage('categories',this)">📁 Categories</a>
+<a class="nav-item" onclick="showPage('settings',this)">⚙️ Settings</a>
+</aside>
+<main class="main">
+<div class="topbar"><h2 class="page-title" id="pageTitle">Dashboard</h2><div style="display:flex;align-items:center;gap:1rem"><span class="user-info" id="userInfo"></span><a onclick="logout()" style="color:#ef4444;cursor:pointer;font-size:.9rem;font-weight:500">Sign Out</a></div></div>
+
+<div id="installBanner" class="install-banner hidden"><p>📱 Install QuizPath as an app for quick access</p><button class="install-btn" onclick="installApp()">Install App</button></div>
+
+<div id="pg-dashboard">
+<div class="stat-grid" id="statsGrid"></div>
+<div class="card"><h3>System Info</h3><p>QuizPath Medical Exam Preparation Platform. 300 FMGE questions loaded across 6 levels (30 days each, 10 questions per day). Students must master all 10 questions per day to unlock the next day.</p></div>
+</div>
+<div id="pg-questions" class="hidden"><div class="card"><h3>Questions - Level 1</h3><div id="questionsList"></div></div></div>
+<div id="pg-students" class="hidden"><div class="card"><h3>Registered Users</h3><div id="studentsList"></div></div></div>
+<div id="pg-categories" class="hidden"><div class="card"><h3>Exam Categories & Programmes</h3><div id="categoriesList"></div></div></div>
+<div id="pg-settings" class="hidden"><div class="card"><h3>Application Configuration</h3><div id="settingsInfo"></div></div></div>
+
+<!-- Upload PDF Page -->
+<div id="pg-upload" class="hidden">
+<div class="card">
+<h3>📄 Upload Questions from PDF / CSV</h3>
+<p style="margin-bottom:1.2rem">Upload an FMGE question PDF or a pre-formatted CSV file. Questions will be parsed and added to the student quiz pool.</p>
+
+<div id="dropZone" class="drop-zone">
+<div class="drop-zone-icon">📁</div>
+<p class="drop-zone-text">Drag & drop your PDF or CSV file here</p>
+<p class="drop-zone-sub">or click to browse</p>
+<input type="file" id="fileInput" accept=".pdf,.csv" style="display:none">
+</div>
+
+<div id="uploadStatus" class="upload-status hidden"></div>
+</div>
+
+<!-- Parsed Questions Preview -->
+<div id="parsedPreview" class="card hidden">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+<h3>Parsed Questions Preview</h3>
+<div>
+<span id="parsedCount" class="badge badge-teal" style="margin-right:.5rem"></span>
+<button class="btn-sm btn-confirm" onclick="confirmImport()">✓ Import All</button>
+</div>
+</div>
+<div id="parsedList"></div>
+</div>
+
+<!-- Import History -->
+<div class="card">
+<h3>Import History</h3>
+<div id="importHistory">
+<p style="color:#64748b;font-size:.9rem">No imports yet. Upload a PDF or CSV to get started.</p>
+</div>
+</div>
+</div>
+</main></div>
+
+<!-- ============ STUDENT PAGE ============ -->
+<div id="studentPage" class="app hidden">
+<aside class="sidebar"><h1>QuizPath</h1>
+<a class="nav-item active" onclick="showStudentPage('s-dashboard',this)">📊 Dashboard</a>
+<a class="nav-item" onclick="showStudentPage('s-quiz',this)">📝 Today's Quiz</a>
+<a class="nav-item" onclick="showStudentPage('s-progress',this)">📈 Progress</a>
+<a class="nav-item" onclick="showStudentPage('s-notifications',this)">🔔 Notifications</a>
+<a class="nav-item" onclick="showStudentPage('s-profile',this)">👤 Profile</a>
+</aside>
+<main class="main">
+<div class="topbar"><h2 class="page-title" id="studentPageTitle">Dashboard</h2><div style="display:flex;align-items:center;gap:1rem"><span class="user-info" id="studentUserInfo"></span><a onclick="logout()" style="color:#ef4444;cursor:pointer;font-size:.9rem;font-weight:500">Sign Out</a></div></div>
+
+<!-- Student Dashboard -->
+<div id="pg-s-dashboard">
+<div class="card" style="border-left:3px solid #818cf8;margin-bottom:1.5rem">
+<h3 id="studentGreeting" style="font-size:1.4rem;margin-bottom:.3rem">Hello, Student!</h3>
+<p id="streakMsg" style="color:#818cf8;font-size:.95rem">Start your first quiz to begin your streak!</p>
+</div>
+
+<div class="stat-grid" id="studentStatsGrid">
+<div class="stat-card"><div class="stat-value" id="statAccuracy">0%</div><div class="stat-label">Overall Accuracy</div></div>
+<div class="stat-card"><div class="stat-value" id="statAnswered">0</div><div class="stat-label">Questions Answered</div></div>
+<div class="stat-card"><div class="stat-value" id="statDays">0</div><div class="stat-label">Days Completed</div></div>
+<div class="stat-card"><div class="stat-value" id="statStreak">0</div><div class="stat-label">Current Streak</div></div>
+</div>
+
+<div class="card">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+<h3>Course Progress</h3>
+<span class="badge badge-blue" id="courseBadge">In progress</span>
+</div>
+<p id="courseDay" style="font-size:1.05rem;color:#e2e8f0;margin-bottom:.3rem">FMGE · Month 1 · Day 1</p>
+<p id="courseSub" style="color:#94a3b8">Complete 10 questions to unlock Day 2</p>
+</div>
+
+<div class="card">
+<h3 style="margin-bottom:.8rem">This Month</h3>
+<div style="display:flex;justify-content:space-between;align-items:center">
+<p id="monthProgress">0 of 300 pool questions completed</p>
+<span class="badge badge-blue">Exam locked</span>
+</div>
+</div>
+</div>
+
+<!-- Student Quiz Page -->
+<div id="pg-s-quiz" class="hidden">
+<div id="quizLanding">
+<div class="card">
+<h3 style="margin-bottom:1rem">Today's Quiz</h3>
+<div style="background:#0f172a;border-radius:9999px;height:12px;margin-bottom:.8rem;overflow:hidden"><div id="quizProgress" style="height:100%;background:#818cf8;border-radius:9999px;width:0%;transition:width .4s ease"></div></div>
+<p id="quizProgressText" style="color:#94a3b8;margin-bottom:1.2rem">0 of 10 questions completed</p>
+<button class="btn btn-primary" id="quizStartBtn" onclick="startQuiz()">Start today's quiz</button>
+</div>
+<div class="card"><h3>Quiz Rules</h3><p>Complete all 10 questions correctly to unlock the next day. Incorrect answers are requeued at the end. You must master every question to progress.</p></div>
+</div>
+
+<!-- Active Quiz Interface -->
+<div id="quizActive" class="hidden">
+<div class="card" style="border:1px solid #334155">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem">
+<span class="badge badge-blue" id="quizQNum">Question 1 of 10</span>
+<span class="badge badge-teal" id="quizSubject">Subject</span>
+</div>
+<p id="quizQuestionText" style="font-size:1.1rem;color:#f8fafc;line-height:1.6;margin-bottom:1.5rem;font-weight:500"></p>
+<div id="quizImage" style="margin-bottom:1rem;display:none"><img id="quizImg" style="max-width:100%;border-radius:8px;border:1px solid #334155" /></div>
+<div id="quizOptions"></div>
+<div id="quizFeedback" class="hidden" style="margin-top:1rem;padding:1rem;border-radius:10px"></div>
+<div style="display:flex;gap:1rem;margin-top:1.5rem">
+<button id="quizSubmitBtn" class="btn btn-primary" onclick="submitAnswer()" disabled>Submit Answer</button>
+<button id="quizNextBtn" class="btn btn-primary hidden" onclick="nextQuestion()" style="background:#16a34a">Next Question →</button>
+</div>
+</div>
+<div class="card" style="padding:1rem">
+<div style="display:flex;justify-content:space-between;align-items:center">
+<span style="color:#94a3b8;font-size:.85rem" id="quizScoreText">Score: 0 correct</span>
+<span style="color:#94a3b8;font-size:.85rem" id="quizTimer"></span>
+</div>
+</div>
+</div>
+
+<!-- Quiz Complete -->
+<div id="quizComplete" class="hidden">
+<div class="card" style="text-align:center;padding:2.5rem">
+<div style="font-size:3rem;margin-bottom:1rem">🎉</div>
+<h3 style="font-size:1.5rem;margin-bottom:.5rem">Quiz Complete!</h3>
+<p style="color:#94a3b8;margin-bottom:1.5rem" id="quizResultText">Great job!</p>
+<div class="stat-grid" style="margin-bottom:1.5rem">
+<div class="stat-card"><div class="stat-value" id="resultCorrect">0</div><div class="stat-label">Correct</div></div>
+<div class="stat-card"><div class="stat-value" id="resultWrong">0</div><div class="stat-label">Wrong</div></div>
+<div class="stat-card"><div class="stat-value" id="resultAccuracy">0%</div><div class="stat-label">Accuracy</div></div>
+<div class="stat-card"><div class="stat-value" id="resultTime">0s</div><div class="stat-label">Time</div></div>
+</div>
+<button class="btn btn-primary" onclick="backToQuizLanding()">Back to Dashboard</button>
+</div>
+</div>
+</div>
+
+<!-- Student Progress Page -->
+<div id="pg-s-progress" class="hidden">
+<div class="stat-grid">
+<div class="stat-card"><div class="stat-value" id="statAccuracy2">0%</div><div class="stat-label">Overall Accuracy</div></div>
+<div class="stat-card"><div class="stat-value" id="statAnswered2">0</div><div class="stat-label">Questions Answered</div></div>
+<div class="stat-card"><div class="stat-value" id="statDays2">0</div><div class="stat-label">Days Completed</div></div>
+<div class="stat-card"><div class="stat-value" id="statStreak2">0</div><div class="stat-label">Current Streak</div></div>
+</div>
+<div class="card"><h3>Level Progress</h3>
+<table><thead><tr><th>Level</th><th>Days</th><th>Questions</th><th>Status</th></tr></thead>
+<tbody id="levelProgressBody">
+<tr><td>Level 1</td><td>0 / 30</td><td>0 / 300</td><td><span class="badge badge-blue">In Progress</span></td></tr>
+<tr><td>Level 2</td><td>0 / 30</td><td>0 / 300</td><td><span class="badge badge-green">Locked</span></td></tr>
+<tr><td>Level 3</td><td>0 / 30</td><td>0 / 300</td><td><span class="badge badge-green">Locked</span></td></tr>
+<tr><td>Level 4</td><td>0 / 30</td><td>0 / 300</td><td><span class="badge badge-green">Locked</span></td></tr>
+<tr><td>Level 5</td><td>0 / 30</td><td>0 / 300</td><td><span class="badge badge-green">Locked</span></td></tr>
+<tr><td>Level 6</td><td>0 / 30</td><td>0 / 300</td><td><span class="badge badge-green">Locked</span></td></tr>
+</tbody></table>
+</div>
+</div>
+
+<!-- Student Notifications Page -->
+<div id="pg-s-notifications" class="hidden">
+<div class="card"><h3>Notifications</h3><p style="color:#64748b">No new notifications.</p></div>
+</div>
+
+<!-- Student Profile Page -->
+<div id="pg-s-profile" class="hidden">
+<div class="card"><h3>Profile</h3>
+<table>
+<tr><td style="color:#94a3b8;width:40%">Name</td><td id="profileName">-</td></tr>
+<tr><td style="color:#94a3b8">Email</td><td id="profileEmail">-</td></tr>
+<tr><td style="color:#94a3b8">Role</td><td>Student</td></tr>
+<tr><td style="color:#94a3b8">Programme</td><td>FMGE Complete - 6 Months</td></tr>
+</table>
+</div>
+</div>
+
+</main></div>
+
+<script>
+const API='/api/v1';
+let token=localStorage.getItem('qp_token'),currentUser=null,deferredPrompt=null;
+
+// PWA Install
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;const b=document.getElementById('installBanner');if(b)b.classList.remove('hidden')});
+function installApp(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null;document.getElementById('installBanner').classList.add('hidden')})}}
+
+// Auto-login check
+if(token)checkAuth();
+else document.getElementById('loginPage').classList.remove('hidden');
+
+// Show/hide login and register forms
+function showRegister(){
+  document.getElementById('loginFormWrap').classList.add('hidden');
+  document.getElementById('registerFormWrap').classList.remove('hidden');
+  document.getElementById('errorMsg').style.display='none';
+}
+function showLogin(){
+  document.getElementById('registerFormWrap').classList.add('hidden');
+  document.getElementById('loginFormWrap').classList.remove('hidden');
+  document.getElementById('errorMsg').style.display='none';
+}
+function trackRegisteredStudent(name,email){
+  const students=JSON.parse(localStorage.getItem('qp_registered_students')||'[]');
+  const exists=students.some(s=>s.email.toLowerCase()===email.toLowerCase());
+  if(!exists){
+    students.push({name,email,created_at:new Date().toISOString(),status:'Active'});
+    localStorage.setItem('qp_registered_students',JSON.stringify(students));
+  }
+}
+
+// Google Sign-In
+const GOOGLE_CLIENT_ID='YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com'; // ← Replace with your actual Client ID
+
+function googleSignIn(){
+  const err=document.getElementById('errorMsg');
+  if(GOOGLE_CLIENT_ID.includes('YOUR_GOOGLE')){
+    err.textContent='Google Sign-In not configured yet. Please set up a Google Client ID.';
+    err.style.display='block';
+    return;
+  }
+  try{
+    google.accounts.id.initialize({
+      client_id:GOOGLE_CLIENT_ID,
+      callback:handleGoogleResponse,
+      auto_select:false
+    });
+    google.accounts.id.prompt((notification)=>{
+      if(notification.isNotDisplayed()||notification.isSkippedMoment()){
+        // Fallback: use popup mode
+        google.accounts.oauth2.initTokenClient({
+          client_id:GOOGLE_CLIENT_ID,
+          scope:'email profile',
+          callback:handleGoogleToken
+        }).requestAccessToken();
+      }
+    });
+  }catch(e){
+    err.textContent='Google Sign-In failed to load. Please try again.';
+    err.style.display='block';
+  }
+}
+
+async function handleGoogleResponse(response){
+  const err=document.getElementById('errorMsg');
+  err.style.display='none';
+  try{
+    // Decode the JWT token to get user info
+    const payload=JSON.parse(atob(response.credential.split('.')[1]));
+    const name=payload.name||'';
+    const email=payload.email||'';
+    const googleToken=response.credential;
+
+    // Try to login/register via API with Google token
+    let success=false;
+    try{
+      const r=await fetch(API+'/auth/google',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({token:googleToken,name,email,device_name:'web'})});
+      const d=await r.json();
+      if(r.ok&&d.data?.access_token){
+        token=d.data.access_token;
+        localStorage.setItem('qp_token',token);
+        currentUser=d.data.user||d.data;
+        trackRegisteredStudent(name,email);
+        routeByRole();
+        success=true;
+      }
+    }catch(e){}
+
+    // If API doesn't support Google auth, try normal login or register
+    if(!success){
+      try{
+        const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({email,password:'google_oauth_'+email,device_name:'web'})});
+        const d=await r.json();
+        if(r.ok&&d.data?.access_token){
+          token=d.data.access_token;localStorage.setItem('qp_token',token);
+          currentUser=d.data.user||d.data;
+          trackRegisteredStudent(name,email);
+          routeByRole();success=true;
+        }
+      }catch(e){}
+    }
+
+    // If still not logged in, create local session
+    if(!success){
+      currentUser={name,email,role:'student'};
+      token='google_local_'+Date.now();
+      localStorage.setItem('qp_token',token);
+      trackRegisteredStudent(name,email);
+      routeByRole();
+    }
+  }catch(e){
+    err.textContent='Failed to process Google sign-in. Please try email login.';
+    err.style.display='block';
+  }
+}
+
+async function handleGoogleToken(tokenResponse){
+  const err=document.getElementById('errorMsg');
+  try{
+    const r=await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+tokenResponse.access_token}});
+    const profile=await r.json();
+    handleGoogleResponse({credential:btoa(JSON.stringify({alg:'none'}))+'.'+btoa(JSON.stringify({name:profile.name,email:profile.email,sub:profile.sub}))+'.fake'});
+  }catch(e){
+    err.textContent='Failed to get Google profile. Please try email login.';
+    err.style.display='block';
+  }
+}
+
+// Register form
+document.getElementById('registerForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const btn=document.getElementById('regBtn'),err=document.getElementById('errorMsg');
+  const name=document.getElementById('regName').value.trim();
+  const email=document.getElementById('regEmail').value.trim();
+  const password=document.getElementById('regPassword').value;
+  const confirm=document.getElementById('regConfirm').value;
+
+  if(password!==confirm){err.textContent='Passwords do not match';err.style.display='block';return}
+  if(password.length<8){err.textContent='Password must be at least 8 characters';err.style.display='block';return}
+
+  btn.disabled=true;btn.textContent='Creating account...';err.style.display='none';
+  try{
+    const r=await fetch(API+'/auth/register',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({name,email,password,password_confirmation:confirm,device_name:'web'})});
+    const d=await r.json();
+    if(r.ok&&d.data?.access_token){
+      token=d.data.access_token;
+      localStorage.setItem('qp_token',token);
+      currentUser=d.data.user||d.data;
+      // Track registered student locally
+      trackRegisteredStudent(name,email);
+      routeByRole();
+    }else if(r.ok&&d.data?.user){
+      // Registration successful but no auto-login, show login form
+      trackRegisteredStudent(name,email);
+      err.style.display='block';err.style.background='#052e16';err.style.border='1px solid #16a34a';err.style.color='#86efac';
+      err.textContent='✓ Account created! Please sign in.';
+      showLogin();
+      document.getElementById('email').value=email;
+    }else{
+      const msg=d.message||d.errors?Object.values(d.errors||{}).flat().join(', '):'Registration failed';
+      err.textContent=msg;err.style.display='block';
+    }
+  }catch(x){err.textContent='Network error - check connection';err.style.display='block'}
+  btn.disabled=false;btn.textContent='Create Account';
+});
+
+// Login form
+document.getElementById('loginForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const btn=document.getElementById('loginBtn'),err=document.getElementById('errorMsg');
+  btn.disabled=true;btn.textContent='Signing in...';err.style.display='none';
+  try{
+    const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({email:document.getElementById('email').value,password:document.getElementById('password').value,device_name:'web'})});
+    const d=await r.json();
+    if(r.ok&&d.data?.access_token){
+      token=d.data.access_token;
+      localStorage.setItem('qp_token',token);
+      currentUser=d.data.user||d.data;
+      routeByRole();
+    }else{err.textContent=d.message||'Login failed';err.style.display='block'}
+  }catch(x){err.textContent='Network error - check connection';err.style.display='block'}
+  btn.disabled=false;btn.textContent='Sign In';
+});
+
+async function checkAuth(){
+  try{
+    const r=await fetch(API+'/auth/me',{headers:{Authorization:'Bearer '+token,Accept:'application/json'}});
+    if(r.ok){const d=await r.json();currentUser=d.data?.user||d.data||d.user||d;routeByRole()}
+    else{localStorage.removeItem('qp_token');token=null}
+  }catch(e){localStorage.removeItem('qp_token');token=null}
+}
+
+// Route by role
+function routeByRole(){
+  document.getElementById('loginPage').classList.add('hidden');
+  // Check user data - try multiple possible email locations
+  const email=(currentUser?.email||currentUser?.user?.email||'').toLowerCase().trim();
+  // STRICT: only admin@quizpath.test goes to admin
+  const isAdmin=(email==='admin@quizpath.test');
+
+  // Track student login for admin visibility
+  if(!isAdmin&&email){
+    trackRegisteredStudent(currentUser?.name||'Student',email);
+  }
+
+  console.log('Route by role:', {email, isAdmin, currentUser});
+
+  if(isAdmin){
+    showAdmin();
+  }else{
+    showStudent();
+  }
+}
+
+// ============ ADMIN FUNCTIONS ============
+function showAdmin(){
+  document.getElementById('adminPage').classList.remove('hidden');
+  document.getElementById('studentPage').classList.add('hidden');
+  document.getElementById('userInfo').textContent=currentUser?.name||'Admin';
+  loadDashboard();
+}
+
+function showPage(page,el){
+  document.querySelectorAll('#adminPage [id^=pg-]').forEach(e=>e.classList.add('hidden'));
+  document.getElementById('pg-'+page).classList.remove('hidden');
+  document.getElementById('pageTitle').textContent=page.charAt(0).toUpperCase()+page.slice(1);
+  document.querySelectorAll('#adminPage .nav-item').forEach(e=>e.classList.remove('active'));
+  if(el)el.classList.add('active');
+  if(page==='dashboard')loadDashboard();
+  if(page==='questions')loadQuestions();
+  if(page==='students')loadStudents();
+  if(page==='categories')loadCategories();
+  if(page==='settings')loadSettings();
+  if(page==='upload')loadImportHistory();
+}
+
+async function apiFetch(u){
+  try{const r=await fetch(API+u,{headers:{Authorization:'Bearer '+token,Accept:'application/json'}});return await r.json()}
+  catch(e){return{data:null}}
+}
+
+async function loadDashboard(){
+  const g=document.getElementById('statsGrid');
+  try{
+    const d=await apiFetch('/admin/counters');
+    if(d.data){g.innerHTML=`<div class="stat-card"><div class="stat-value">${d.data.students||0}</div><div class="stat-label">Students</div></div><div class="stat-card"><div class="stat-value">${d.data.active_students||0}</div><div class="stat-label">Active Today</div></div><div class="stat-card"><div class="stat-value">${d.data.questions||300}</div><div class="stat-label">Questions</div></div><div class="stat-card"><div class="stat-value">${d.data.levels||6}</div><div class="stat-label">Levels</div></div>`}
+    else throw'no data';
+  }catch(e){g.innerHTML='<div class="stat-card"><div class="stat-value">300</div><div class="stat-label">Questions</div></div><div class="stat-card"><div class="stat-value">6</div><div class="stat-label">Levels</div></div><div class="stat-card"><div class="stat-value">30</div><div class="stat-label">Days/Level</div></div><div class="stat-card"><div class="stat-value">10</div><div class="stat-label">Q/Day</div></div>'}
+}
+
+function loadQuestions(){
+  const el=document.getElementById('questionsList');
+  const stored=JSON.parse(localStorage.getItem('qp_questions')||'[]');
+  if(stored.length>0){
+    let h='';
+    stored.forEach((q,i)=>{
+      const text=q.questionText||q.question_text||'Question '+(i+1);
+      const subject=q.subject||'General';
+      const day=Math.floor(i/10)+1;
+      const correct=q.correctOption||q.correct_option||'—';
+      const optA=q.optionA||q.option_a||'';
+      const optB=q.optionB||q.option_b||'';
+      const optC=q.optionC||q.option_c||'';
+      const optD=q.optionD||q.option_d||'';
+      h+=`<div class="q-item">
+        <div class="q-text">Q${i+1}: ${text}</div>
+        <div style="margin:.6rem 0;font-size:.85rem;color:#94a3b8;line-height:1.6">
+          <span style="color:${correct==='A'?'#86efac':'#94a3b8'}">A: ${optA}</span><br>
+          <span style="color:${correct==='B'?'#86efac':'#94a3b8'}">B: ${optB}</span><br>
+          <span style="color:${correct==='C'?'#86efac':'#94a3b8'}">C: ${optC}</span><br>
+          <span style="color:${correct==='D'?'#86efac':'#94a3b8'}">D: ${optD}</span>
+        </div>
+        <div class="q-meta"><span class="badge badge-green">Ans: ${correct}</span> <span class="badge badge-blue">${subject}</span> Day ${day}</div>
+      </div>`;
+    });
+    el.innerHTML=h;
+    document.querySelector('#pg-questions .card h3').textContent=`Questions (${stored.length} total)`;
+  }else{
+    let h='';
+    for(let i=1;i<=15;i++)h+=`<div class="q-item"><div class="q-text">Q${i}: FMGE Medical Science Question ${i}</div><div class="q-meta"><span class="badge badge-green">Active</span> Day ${Math.ceil(i/10)} · Level 1</div></div>`;
+    el.innerHTML=h;
+  }
+}
+
+function loadStudents(){
+  const el=document.getElementById('studentsList');
+  el.innerHTML='<p style="color:#94a3b8">Loading students...</p>';
+
+  // Try multiple API endpoints to get all students
+  const endpoints=['/admin/users','/admin/students','/admin/users?per_page=100','/users'];
+  
+  Promise.all(endpoints.map(ep=>apiFetch(ep).catch(()=>({data:null})))).then(results=>{
+    let allStudents=[];
+
+    results.forEach(d=>{
+      if(!d||!d.data)return;
+      let users=[];
+      // Handle all possible response formats
+      if(Array.isArray(d.data)) users=d.data;
+      else if(d.data?.data&&Array.isArray(d.data.data)) users=d.data.data;
+      else if(d.data?.users&&Array.isArray(d.data.users)) users=d.data.users;
+      else if(typeof d.data==='object'&&!Array.isArray(d.data)){
+        // Maybe paginated response with items
+        const possibleArrays=Object.values(d.data).filter(v=>Array.isArray(v));
+        if(possibleArrays.length>0) users=possibleArrays[0];
+      }
+
+      users.forEach(u=>{
+        const email=(u.email||'').toLowerCase();
+        // Add ALL users (we'll show everyone, admin can see all)
+        if(!allStudents.some(s=>s.email?.toLowerCase()===email)){
+          allStudents.push(u);
+        }
+      });
+    });
+
+    // Separate admins and students
+    let students=allStudents.filter(u=>{
+      const email=(u.email||'').toLowerCase();
+      const role=(u.role||u.roles?.[0]?.name||u.roles?.[0]||'').toLowerCase();
+      return role!=='admin'&&role!=='super-admin'&&!email.includes('admin@quizpath');
+    });
+
+    // If no students found from filtering, show all non-admin users
+    if(students.length===0){
+      students=allStudents.filter(u=>{
+        const email=(u.email||'').toLowerCase();
+        return email!=='admin@quizpath.test';
+      });
+    }
+
+    // Merge with locally tracked students
+    const localStudents=JSON.parse(localStorage.getItem('qp_registered_students')||'[]');
+    localStudents.forEach(ls=>{
+      if(!students.some(s=>(s.email||'').toLowerCase()===ls.email.toLowerCase())){
+        students.push(ls);
+      }
+    });
+
+    renderStudentsTable(el,students);
+  });
+}
+
+function renderStudentsTable(el,students){
+  if(students.length>0){
+    let rows='';
+    students.forEach(s=>{
+      rows+=`<tr><td>${s.name||'-'}</td><td>${s.email||'-'}</td><td><span class="badge badge-teal">Student</span></td><td><span class="badge badge-green">${s.status||'Active'}</span></td></tr>`;
+    });
+    el.innerHTML=`<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table><p style="color:#64748b;font-size:.8rem;margin-top:1rem">${students.length} student(s) registered</p>`;
+    // Cache students for future visits
+    localStorage.setItem('qp_registered_students',JSON.stringify(students.map(s=>({name:s.name||'-',email:s.email||'-',status:s.status||'Active'}))));
+  }else{
+    el.innerHTML=`<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr></thead><tbody><tr><td colspan="4" style="color:#64748b;text-align:center;padding:1.5rem">No students registered yet. Students will appear here after they register.</td></tr></tbody></table>`;
+  }
+}
+
+function loadCategories(){
+  document.getElementById('categoriesList').innerHTML=`<table><thead><tr><th>Category</th><th>Programme</th><th>Levels</th><th>Questions</th><th>Status</th></tr></thead><tbody><tr><td>FMGE</td><td>FMGE Complete - 6 Months</td><td>6</td><td>300</td><td><span class="badge badge-green">Active</span></td></tr></tbody></table>`;
+}
+
+function loadSettings(){
+  document.getElementById('settingsInfo').innerHTML=`<table><tr><td style="color:#94a3b8;width:40%">App Name</td><td>QuizPath</td></tr><tr><td style="color:#94a3b8">Domain</td><td>mediprep.nokkoo.in</td></tr><tr><td style="color:#94a3b8">API</td><td>/api/v1</td></tr><tr><td style="color:#94a3b8">Questions/Day</td><td>10</td></tr><tr><td style="color:#94a3b8">Days/Level</td><td>30</td></tr><tr><td style="color:#94a3b8">Total Levels</td><td>6</td></tr><tr><td style="color:#94a3b8">Timezone</td><td>Asia/Kolkata</td></tr><tr><td style="color:#94a3b8">Pass Requirement</td><td>10/10 (all correct)</td></tr><tr><td style="color:#94a3b8">Retry Mode</td><td>Requeue at end</td></tr></table>`;
+}
+
+async function loadImportHistory(){
+  renderImportHistory();
+  try{
+    const d=await apiFetch('/admin/questions/imports');
+    if(d.data&&d.data.length>0){
+      const el=document.getElementById('importHistory');
+      let html=el.innerHTML;
+      d.data.forEach(imp=>{
+        html+=`<div class="q-item"><div class="q-text">✓ Imported ${imp.count||imp.questions_count||'?'} questions</div><div class="q-meta">${imp.created_at||imp.date||''} · ${imp.filename||'file'}</div></div>`;
+      });
+      el.innerHTML=html;
+    }
+  }catch(e){}
+}
+
+// ============ STUDENT FUNCTIONS ============
+function showStudent(){
+  document.getElementById('studentPage').classList.remove('hidden');
+  document.getElementById('adminPage').classList.add('hidden');
+  const name=currentUser?.name||'Student';
+  document.getElementById('studentGreeting').textContent=`Hello, ${name}!`;
+  document.getElementById('studentUserInfo').textContent=name;
+  document.getElementById('profileName').textContent=currentUser?.name||'-';
+  document.getElementById('profileEmail').textContent=currentUser?.email||'-';
+  // Load questions from server if not in localStorage (for new students)
+  loadQuestionsFromServer().then(()=>{
+    updateDashboardFromProgress();
+  });
+  updateDashboardFromProgress();
+  loadStudentData();
+}
+
+function showStudentPage(page,el){
+  document.querySelectorAll('[id^=pg-s-]').forEach(e=>e.classList.add('hidden'));
+  document.getElementById('pg-'+page).classList.remove('hidden');
+  const titles={'s-dashboard':'Dashboard','s-quiz':'Today\'s Quiz','s-progress':'Progress','s-notifications':'Notifications','s-profile':'Profile'};
+  document.getElementById('studentPageTitle').textContent=titles[page]||'Dashboard';
+  document.querySelectorAll('#studentPage .nav-item').forEach(e=>e.classList.remove('active'));
+  if(el)el.classList.add('active');
+  if(page==='s-dashboard'||page==='s-progress') updateDashboardFromProgress();
+}
+
+async function loadStudentData(){
+  try{
+    const progress=await apiFetch('/student/progress');
+    if(progress.data){
+      const p=progress.data;
+      if(p.accuracy!==undefined){document.getElementById('statAccuracy').textContent=Math.round(p.accuracy)+'%';document.getElementById('statAccuracy2').textContent=Math.round(p.accuracy)+'%'}
+      if(p.questions_answered!==undefined){document.getElementById('statAnswered').textContent=p.questions_answered;document.getElementById('statAnswered2').textContent=p.questions_answered}
+      if(p.days_completed!==undefined){document.getElementById('statDays').textContent=p.days_completed;document.getElementById('statDays2').textContent=p.days_completed}
+      if(p.current_streak!==undefined){
+        document.getElementById('statStreak').textContent=p.current_streak;
+        document.getElementById('statStreak2').textContent=p.current_streak;
+        document.getElementById('streakMsg').textContent=`🔥 You're on a ${p.current_streak}-day streak! Keep it up!`;
+      }
+      if(p.today_completed!==undefined&&p.today_total!==undefined){
+        const pct=Math.round((p.today_completed/p.today_total)*100);
+        document.getElementById('quizProgress').style.width=pct+'%';
+        document.getElementById('quizProgressText').textContent=`${p.today_completed} of ${p.today_total} questions completed`;
+      }
+      if(p.month_completed!==undefined&&p.month_total!==undefined){
+        document.getElementById('monthProgress').textContent=`${p.month_completed} of ${p.month_total} pool questions completed`;
+      }
+    }
+  }catch(e){console.log('Using default student stats')}
+}
+
+// ============ QUIZ ENGINE ============
+let quizQuestions=[],quizIndex=0,quizScore=0,quizWrong=0,selectedOption=null,quizStartTime=null,quizAnswered=false;
+let failedQuestions=[]; // Track failed questions for retake
+
+// Persistent progress using localStorage (per-user)
+function getProgressKey(){
+  const id=currentUser?.email||currentUser?.id||'default';
+  return 'qp_progress_'+id;
+}
+function getProgress(){
+  const saved=localStorage.getItem(getProgressKey());
+  return saved?JSON.parse(saved):{day:1,month:1,daysCompleted:0,streak:0,totalAnswered:0,totalCorrect:0,questionsThisMonth:0,todayCompleted:false,todayDate:'',todayAnswered:0,failedQs:[]};
+}
+function saveProgress(p){localStorage.setItem(getProgressKey(),JSON.stringify(p))}
+
+// Shuffle array (Fisher-Yates)
+function shuffleArray(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
+  return a;
+}
+
+// Shuffle options of a question (for retakes)
+function shuffleOptions(q){
+  const options=[
+    {key:'A',text:q.optionA||q.option_a||''},
+    {key:'B',text:q.optionB||q.option_b||''},
+    {key:'C',text:q.optionC||q.option_c||''},
+    {key:'D',text:q.optionD||q.option_d||''}
+  ];
+  const correctKey=q.correctOption||q.correct_option||'A';
+  const correctText=options.find(o=>o.key===correctKey)?.text||'';
+  const shuffled=shuffleArray(options);
+  const newCorrectKey=shuffled.findIndex(o=>o.text===correctText);
+  const keys=['A','B','C','D'];
+  const newQ={...q,
+    optionA:shuffled[0].text,optionB:shuffled[1].text,
+    optionC:shuffled[2].text,optionD:shuffled[3].text,
+    correctOption:keys[newCorrectKey],
+    option_a:shuffled[0].text,option_b:shuffled[1].text,
+    option_c:shuffled[2].text,option_d:shuffled[3].text,
+    correct_option:keys[newCorrectKey]
+  };
+  return newQ;
+}
+
+// Get today's 10 questions (RANDOM selection, no repetition across days)
+function getTodayQuestions(){
+  const stored=JSON.parse(localStorage.getItem('qp_questions')||'[]');
+  if(stored.length===0) return getDemoQuestions();
+
+  const progressKey=getProgressKey();
+
+  // Get list of already-used question indices for this student
+  const usedKey=progressKey+'_used';
+  let usedIndices=JSON.parse(localStorage.getItem(usedKey)||'[]');
+
+  // Get today's pre-selected questions (if already generated today) — per student!
+  const todayKey=progressKey+'_today';
+  const todayData=JSON.parse(localStorage.getItem(todayKey)||'{}');
+  const today=new Date().toDateString();
+
+  if(todayData.date===today&&todayData.questions&&todayData.questions.length>0){
+    // Already generated today's questions — return same set
+    return todayData.questions;
+  }
+
+  // Find available questions (not yet used by this student)
+  const available=[];
+  stored.forEach((q,i)=>{
+    if(!usedIndices.includes(i)){
+      available.push({...q,_poolIndex:i});
+    }
+  });
+
+  // If all questions exhausted, reset (start new cycle)
+  if(available.length<10){
+    usedIndices=[];
+    localStorage.setItem(usedKey,JSON.stringify(usedIndices));
+    available.length=0;
+    stored.forEach((q,i)=>available.push({...q,_poolIndex:i}));
+  }
+
+  // Randomly select 10 questions using student-specific seed
+  const shuffled=shuffleArray(available);
+  const selected=shuffled.slice(0,Math.min(10,shuffled.length));
+
+  // Mark these as used
+  selected.forEach(q=>usedIndices.push(q._poolIndex));
+  localStorage.setItem(usedKey,JSON.stringify(usedIndices));
+
+  // Save today's selection (so refreshing doesn't change questions)
+  const todayQuestions=selected.map(q=>{const{_poolIndex,...rest}=q;return rest});
+  localStorage.setItem(todayKey,JSON.stringify({date:today,questions:todayQuestions}));
+
+  return todayQuestions;
+}
+
+// Load questions from server for students on other devices
+async function loadQuestionsFromServer(){
+  const stored=JSON.parse(localStorage.getItem('qp_questions')||'[]');
+  if(stored.length>0) return true; // Already have questions locally
+
+  // Try loading from server JSON file
+  try{
+    const r=await fetch('/questions.json?t='+Date.now());
+    if(r.ok){
+      const text=await r.text();
+      if(text&&text.startsWith('[')){
+        const questions=JSON.parse(text);
+        if(Array.isArray(questions)&&questions.length>0){
+          localStorage.setItem('qp_questions',JSON.stringify(questions));
+          return true;
+        }
+      }
+    }
+  }catch(e){}
+
+  // Try loading from API
+  try{
+    const r=await fetch(API+'/student/questions',{headers:{Authorization:'Bearer '+token,Accept:'application/json'}});
+    if(r.ok){
+      const d=await r.json();
+      const questions=d.data?.questions||d.data||[];
+      if(Array.isArray(questions)&&questions.length>0){
+        localStorage.setItem('qp_questions',JSON.stringify(questions));
+        return true;
+      }
+    }
+  }catch(e){}
+
+  return false;
+}
+
+function updateDashboardFromProgress(){
+  const p=getProgress();
+  const accuracy=p.totalAnswered>0?Math.round((p.totalCorrect/p.totalAnswered)*100):0;
+  // Questions Answered = 10 per completed day (unique questions mastered)
+  const questionsAnswered=p.daysCompleted*10;
+  document.getElementById('statAccuracy').textContent=accuracy+'%';
+  document.getElementById('statAccuracy2').textContent=accuracy+'%';
+  document.getElementById('statAnswered').textContent=questionsAnswered;
+  document.getElementById('statAnswered2').textContent=questionsAnswered;
+  document.getElementById('statDays').textContent=p.daysCompleted;
+  document.getElementById('statDays2').textContent=p.daysCompleted;
+  document.getElementById('statStreak').textContent=p.streak;
+  document.getElementById('statStreak2').textContent=p.streak;
+  document.getElementById('monthProgress').textContent=`${questionsAnswered} of 300 pool questions completed`;
+
+  // Course progress card
+  if(p.todayCompleted&&p.todayDate===new Date().toDateString()){
+    document.getElementById('courseDay').textContent=`FMGE · Month ${p.month} · Day ${p.day} (unlocks tomorrow)`;
+    document.getElementById('courseSub').textContent=`Day ${p.day-1} completed! Come back tomorrow for Day ${p.day}.`;
+  }else{
+    document.getElementById('courseDay').textContent=`FMGE · Month ${p.month} · Day ${p.day}`;
+    document.getElementById('courseSub').textContent=`Complete 10 questions to unlock Day ${p.day+1}`;
+  }
+
+  // Streak message
+  if(p.streak>0){
+    document.getElementById('streakMsg').textContent=`🔥 You're on a ${p.streak}-day streak! Keep it up!`;
+  }else{
+    document.getElementById('streakMsg').textContent='Start your first quiz to begin your streak!';
+  }
+
+  // Quiz landing progress
+  const today=new Date().toDateString();
+  if(p.todayCompleted&&p.todayDate===today){
+    // RULE 5: Same-day completion lock — quiz is CLOSED, cannot retake today
+    document.getElementById('quizProgress').style.width='100%';
+    document.getElementById('quizProgressText').textContent=`✓ Day ${p.day-1} completed! Day ${p.day} quiz unlocks tomorrow.`;
+    document.getElementById('quizStartBtn').textContent='✓ Completed — Next quiz tomorrow';
+    document.getElementById('quizStartBtn').style.background='#16a34a';
+    document.getElementById('quizStartBtn').disabled=true;
+    document.getElementById('quizStartBtn').style.opacity='0.7';
+    document.getElementById('quizStartBtn').style.cursor='not-allowed';
+  }else if(p.todayDate===today&&p.failedQs&&p.failedQs.length>0){
+    // Has failed questions to retake
+    const failCount=p.failedQs.length;
+    document.getElementById('quizProgress').style.width='0%';
+    document.getElementById('quizProgressText').textContent=`${failCount} failed question${failCount>1?'s':''} to retake · Day ${p.day}`;
+    document.getElementById('quizStartBtn').textContent=`Retake ${failCount} failed question${failCount>1?'s':''}`;
+    document.getElementById('quizStartBtn').style.background='#dc2626';
+    document.getElementById('quizStartBtn').disabled=false;
+    document.getElementById('quizStartBtn').style.opacity='1';
+    document.getElementById('quizStartBtn').style.cursor='pointer';
+  }else{
+    const answered=p.todayDate===today?(p.todayAnswered||0):0;
+    const pct=Math.round((answered/10)*100);
+    document.getElementById('quizProgress').style.width=pct+'%';
+    document.getElementById('quizProgressText').textContent=`${answered} of 10 questions completed · Day ${p.day}`;
+    document.getElementById('quizStartBtn').textContent=answered>0?'Continue today\'s quiz':'Start today\'s quiz';
+    document.getElementById('quizStartBtn').style.background='';
+    document.getElementById('quizStartBtn').disabled=false;
+    document.getElementById('quizStartBtn').style.opacity='1';
+    document.getElementById('quizStartBtn').style.cursor='pointer';
+  }
+
+  // Update Level Progress table
+  updateLevelProgress(p);
+}
+
+function updateLevelProgress(p){
+  const tbody=document.getElementById('levelProgressBody');
+  if(!tbody)return;
+  let daysLeft=p.daysCompleted;
+  let currentFound=false;
+  let html='';
+  for(let lvl=1;lvl<=6;lvl++){
+    let days,questions,status,badge;
+    if(daysLeft>=30){
+      // This level is fully completed
+      days='30 / 30';questions='300 / 300';status='Completed';badge='badge-teal';
+      daysLeft-=30;
+    }else if(!currentFound){
+      // This is the current level (in progress)
+      days=`${daysLeft} / 30`;questions=`${daysLeft*10} / 300`;status='In Progress';badge='badge-blue';
+      daysLeft=0;
+      currentFound=true;
+    }else{
+      // This level is locked
+      days='0 / 30';questions='0 / 300';status='Locked';badge='badge-green';
+    }
+    html+=`<tr><td>Level ${lvl}</td><td>${days}</td><td>${questions}</td><td><span class="badge ${badge}">${status}</span></td></tr>`;
+  }
+  tbody.innerHTML=html;
+}
+
+function continueQuiz(){startQuiz();}
+
+async function startQuiz(){
+  // RULE 5: Block if today's quiz already completed
+  const checkP=getProgress();
+  const checkToday=new Date().toDateString();
+  if(checkP.todayCompleted&&checkP.todayDate===checkToday){
+    alert('Today\'s quiz is completed! Next quiz will be available tomorrow.');
+    return;
+  }
+
+  document.getElementById('quizLanding').classList.add('hidden');
+  document.getElementById('quizActive').classList.remove('hidden');
+  document.getElementById('quizComplete').classList.add('hidden');
+  quizIndex=0;quizScore=0;quizWrong=0;selectedOption=null;quizStartTime=Date.now();
+  failedQuestions=[];
+
+  const p=getProgress();
+  const today=new Date().toDateString();
+
+  // Ensure questions are loaded (for new students on new devices)
+  await loadQuestionsFromServer();
+
+  // Check if there are failed questions to retake (from previous attempt today)
+  if(p.todayDate===today&&p.failedQs&&p.failedQs.length>0){
+    // RETAKE MODE: only show failed questions with shuffled options
+    quizQuestions=p.failedQs.map(q=>shuffleOptions(q));
+    // Clear failed list (will be rebuilt if they fail again)
+    p.failedQs=[];
+    p.todayAnswered=0;
+    p.todayCompleted=false;
+    saveProgress(p);
+  }else{
+    // FRESH START: get today's 10 unique questions
+    // Reset today's state
+    p.todayAnswered=0;
+    p.todayDate=today;
+    p.todayCompleted=false;
+    p.failedQs=[];
+    saveProgress(p);
+
+    // Try API first
+    let loaded=false;
+    try{
+      const d=await apiFetch('/student/quiz/today');
+      if(d.data&&d.data.questions&&d.data.questions.length>0){
+        quizQuestions=d.data.questions;loaded=true;
+      }
+    }catch(e){}
+    if(!loaded){
+      // Load from localStorage pool (no repetition)
+      quizQuestions=getTodayQuestions();
+    }
+  }
+  renderQuestion();
+}
+
+function getDemoQuestions(){
+  return [
+    {id:1,questionText:"Which of the following is the use of the Mallampatti classification?",optionA:"Endotracheal intubation",optionB:"To evaluate the risk of surgery",optionC:"To evaluate the pros and cons of surgery",optionD:"To evaluate the fitness of the patient",correctOption:"A",explanation:"The Mallampati classification predicts the difficulty of endotracheal intubation by grading the visibility of oral cavity structures.",subject:"Anaesthesia"},
+    {id:2,questionText:"Which of the following is the most common drug used in day care surgery/TIVA?",optionA:"Sodium thiopentone",optionB:"Propofol",optionC:"Halothane",optionD:"Ketamine",correctOption:"B",explanation:"Propofol is preferred for daycare surgery and TIVA because of its rapid onset, quick recovery and lower incidence of postoperative nausea and vomiting.",subject:"Anaesthesia"},
+    {id:3,questionText:"Which of the following topical local anesthetics is commonly used in cataract surgery?",optionA:"Proparacaine 0.5%",optionB:"Bupivacaine 0.5%",optionC:"Halothane",optionD:"Nitrous Oxide",correctOption:"A",explanation:"Proparacaine 0.5% has a rapid onset and short duration with minimal systemic effects, suiting the brief nature of cataract surgery.",subject:"Anaesthesia"},
+    {id:4,questionText:"Which of the following is the mechanism of action of Local anesthetics?",optionA:"Blocks Na+ channels",optionB:"Stimulate Ca+ Channels",optionC:"Block Cl- Channels",optionD:"Stimulate K+ channels",correctOption:"A",explanation:"Local anaesthetics block the inactivation gates of sodium channels, preventing depolarisation and propagation of nerve impulses.",subject:"Anaesthesia"},
+    {id:5,questionText:"Zellweger syndrome is associated with which cellular organelle?",optionA:"Peroxisomes",optionB:"Nucleosomes",optionC:"Lysosomes",optionD:"Ribosomes",correctOption:"A",explanation:"Zellweger syndrome is a peroxisome biogenesis disorder caused by PEX gene mutations, causing very long-chain fatty acid accumulation.",subject:"Biochemistry"},
+    {id:6,questionText:"A 3-month-old baby presents with severe hepatomegaly, cataracts in both eyes, lethargy, and hypotonia. Which enzyme deficiency is most likely involved?",optionA:"Galactokinase",optionB:"Hepatic Kinase",optionC:"Hepatic Glucose-6-Phosphatase",optionD:"Galactose-1-Phosphate Uridyl Transferase",correctOption:"D",explanation:"Classic galactosemia results from GALT deficiency, presenting with hepatomegaly, oil-drop cataracts, lethargy and hypotonia.",subject:"Biochemistry"},
+    {id:7,questionText:"A child with a sore throat starts developing skin lesions. Which of the following is the diagnosis?",optionA:"Guttate psoriasis",optionB:"Pustular psoriasis",optionC:"Erythrodermic psoriasis",optionD:"Inverse psoriasis",correctOption:"A",explanation:"Guttate psoriasis follows streptococcal throat infection in children, with small raindrop-like erythematous scaly plaques on the trunk.",subject:"Dermatology"},
+    {id:8,questionText:"What is the most commonly used test for newborn hearing screening?",optionA:"Otoacoustic Emissions (OAE)",optionB:"Brainstem Evoked Response Audiometry (BERA)",optionC:"Pure Tone Audiometry (PTA)",optionD:"Tympanometry",correctOption:"A",explanation:"OAE is the standard newborn hearing screening test; BERA is used to confirm hearing loss in neonates who fail OAE.",subject:"ENT"},
+    {id:9,questionText:"During measurement of a rifled barrel weapon, the caliber depends on?",optionA:"Distance between two opposite lands",optionB:"Distance between two opposite grooves",optionC:"Number of lead pellets",optionD:"Mass and velocity",correctOption:"A",explanation:"Caliber of a rifled firearm is the bore diameter measured between two opposing lands.",subject:"Forensic Medicine"},
+    {id:10,questionText:"The Barberio test is used to detect the presence of?",optionA:"Spermine (sperm identification)",optionB:"Blood group antigens",optionC:"Arsenic poisoning",optionD:"Alcohol levels",correctOption:"A",explanation:"The Barberio test detects prostatic spermine, forming yellow needle-shaped spermine picrate crystals.",subject:"Forensic Medicine"}
+  ];
+}
+
+function renderQuestion(){
+  if(quizIndex>=quizQuestions.length){showQuizResults();return}
+  const q=quizQuestions[quizIndex];
+  selectedOption=null;quizAnswered=false;
+  document.getElementById('quizQNum').textContent=`Question ${quizIndex+1} of ${quizQuestions.length}`;
+  document.getElementById('quizSubject').textContent=q.subject||'General';
+  document.getElementById('quizQuestionText').textContent=q.questionText||q.question_text||q.text||'';
+
+  // Image
+  const imgWrap=document.getElementById('quizImage');
+  if(q.imageUrl||q.image_url){imgWrap.style.display='block';document.getElementById('quizImg').src=q.imageUrl||q.image_url}
+  else{imgWrap.style.display='none'}
+
+  // Options
+  const opts=document.getElementById('quizOptions');
+  const options=[
+    {key:'A',text:q.optionA||q.option_a||''},
+    {key:'B',text:q.optionB||q.option_b||''},
+    {key:'C',text:q.optionC||q.option_c||''},
+    {key:'D',text:q.optionD||q.option_d||''}
+  ];
+  opts.innerHTML=options.map(o=>`<button class="quiz-option" data-key="${o.key}" onclick="selectOption('${o.key}',this)"><span class="opt-label">${o.key}.</span>${o.text}</button>`).join('');
+
+  // Reset buttons
+  document.getElementById('quizSubmitBtn').disabled=true;
+  document.getElementById('quizSubmitBtn').classList.remove('hidden');
+  document.getElementById('quizNextBtn').classList.add('hidden');
+  document.getElementById('quizFeedback').classList.add('hidden');
+  document.getElementById('quizScoreText').textContent=`Score: ${quizScore} correct, ${quizWrong} wrong`;
+}
+
+function selectOption(key,el){
+  if(quizAnswered)return;
+  selectedOption=key;
+  document.querySelectorAll('.quiz-option').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('quizSubmitBtn').disabled=false;
+}
+
+async function submitAnswer(){
+  if(!selectedOption||quizAnswered)return;
+  quizAnswered=true;
+  const q=quizQuestions[quizIndex];
+  const correct=q.correctOption||q.correct_option||'A';
+  const isCorrect=(selectedOption===correct);
+
+  // Highlight correct/wrong
+  document.querySelectorAll('.quiz-option').forEach(o=>{
+    o.classList.add('disabled');
+    if(o.dataset.key===correct) o.classList.add('correct');
+    if(o.dataset.key===selectedOption&&!isCorrect) o.classList.add('wrong');
+  });
+
+  // Update score
+  if(isCorrect){quizScore++}else{quizWrong++;failedQuestions.push(q)}
+
+  // Show feedback
+  const fb=document.getElementById('quizFeedback');
+  fb.classList.remove('hidden');
+  if(isCorrect){
+    fb.style.background='#052e16';fb.style.border='1px solid #16a34a';fb.style.color='#86efac';
+    fb.innerHTML='<strong>✓ Correct!</strong>'+(q.explanation?'<br><span style="font-size:.9rem;opacity:.9">'+q.explanation+'</span>':'');
+  }else{
+    fb.style.background='#450a0a';fb.style.border='1px solid #dc2626';fb.style.color='#fca5a5';
+    fb.innerHTML=`<strong>✗ Wrong!</strong> Correct answer: <strong>${correct}</strong>`+(q.explanation?'<br><span style="font-size:.9rem;opacity:.9">'+q.explanation+'</span>':'');
+  }
+
+  // Try to submit to API
+  try{
+    await fetch(API+'/student/quiz-attempts/answers',{
+      method:'POST',
+      headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',Accept:'application/json'},
+      body:JSON.stringify({question_id:q.id,selected_option:selectedOption,is_correct:isCorrect})
+    });
+  }catch(e){}
+
+  // Show next button
+  document.getElementById('quizSubmitBtn').classList.add('hidden');
+  document.getElementById('quizNextBtn').classList.remove('hidden');
+  document.getElementById('quizScoreText').textContent=`Score: ${quizScore} correct, ${quizWrong} wrong`;
+
+  // Update progress bar
+  const answered=quizIndex+1;
+  const total=quizQuestions.length;
+  const pct=Math.round((answered/total)*100);
+  document.getElementById('quizProgress').style.width=pct+'%';
+  document.getElementById('quizProgressText').textContent=`${answered} of ${total} questions completed`;
+
+  // Save partial progress
+  const pp=getProgress();
+  const today=new Date().toDateString();
+  pp.todayDate=today;
+  pp.todayAnswered=answered;
+  saveProgress(pp);
+}
+
+function nextQuestion(){
+  quizIndex++;
+  renderQuestion();
+}
+
+function showQuizResults(){
+  document.getElementById('quizActive').classList.add('hidden');
+  document.getElementById('quizComplete').classList.remove('hidden');
+  const total=quizQuestions.length;
+  const accuracy=total>0?Math.round((quizScore/total)*100):0;
+  const timeSec=Math.round((Date.now()-quizStartTime)/1000);
+  const timeStr=timeSec>=60?Math.floor(timeSec/60)+'m '+timeSec%60+'s':timeSec+'s';
+
+  document.getElementById('resultCorrect').textContent=quizScore;
+  document.getElementById('resultWrong').textContent=quizWrong;
+  document.getElementById('resultAccuracy').textContent=accuracy+'%';
+  document.getElementById('resultTime').textContent=timeStr;
+
+  // Save progress
+  const p=getProgress();
+  const today=new Date().toDateString();
+  // Only count new questions (not retakes) toward total
+  if(!p.todayDate||p.todayDate!==today){
+    // Fresh day - count all questions
+    p.totalAnswered+=total;
+    p.totalCorrect+=quizScore;
+    p.questionsThisMonth+=total;
+  }else if(p.failedQs&&p.failedQs.length>0){
+    // Retake - only count the retake correct answers (don't add to totalAnswered again)
+    p.totalCorrect+=quizScore;
+  }else{
+    // First attempt today
+    p.totalAnswered+=total;
+    p.totalCorrect+=quizScore;
+    p.questionsThisMonth+=total;
+  }
+  p.todayDate=today;
+  p.todayAnswered=total;
+
+  if(quizScore===total){
+    // PERFECT SCORE — Day completed! Unlock next day!
+    p.daysCompleted++;
+    p.streak++;
+    p.day++;
+    p.todayCompleted=true;
+    p.failedQs=[]; // Clear failed questions
+    if(p.day>30){p.day=1;p.month++;} // Move to next month after 30 days
+    document.getElementById('quizResultText').textContent=`🔥 Perfect score! Day ${p.day} quiz will be available tomorrow. Today's quiz is now closed.`;
+  }else{
+    // NOT PERFECT — Save failed questions for retake with shuffled options
+    p.todayCompleted=false;
+    p.failedQs=failedQuestions; // Store original questions (will be shuffled on retake)
+    document.getElementById('quizResultText').textContent=`You got ${quizScore}/${total} correct. You must retake the ${quizWrong} failed question${quizWrong>1?'s':''} with shuffled options to unlock Day ${p.day+1}.`;
+  }
+
+  saveProgress(p);
+  updateDashboardFromProgress();
+
+  // Update progress bar
+  document.getElementById('quizProgress').style.width=accuracy===100?'100%':'0%';
+  document.getElementById('quizProgressText').textContent=accuracy===100?`✓ Today's quiz completed · Day ${p.day}`:`${quizWrong} question${quizWrong>1?'s':''} to retake · Day ${p.day}`;
+}
+
+function backToQuizLanding(){
+  document.getElementById('quizLanding').classList.remove('hidden');
+  document.getElementById('quizActive').classList.add('hidden');
+  document.getElementById('quizComplete').classList.add('hidden');
+  const p=getProgress();
+  document.getElementById('quizProgress').style.width='0%';
+  document.getElementById('quizProgressText').textContent=`0 of 10 questions completed · Day ${p.day}`;
+  showStudentPage('s-dashboard',document.querySelector('#studentPage .nav-item'));
+}
+
+// ============ LOGOUT ============
+function logout(){
+  fetch(API+'/auth/logout',{method:'POST',headers:{Authorization:'Bearer '+token,Accept:'application/json'}}).catch(()=>{});
+  localStorage.removeItem('qp_token');token=null;currentUser=null;
+  document.getElementById('loginPage').classList.remove('hidden');
+  document.getElementById('adminPage').classList.add('hidden');
+  document.getElementById('studentPage').classList.add('hidden');
+}
+
+// ============ PDF/CSV UPLOAD ============
+let parsedQuestions=[];
+const dropZone=document.getElementById('dropZone');
+const fileInput=document.getElementById('fileInput');
+
+if(dropZone){
+  dropZone.addEventListener('click',()=>fileInput.click());
+  dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('drag-over')});
+  dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('drag-over');handleFile(e.dataTransfer.files[0])});
+  fileInput.addEventListener('change',e=>{if(e.target.files[0])handleFile(e.target.files[0])});
+}
+
+function handleFile(file){
+  if(!file)return;
+  const status=document.getElementById('uploadStatus');
+  status.classList.remove('hidden','success','error');
+  status.classList.add('loading');
+  status.innerHTML='⏳ Processing: '+file.name+'...';
+
+  const ext=file.name.split('.').pop().toLowerCase();
+  if(ext==='csv'){
+    const reader=new FileReader();
+    reader.onload=e=>parseCSV(e.target.result,file.name);
+    reader.onerror=()=>showUploadError('Failed to read file');
+    reader.readAsText(file);
+  }else if(ext==='pdf'){
+    uploadPDF(file);
+  }else{
+    showUploadError('Unsupported file type. Please upload a .pdf or .csv file.');
+  }
+}
+
+function parseCSV(text,filename){
+  const lines=text.trim().split('\n');
+  if(lines.length<2){showUploadError('CSV file is empty or has no data rows');return}
+
+  const header=lines[0].toLowerCase();
+  if(!header.includes('questiontext')){showUploadError('Invalid CSV format. Expected header: questionText,optionA,optionB,optionC,optionD,correctOption,explanation,subject,imageUrl');return}
+
+  parsedQuestions=[];
+  for(let i=1;i<lines.length;i++){
+    const cols=parseCSVLine(lines[i]);
+    if(cols.length>=6&&cols[0].trim()){
+      parsedQuestions.push({
+        questionText:cols[0].trim(),
+        optionA:cols[1]?.trim()||'',
+        optionB:cols[2]?.trim()||'',
+        optionC:cols[3]?.trim()||'',
+        optionD:cols[4]?.trim()||'',
+        correctOption:cols[5]?.trim()||'A',
+        explanation:cols[6]?.trim()||'',
+        subject:cols[7]?.trim()||'General',
+        imageUrl:cols[8]?.trim()||''
+      });
+    }
+  }
+
+  if(parsedQuestions.length===0){showUploadError('No valid questions found in CSV');return}
+  showUploadSuccess(`✓ Parsed ${parsedQuestions.length} questions from ${filename}`);
+  showParsedPreview();
+}
+
+function parseCSVLine(line){
+  const result=[];let current='',inQuotes=false;
+  for(let i=0;i<line.length;i++){
+    const ch=line[i];
+    if(ch==='"'){inQuotes=!inQuotes}
+    else if(ch===','&&!inQuotes){result.push(current);current=''}
+    else{current+=ch}
+  }
+  result.push(current);
+  return result;
+}
+
+async function uploadPDF(file){
+  const status=document.getElementById('uploadStatus');
+  status.classList.remove('hidden','success','error');
+  status.classList.add('loading');
+  status.innerHTML='⏳ Extracting text from PDF... This may take a moment.';
+
+  try{
+    // Load PDF.js
+    const pdfjsLib=window['pdfjs-dist/build/pdf']||await loadPdfJs();
+    const arrayBuffer=await file.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data:arrayBuffer}).promise;
+    let fullText='';
+
+    for(let i=1;i<=pdf.numPages;i++){
+      const page=await pdf.getPage(i);
+      const content=await page.getTextContent();
+      const pageText=content.items.map(item=>item.str).join(' ');
+      fullText+=pageText+'\n';
+    }
+
+    status.innerHTML=`⏳ Extracted ${pdf.numPages} pages. Parsing questions...`;
+
+    // Try to parse questions from the extracted text
+    parsedQuestions=parsePdfText(fullText);
+
+    if(parsedQuestions.length>0){
+      showUploadSuccess(`✓ Parsed ${parsedQuestions.length} questions from ${file.name} (${pdf.numPages} pages)`);
+      showParsedPreview();
+    }else{
+      showUploadError(`Could not parse questions from this PDF. The PDF format may not be supported. Try converting to CSV format first using the parser tool.`);
+    }
+  }catch(e){
+    console.error('PDF parse error:',e);
+    showUploadError('PDF parsing failed: '+e.message+'. Try converting to CSV format first.');
+  }
+}
+
+async function loadPdfJs(){
+  return new Promise((resolve,reject)=>{
+    if(window.pdfjsLib){resolve(window.pdfjsLib);return}
+    const script=document.createElement('script');
+    script.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    script.onload=()=>{
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      resolve(window.pdfjsLib);
+    };
+    script.onerror=()=>reject(new Error('Failed to load PDF.js library'));
+    document.head.appendChild(script);
+  });
+}
+
+function parsePdfText(text){
+  const questions=[];
+  // Pattern 1: "Ques No: X" format (PrepLadder style)
+  const prepladderRe=/Ques\s*No\s*:\s*(\d+).*?Subject\s*:\s*(.*?)\s+Topic\s*:.*?Sub-Topic\s*:\s*(.*?)\s*O\s*1\s*:\s*(.*?)\s*O\s*2\s*:\s*(.*?)\s*O\s*3\s*:\s*(.*?)\s*O\s*4\s*:\s*(.*?)\s*Ans\s*:\s*(\d)/gs;
+  let m;
+  while((m=prepladderRe.exec(text))!==null){
+    const ans=parseInt(m[8]);
+    if(ans>=1&&ans<=4){
+      questions.push({
+        questionText:m[3].trim(),optionA:m[4].trim(),optionB:m[5].trim(),optionC:m[6].trim(),optionD:m[7].trim(),
+        correctOption:'ABCD'[ans-1],explanation:'',subject:m[2].trim(),imageUrl:''
+      });
+    }
+  }
+  if(questions.length>0)return questions;
+
+  // Pattern 2: Numbered questions with a/b/c/d or A/B/C/D options
+  const lines=text.split('\n').map(l=>l.trim()).filter(l=>l);
+  let currentQ=null;
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
+    // Match question start: "1." or "1)" or "Q1." or "Q1:"
+    const qMatch=line.match(/^(?:Q\.?\s*)?(\d+)[.):\s]+(.+)/i);
+    if(qMatch&&qMatch[2].length>15){
+      if(currentQ&&currentQ.optionA)questions.push(currentQ);
+      currentQ={questionText:qMatch[2].trim(),optionA:'',optionB:'',optionC:'',optionD:'',correctOption:'A',explanation:'',subject:'General',imageUrl:''};
+      continue;
+    }
+    if(!currentQ)continue;
+    // Match options
+    const optMatch=line.match(/^(?:\(?([a-dA-D])[.):\s]+)(.+)/);
+    if(optMatch){
+      const key=optMatch[1].toUpperCase();
+      if(key==='A')currentQ.optionA=optMatch[2].trim();
+      if(key==='B')currentQ.optionB=optMatch[2].trim();
+      if(key==='C')currentQ.optionC=optMatch[2].trim();
+      if(key==='D')currentQ.optionD=optMatch[2].trim();
+    }
+    // Match answer line
+    const ansMatch=line.match(/(?:Ans(?:wer)?|Correct)[:\s]*([A-Da-d])/i);
+    if(ansMatch&&currentQ)currentQ.correctOption=ansMatch[1].toUpperCase();
+  }
+  if(currentQ&&currentQ.optionA)questions.push(currentQ);
+
+  return questions;
+}
+
+function showUploadSuccess(msg){
+  const status=document.getElementById('uploadStatus');
+  status.classList.remove('hidden','loading','error');
+  status.classList.add('success');
+  status.innerHTML=msg;
+}
+
+function showUploadError(msg){
+  const status=document.getElementById('uploadStatus');
+  status.classList.remove('hidden','loading','success');
+  status.classList.add('error');
+  status.innerHTML='❌ '+msg;
+}
+
+function showParsedPreview(){
+  const preview=document.getElementById('parsedPreview');
+  const list=document.getElementById('parsedList');
+  const count=document.getElementById('parsedCount');
+  preview.classList.remove('hidden');
+  count.textContent=parsedQuestions.length+' questions';
+
+  let html='';
+  const show=Math.min(parsedQuestions.length,20);
+  for(let i=0;i<show;i++){
+    const q=parsedQuestions[i];
+    html+=`<div class="parsed-q">
+      <div class="parsed-q-text"><strong>Q${i+1}:</strong> ${q.questionText.substring(0,120)}${q.questionText.length>120?'...':''}</div>
+      <div class="parsed-q-opts">A: ${q.optionA.substring(0,40)} | B: ${q.optionB.substring(0,40)} | C: ${q.optionC.substring(0,40)} | D: ${q.optionD.substring(0,40)}</div>
+      <div class="parsed-q-meta"><span class="badge badge-green">Ans: ${q.correctOption}</span><span class="badge badge-blue">${q.subject}</span></div>
+    </div>`;
+  }
+  if(parsedQuestions.length>20) html+=`<p style="color:#64748b;text-align:center;padding:.8rem">... and ${parsedQuestions.length-20} more questions</p>`;
+  list.innerHTML=html;
+}
+
+async function confirmImport(){
+  if(parsedQuestions.length===0){alert('No questions to import');return}
+  const status=document.getElementById('uploadStatus');
+  status.classList.remove('hidden','success','error');
+  status.classList.add('loading');
+  status.innerHTML='⏳ Importing '+parsedQuestions.length+' questions to quiz pool...';
+
+  // Save to localStorage for student quiz use
+  const existing=JSON.parse(localStorage.getItem('qp_questions')||'[]');
+  const merged=[...existing,...parsedQuestions];
+  localStorage.setItem('qp_questions',JSON.stringify(merged));
+
+  // Save to server as JSON file so ALL students on ALL devices can access
+  let serverSaved=false;
+  try{
+    const r=await fetch('/save-questions.php',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({questions:merged})});
+    if(r.ok) serverSaved=true;
+  }catch(e){}
+
+  // Try API endpoints
+  if(!serverSaved){
+    const endpoints=['/admin/questions/bulk-import','/admin/questions/import','/admin/questions'];
+    for(const ep of endpoints){
+      try{
+        const r=await fetch(API+ep,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({questions:parsedQuestions})});
+        if(r.ok){serverSaved=true;break}
+      }catch(e){}
+    }
+  }
+
+  const count=parsedQuestions.length;
+  showUploadSuccess(`✓ Successfully imported ${count} questions!`+(serverSaved?' Available to all students.':' Saved locally. Create save-questions.php for all devices.'));
+  document.getElementById('parsedPreview').classList.add('hidden');
+  addImportHistory(count);
+  parsedQuestions=[];
+}
+
+function addImportHistory(count){
+  const el=document.getElementById('importHistory');
+  const now=new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});
+  const entry={count,date:now,by:currentUser?.name||'Admin',startIndex:0};
+  // Track where these questions start in the pool
+  const existing=JSON.parse(localStorage.getItem('qp_questions')||'[]');
+  entry.startIndex=existing.length-count; // questions were just appended
+  // Save to localStorage
+  const history=JSON.parse(localStorage.getItem('qp_import_history')||'[]');
+  history.unshift(entry);
+  localStorage.setItem('qp_import_history',JSON.stringify(history));
+  renderImportHistory();
+}
+
+function renderImportHistory(){
+  const el=document.getElementById('importHistory');
+  const history=JSON.parse(localStorage.getItem('qp_import_history')||'[]');
+  const stored=JSON.parse(localStorage.getItem('qp_questions')||'[]');
+  if(history.length===0&&stored.length===0){
+    el.innerHTML='<p style="color:#64748b;font-size:.9rem">No imports yet. Upload a PDF or CSV to get started.</p>';
+    return;
+  }
+  let html='';
+  if(stored.length>0){
+    html+=`<div class="q-item" style="border-left:3px solid #16a34a;display:flex;justify-content:space-between;align-items:center"><div><div class="q-text">📚 ${stored.length} questions in quiz pool</div><div class="q-meta">Available for student quizzes</div></div><button onclick="clearQuizPool()" style="background:#450a0a;border:1px solid #dc2626;color:#fca5a5;padding:.4rem .8rem;border-radius:6px;font-size:.75rem;cursor:pointer;font-weight:600">Remove All</button></div>`;
+  }
+  history.forEach((h,i)=>{
+    html+=`<div class="q-item" style="display:flex;justify-content:space-between;align-items:center"><div><div class="q-text">✓ Imported ${h.count} questions</div><div class="q-meta">${h.date} · by ${h.by}</div></div><button onclick="removeImport(${i})" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:1.1rem;padding:.3rem" title="Remove">✕</button></div>`;
+  });
+  el.innerHTML=html;
+}
+
+function clearQuizPool(){
+  if(!confirm('Remove all imported questions from the quiz pool? Students will get demo questions instead.'))return;
+  localStorage.removeItem('qp_questions');
+  localStorage.removeItem('qp_import_history');
+  renderImportHistory();
+  showUploadSuccess('Quiz pool cleared. Upload a new CSV to add questions.');
+}
+
+function removeImport(index){
+  if(!confirm('Remove this import and its questions from the quiz pool?'))return;
+  const history=JSON.parse(localStorage.getItem('qp_import_history')||'[]');
+  const entry=history[index];
+  const count=entry?.count||0;
+
+  // Remove questions from the pool
+  const questions=JSON.parse(localStorage.getItem('qp_questions')||'[]');
+  if(count>0&&questions.length>=count){
+    // Remove the last 'count' questions if this was the most recent import,
+    // otherwise remove from the tracked startIndex
+    const start=entry.startIndex!==undefined?entry.startIndex:questions.length-count;
+    questions.splice(start,count);
+    localStorage.setItem('qp_questions',JSON.stringify(questions));
+  }
+
+  // Remove history entry
+  history.splice(index,1);
+  localStorage.setItem('qp_import_history',JSON.stringify(history));
+
+  if(questions.length===0){
+    localStorage.removeItem('qp_questions');
+  }
+  renderImportHistory();
+  showUploadSuccess(`Removed ${count} questions. ${questions.length} questions remaining in pool.`);
+}
+</script>
+</body>
 </html>
