@@ -756,6 +756,7 @@ async function loadStudentData(){
 // ============ QUIZ ENGINE ============
 let quizQuestions=[],quizIndex=0,quizScore=0,quizWrong=0,selectedOption=null,quizStartTime=null,quizAnswered=false;
 let failedQuestions=[]; // Track failed questions for retake
+let originalTenQuestions=[]; // Always keep the original 10 questions for retake
 
 // Persistent progress using localStorage (per-user)
 function getProgressKey(){
@@ -1007,6 +1008,7 @@ async function startQuiz(){
   if(p.todayDate===today&&p.failedQs&&p.failedQs.length>0){
     // RETAKE MODE: show ALL 10 same questions in new random order with shuffled options
     quizQuestions=shuffleArray(p.failedQs).map(q=>shuffleOptions(q));
+    originalTenQuestions=p.failedQs; // Keep original 10 for further retakes
     // Clear failed list (will be rebuilt if they fail again)
     p.failedQs=[];
     p.todayAnswered=0;
@@ -1034,6 +1036,8 @@ async function startQuiz(){
       quizQuestions=getTodayQuestions();
     }
   }
+  // Save the original 10 questions for retake purposes
+  originalTenQuestions=quizQuestions.map(q=>({...q}));
   renderQuestion();
 }
 
@@ -1200,9 +1204,9 @@ function showQuizResults(){
     document.getElementById('quizResultBtn').classList.remove('hidden');
     document.getElementById('quizRetakeBtn').classList.add('hidden');
   }else{
-    // NOT PERFECT — Save ALL 10 questions for retake (new order + shuffled options)
+    // NOT PERFECT — Save ALL 10 original questions for retake (new order + shuffled options)
     p.todayCompleted=false;
-    p.failedQs=quizQuestions; // Store ALL questions (will be reshuffled on retake)
+    p.failedQs=originalTenQuestions; // Store ORIGINAL 10 questions (will be reshuffled on retake)
     document.getElementById('quizResultText').textContent=`You got ${quizScore}/${total} correct. You need 10/10 to pass. Retake all questions in a new order.`;
     // Show "Retake" button, hide back to dashboard
     document.getElementById('quizResultBtn').classList.add('hidden');
@@ -1228,15 +1232,17 @@ function backToQuizLanding(){
 }
 
 function retakeQuiz(){
-  // Immediately restart with same questions in new order + shuffled options
+  // Immediately restart with same 10 questions in new order + shuffled options
   const p=getProgress();
-  if(p.failedQs&&p.failedQs.length>0){
+  const questionsToRetake=originalTenQuestions.length>0?originalTenQuestions:(p.failedQs||[]);
+  if(questionsToRetake.length>0){
     document.getElementById('quizComplete').classList.add('hidden');
     document.getElementById('quizActive').classList.remove('hidden');
     quizIndex=0;quizScore=0;quizWrong=0;selectedOption=null;quizStartTime=Date.now();
     failedQuestions=[];
     // Shuffle question order AND shuffle each question's options
-    quizQuestions=shuffleArray(p.failedQs).map(q=>shuffleOptions(q));
+    quizQuestions=shuffleArray(questionsToRetake).map(q=>shuffleOptions(q));
+    originalTenQuestions=questionsToRetake; // Keep original for further retakes
     // Clear saved failed list
     p.failedQs=[];
     p.todayAnswered=0;
