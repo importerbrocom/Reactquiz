@@ -943,7 +943,7 @@ function showActivationScreen(){
   document.getElementById('activationPage').classList.remove('hidden');
 }
 
-function submitActivation(){
+async function submitActivation(){
   const code=document.getElementById('activationCodeInput').value.trim();
   const err=document.getElementById('activationError');
 
@@ -953,19 +953,27 @@ function submitActivation(){
     return;
   }
 
-  if(!validateActivationCode(code)){
+  err.style.display='none';
+  document.querySelector('#activationPage .btn-primary').textContent='Verifying...';
+  document.querySelector('#activationPage .btn-primary').disabled=true;
+
+  const isValid=await validateActivationCode(code);
+
+  if(!isValid){
     err.textContent='Invalid or already used code. Please contact admin for a valid activation code.';
     err.style.display='block';
+    document.querySelector('#activationPage .btn-primary').textContent='Activate Account';
+    document.querySelector('#activationPage .btn-primary').disabled=false;
     return;
   }
 
   // Code is valid! Activate account
   const email=currentUser?.email||'default';
-  markCodeUsed(code,email);
+  await markCodeUsed(code,email);
   localStorage.setItem('qp_activated_'+email,'true');
-  err.style.display='none';
   document.getElementById('activationPage').classList.add('hidden');
-  // Go directly to student dashboard with quiz
+  document.querySelector('#activationPage .btn-primary').textContent='Activate Account';
+  document.querySelector('#activationPage .btn-primary').disabled=false;
   showStudent();
 }
 
@@ -1858,6 +1866,8 @@ function getActivationCodes(){
 }
 function saveActivationCodes(codes){
   localStorage.setItem('qp_activation_codes',JSON.stringify(codes));
+  // Also sync to server
+  fetch('/codes.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'replace',codes})}).catch(()=>{});
 }
 
 function generateCodes(){
@@ -1897,7 +1907,7 @@ function generateCodes(){
 }
 
 function shareCode(code){
-  const text=`Your ERO activation code is: ${code}\n\nUse this code to register at: https://mediprep.nokkoo.in\n\nThis code can only be used once.`;
+  const text=`Your ERO activation code is: ${code}\n\nUse this code to activate your account at: https://mediprep.nokkoo.in\n\nThis code can only be used once.`;
   if(navigator.share){
     navigator.share({title:'ERO Activation Code',text}).catch(()=>{});
   }else{
@@ -1906,7 +1916,7 @@ function shareCode(code){
 }
 
 function shareAllCodes(codes){
-  const text=`ERO Activation Codes:\n\n${codes.map((c,i)=>`${i+1}. ${c}`).join('\n')}\n\nRegister at: https://mediprep.nokkoo.in\nEach code can only be used once.`;
+  const text=`ERO Activation Codes:\n\n${codes.map((c,i)=>`${i+1}. ${c}`).join('\n')}\n\nActivate at: https://mediprep.nokkoo.in\nEach code can only be used once.`;
   if(navigator.share){
     navigator.share({title:'ERO Activation Codes',text}).catch(()=>{});
   }else{
@@ -1915,17 +1925,26 @@ function shareAllCodes(codes){
 }
 
 function loadActivationCodes(){
+  // Load from server first, then merge with local
+  fetch('/codes.php?action=list').then(r=>r.json()).then(d=>{
+    if(d.codes&&Array.isArray(d.codes)){
+      localStorage.setItem('qp_activation_codes',JSON.stringify(d.codes));
+    }
+    renderActivationCodes();
+  }).catch(()=>renderActivationCodes());
+}
+
+function renderActivationCodes(){
   const codes=getActivationCodes();
   const active=codes.filter(c=>!c.used);
   const used=codes.filter(c=>c.used);
 
-  // Active codes
   const activeEl=document.getElementById('activeCodesList');
   if(active.length===0){
     activeEl.innerHTML='<p style="color:#64748b;font-size:.9rem">No active codes.</p>';
   }else{
     let html='';
-    active.forEach((c,i)=>{
+    active.forEach(c=>{
       const created=new Date(c.created).toLocaleDateString('en-IN');
       html+=`<div class="q-item" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
         <div><span style="font-family:monospace;font-size:1.1rem;color:#f8fafc;letter-spacing:2px;font-weight:700">${c.code}</span><span style="font-size:.75rem;color:#64748b;margin-left:.8rem">${created}</span></div>
@@ -1938,7 +1957,6 @@ function loadActivationCodes(){
     activeEl.innerHTML=html;
   }
 
-  // Used codes
   const usedEl=document.getElementById('usedCodesList');
   if(used.length===0){
     usedEl.innerHTML='<p style="color:#64748b;font-size:.9rem">No codes used yet.</p>';
@@ -1960,23 +1978,35 @@ function deleteCode(code){
   let codes=getActivationCodes();
   codes=codes.filter(c=>c.code!==code);
   saveActivationCodes(codes);
-  loadActivationCodes();
+  renderActivationCodes();
 }
 
-function validateActivationCode(code){
+async function validateActivationCode(code){
+  // Try server first
+  try{
+    const r=await fetch('/codes.php?action=validate&code='+code);
+    const d=await r.json();
+    if(d.valid===true) return true;
+    if(d.valid===false) return false;
+  }catch(e){}
+  // Fallback to local
   const codes=getActivationCodes();
-  const found=codes.find(c=>c.code===code&&!c.used);
-  return !!found;
+  return codes.some(c=>c.code===code&&!c.used);
 }
 
-function markCodeUsed(code,email){
+async function markCodeUsed(code,email){
+  // Mark on server
+  try{
+    await fetch('/codes.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'use',code,email})});
+  }catch(e){}
+  // Also mark locally
   const codes=getActivationCodes();
   const idx=codes.findIndex(c=>c.code===code&&!c.used);
   if(idx>=0){
     codes[idx].used=true;
     codes[idx].usedBy=email;
     codes[idx].usedAt=new Date().toISOString();
-    saveActivationCodes(codes);
+    localStorage.setItem('qp_activation_codes',JSON.stringify(codes));
   }
 }
 
