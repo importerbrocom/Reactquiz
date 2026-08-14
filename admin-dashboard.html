@@ -585,12 +585,16 @@ async function loadStudentData(){
 // ============ QUIZ ENGINE ============
 let quizQuestions=[],quizIndex=0,quizScore=0,quizWrong=0,selectedOption=null,quizStartTime=null,quizAnswered=false;
 
-// Persistent progress using localStorage
+// Persistent progress using localStorage (per-user)
+function getProgressKey(){
+  const id=currentUser?.email||currentUser?.id||'default';
+  return 'qp_progress_'+id;
+}
 function getProgress(){
-  const saved=localStorage.getItem('qp_progress');
+  const saved=localStorage.getItem(getProgressKey());
   return saved?JSON.parse(saved):{day:1,month:1,daysCompleted:0,streak:0,totalAnswered:0,totalCorrect:0,questionsThisMonth:0,todayCompleted:false,todayDate:'',todayAnswered:0};
 }
-function saveProgress(p){localStorage.setItem('qp_progress',JSON.stringify(p))}
+function saveProgress(p){localStorage.setItem(getProgressKey(),JSON.stringify(p))}
 
 function updateDashboardFromProgress(){
   const p=getProgress();
