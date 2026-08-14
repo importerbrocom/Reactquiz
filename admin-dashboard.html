@@ -796,31 +796,57 @@ function shuffleOptions(q){
   return newQ;
 }
 
-// Get today's 10 questions (no repetition across days)
+// Get today's 10 questions (RANDOM selection, no repetition across days)
 function getTodayQuestions(){
   const stored=JSON.parse(localStorage.getItem('qp_questions')||'[]');
   if(stored.length===0) return getDemoQuestions();
 
   const p=getProgress();
-  const day=p.day; // Current day (1-based)
-  const questionsPerDay=10;
-  const startIdx=(day-1)*questionsPerDay;
+  const progressKey=getProgressKey();
 
-  // If we've exhausted the pool, cycle back
-  if(startIdx>=stored.length){
-    const wrappedStart=startIdx%stored.length;
-    return stored.slice(wrappedStart,wrappedStart+questionsPerDay);
+  // Get list of already-used question indices for this student
+  const usedKey=progressKey+'_used';
+  let usedIndices=JSON.parse(localStorage.getItem(usedKey)||'[]');
+
+  // Get today's pre-selected questions (if already generated today)
+  const todayKey=progressKey+'_today';
+  const todayData=JSON.parse(localStorage.getItem(todayKey)||'{}');
+  const today=new Date().toDateString();
+
+  if(todayData.date===today&&todayData.questions&&todayData.questions.length>0){
+    // Already generated today's questions — return same set
+    return todayData.questions;
   }
 
-  const todayQs=stored.slice(startIdx,startIdx+questionsPerDay);
+  // Find available questions (not yet used by this student)
+  const available=[];
+  stored.forEach((q,i)=>{
+    if(!usedIndices.includes(i)){
+      available.push({...q,_poolIndex:i});
+    }
+  });
 
-  // If not enough questions remaining, pad from start
-  if(todayQs.length<questionsPerDay){
-    const remaining=questionsPerDay-todayQs.length;
-    todayQs.push(...stored.slice(0,remaining));
+  // If all questions exhausted, reset (start new cycle)
+  if(available.length<10){
+    usedIndices=[];
+    localStorage.setItem(usedKey,JSON.stringify(usedIndices));
+    available.length=0;
+    stored.forEach((q,i)=>available.push({...q,_poolIndex:i}));
   }
 
-  return todayQs;
+  // Randomly select 10 questions
+  const shuffled=shuffleArray(available);
+  const selected=shuffled.slice(0,10);
+
+  // Mark these as used
+  selected.forEach(q=>usedIndices.push(q._poolIndex));
+  localStorage.setItem(usedKey,JSON.stringify(usedIndices));
+
+  // Save today's selection (so refreshing doesn't change questions)
+  const todayQuestions=selected.map(q=>{const{_poolIndex,...rest}=q;return rest});
+  localStorage.setItem(todayKey,JSON.stringify({date:today,questions:todayQuestions}));
+
+  return todayQuestions;
 }
 
 // Load questions from server for students on other devices
