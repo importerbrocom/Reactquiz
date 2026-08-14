@@ -399,9 +399,23 @@ async function loadDashboard(){
 }
 
 function loadQuestions(){
-  const el=document.getElementById('questionsList');let h='';
-  for(let i=1;i<=15;i++)h+=`<div class="q-item"><div class="q-text">Q${i}: FMGE Medical Science Question ${i}</div><div class="q-meta"><span class="badge badge-green">Active</span> Day ${Math.ceil(i/10)} · Level 1</div></div>`;
-  el.innerHTML=h;
+  const el=document.getElementById('questionsList');
+  const stored=JSON.parse(localStorage.getItem('qp_questions')||'[]');
+  if(stored.length>0){
+    let h='';
+    stored.forEach((q,i)=>{
+      const text=q.questionText||q.question_text||'Question '+(i+1);
+      const subject=q.subject||'General';
+      const day=Math.floor(i/10)+1;
+      h+=`<div class="q-item"><div class="q-text">Q${i+1}: ${text.substring(0,100)}${text.length>100?'...':''}</div><div class="q-meta"><span class="badge badge-green">Active</span> Day ${day} · ${subject}</div></div>`;
+    });
+    el.innerHTML=h;
+    document.querySelector('#pg-questions .card h3').textContent=`Questions (${stored.length} total)`;
+  }else{
+    let h='';
+    for(let i=1;i<=15;i++)h+=`<div class="q-item"><div class="q-text">Q${i}: FMGE Medical Science Question ${i}</div><div class="q-meta"><span class="badge badge-green">Active</span> Day ${Math.ceil(i/10)} · Level 1</div></div>`;
+    el.innerHTML=h;
+  }
 }
 
 function loadStudents(){
