@@ -154,7 +154,7 @@ td{padding:.8rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <a class="nav-item" onclick="showPage('questions',this)">❓ Questions</a>
 <a class="nav-item" onclick="showPage('upload',this)">📄 Upload Questions</a>
 <a class="nav-item" onclick="showPage('students',this)">👥 Students</a>
-<a class="nav-item" onclick="showPage('categories',this)">📁 Categories</a>
+<a class="nav-item" onclick="showPage('exams',this)">📋 Exams</a>
 <a class="nav-item" onclick="showPage('settings',this)">⚙️ Settings</a>
 </aside>
 <main class="main">
@@ -168,7 +168,29 @@ td{padding:.8rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 </div>
 <div id="pg-questions" class="hidden"><div class="card"><h3>Questions - Level 1</h3><div id="questionsList"></div></div></div>
 <div id="pg-students" class="hidden"><div class="card"><h3>Registered Users</h3><div id="studentsList"></div></div></div>
-<div id="pg-categories" class="hidden"><div class="card"><h3>Exam Categories & Programmes</h3><div id="categoriesList"></div></div></div>
+<div id="pg-categories" class="hidden">
+<div class="card">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+<h3>Exams</h3>
+<button class="btn-sm btn-confirm" onclick="showAddExam()">+ Add Exam</button>
+</div>
+<div id="categoriesList"></div>
+</div>
+<!-- Add/Edit Exam Form -->
+<div id="examForm" class="card hidden">
+<h3 id="examFormTitle">Add New Exam</h3>
+<div style="margin-top:1rem">
+<label>Exam Name</label><input type="text" id="examName" placeholder="e.g. FMGE, NEET, USMLE">
+<label>Description</label><input type="text" id="examDesc" placeholder="e.g. FMGE Complete - 6 Months">
+<label>Levels</label><input type="number" id="examLevels" value="6" min="1">
+<label>Questions per Level</label><input type="number" id="examQPerLevel" value="300" min="10">
+<div style="display:flex;gap:1rem;margin-top:1rem">
+<button class="btn btn-primary" style="width:auto;padding:.7rem 1.5rem" onclick="saveExam()">Save Exam</button>
+<button class="btn" style="width:auto;padding:.7rem 1.5rem;background:#334155" onclick="cancelExamForm()">Cancel</button>
+</div>
+</div>
+</div>
+</div>
 <div id="pg-settings" class="hidden"><div class="card"><h3>Application Configuration</h3><div id="settingsInfo"></div></div></div>
 
 <!-- Upload PDF Page -->
@@ -208,6 +230,16 @@ td{padding:.8rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 </div>
 </div>
 </main></div>
+
+<!-- ============ STUDENT ONBOARDING ============ -->
+<div id="onboardingPage" class="login-wrap hidden">
+<div class="login-box" style="max-width:500px">
+<img src="/icons/logo.avif" alt="ERO Logo" style="display:block;margin:0 auto 1rem;width:100px;height:auto">
+<h2 style="text-align:center;color:#f8fafc;margin-bottom:.5rem" id="onboardingGreeting">Welcome!</h2>
+<p style="text-align:center;color:#94a3b8;margin-bottom:2rem">Select the exam you want to practice:</p>
+<div id="examChoices" style="display:flex;flex-direction:column;gap:.8rem"></div>
+</div>
+</div>
 
 <!-- ============ STUDENT PAGE ============ -->
 <div id="studentPage" class="app hidden">
@@ -580,7 +612,8 @@ function showPage(page,el){
   if(page==='dashboard')loadDashboard();
   if(page==='questions')loadQuestions();
   if(page==='students')loadStudents();
-  if(page==='categories')loadCategories();
+  if(page==='categories')loadExams();
+  if(page==='exams'){document.getElementById('pg-categories').classList.remove('hidden');loadExams()}
   if(page==='settings')loadSettings();
   if(page==='upload')loadImportHistory();
 }
@@ -706,8 +739,75 @@ function renderStudentsTable(el,students){
   }
 }
 
-function loadCategories(){
-  document.getElementById('categoriesList').innerHTML=`<table><thead><tr><th>Category</th><th>Programme</th><th>Levels</th><th>Questions</th><th>Status</th></tr></thead><tbody><tr><td>FMGE</td><td>FMGE Complete - 6 Months</td><td>6</td><td>300</td><td><span class="badge badge-green">Active</span></td></tr></tbody></table>`;
+// ============ EXAMS CRUD ============
+let editingExamIndex=-1;
+
+function getExams(){
+  return JSON.parse(localStorage.getItem('qp_exams')||'[{"name":"FMGE","desc":"FMGE Complete - 6 Months","levels":6,"qPerLevel":300,"status":"Active"}]');
+}
+function saveExams(exams){localStorage.setItem('qp_exams',JSON.stringify(exams))}
+
+function loadExams(){
+  const exams=getExams();
+  const el=document.getElementById('categoriesList');
+  if(exams.length===0){el.innerHTML='<p style="color:#64748b">No exams added yet. Click "+ Add Exam" to create one.</p>';return}
+  let html='<table><thead><tr><th>Exam</th><th>Description</th><th>Levels</th><th>Questions</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+  exams.forEach((ex,i)=>{
+    html+=`<tr><td>${ex.name}</td><td>${ex.desc}</td><td>${ex.levels}</td><td>${ex.qPerLevel}</td><td><span class="badge badge-green">${ex.status||'Active'}</span></td><td><a onclick="editExam(${i})" style="color:#3b82f6;cursor:pointer;margin-right:.8rem">Edit</a><a onclick="deleteExam(${i})" style="color:#ef4444;cursor:pointer">Delete</a></td></tr>`;
+  });
+  html+='</tbody></table>';
+  el.innerHTML=html;
+}
+
+function showAddExam(){
+  editingExamIndex=-1;
+  document.getElementById('examFormTitle').textContent='Add New Exam';
+  document.getElementById('examName').value='';
+  document.getElementById('examDesc').value='';
+  document.getElementById('examLevels').value='6';
+  document.getElementById('examQPerLevel').value='300';
+  document.getElementById('examForm').classList.remove('hidden');
+}
+
+function editExam(i){
+  const exams=getExams();
+  editingExamIndex=i;
+  document.getElementById('examFormTitle').textContent='Edit Exam';
+  document.getElementById('examName').value=exams[i].name;
+  document.getElementById('examDesc').value=exams[i].desc;
+  document.getElementById('examLevels').value=exams[i].levels;
+  document.getElementById('examQPerLevel').value=exams[i].qPerLevel;
+  document.getElementById('examForm').classList.remove('hidden');
+}
+
+function saveExam(){
+  const name=document.getElementById('examName').value.trim();
+  const desc=document.getElementById('examDesc').value.trim();
+  const levels=parseInt(document.getElementById('examLevels').value)||6;
+  const qPerLevel=parseInt(document.getElementById('examQPerLevel').value)||300;
+  if(!name){alert('Please enter exam name');return}
+  const exams=getExams();
+  if(editingExamIndex>=0){
+    exams[editingExamIndex]={name,desc,levels,qPerLevel,status:'Active'};
+  }else{
+    exams.push({name,desc,levels,qPerLevel,status:'Active'});
+  }
+  saveExams(exams);
+  cancelExamForm();
+  loadExams();
+}
+
+function deleteExam(i){
+  if(!confirm('Delete this exam? This cannot be undone.'))return;
+  const exams=getExams();
+  exams.splice(i,1);
+  saveExams(exams);
+  loadExams();
+}
+
+function cancelExamForm(){
+  document.getElementById('examForm').classList.add('hidden');
+  editingExamIndex=-1;
 }
 
 function loadSettings(){
@@ -731,6 +831,16 @@ async function loadImportHistory(){
 
 // ============ STUDENT FUNCTIONS ============
 function showStudent(){
+  const email=currentUser?.email||'default';
+  const selectedExam=localStorage.getItem('qp_exam_'+email);
+
+  if(!selectedExam){
+    // Show onboarding - student must select an exam
+    showOnboarding();
+    return;
+  }
+
+  document.getElementById('onboardingPage').classList.add('hidden');
   document.getElementById('studentPage').classList.remove('hidden');
   document.getElementById('adminPage').classList.add('hidden');
   const name=currentUser?.name||'Student';
@@ -744,6 +854,35 @@ function showStudent(){
   });
   updateDashboardFromProgress();
   loadStudentData();
+}
+
+function showOnboarding(){
+  document.getElementById('loginPage').classList.add('hidden');
+  document.getElementById('adminPage').classList.add('hidden');
+  document.getElementById('studentPage').classList.add('hidden');
+  document.getElementById('onboardingPage').classList.remove('hidden');
+
+  const name=currentUser?.name||'Student';
+  document.getElementById('onboardingGreeting').textContent=`Welcome, ${name}!`;
+
+  // Load available exams
+  const exams=JSON.parse(localStorage.getItem('qp_exams')||'[{"name":"FMGE","desc":"FMGE Complete - 6 Months","levels":6,"qPerLevel":300,"status":"Active"}]');
+  const el=document.getElementById('examChoices');
+  let html='';
+  exams.forEach(ex=>{
+    html+=`<button onclick="selectExam('${ex.name}')" style="background:#1e293b;border:2px solid #334155;border-radius:12px;padding:1.2rem;color:#f8fafc;cursor:pointer;text-align:left;transition:all .2s" onmouseover="this.style.borderColor='#3b82f6'" onmouseout="this.style.borderColor='#334155'"><div style="font-size:1.1rem;font-weight:600;margin-bottom:.3rem">${ex.name}</div><div style="font-size:.85rem;color:#94a3b8">${ex.desc} · ${ex.levels} levels · ${ex.qPerLevel} questions</div></button>`;
+  });
+  if(exams.length===0){
+    html='<p style="color:#64748b;text-align:center">No exams available yet. Please contact admin.</p>';
+  }
+  el.innerHTML=html;
+}
+
+function selectExam(examName){
+  const email=currentUser?.email||'default';
+  localStorage.setItem('qp_exam_'+email,examName);
+  document.getElementById('onboardingPage').classList.add('hidden');
+  showStudent();
 }
 
 function showStudentPage(page,el){
@@ -932,11 +1071,12 @@ function updateDashboardFromProgress(){
   document.getElementById('monthProgress').textContent=`${questionsAnswered} of 300 pool questions completed`;
 
   // Course progress card
+  const selectedExam=localStorage.getItem('qp_exam_'+(currentUser?.email||'default'))||'FMGE';
   if(p.todayCompleted&&p.todayDate===new Date().toDateString()){
-    document.getElementById('courseDay').textContent=`FMGE · Month ${p.month} · Day ${p.day} (unlocks tomorrow)`;
+    document.getElementById('courseDay').textContent=`${selectedExam} · Month ${p.month} · Day ${p.day} (unlocks tomorrow)`;
     document.getElementById('courseSub').textContent=`Day ${p.day-1} completed! Come back tomorrow for Day ${p.day}.`;
   }else{
-    document.getElementById('courseDay').textContent=`FMGE · Month ${p.month} · Day ${p.day}`;
+    document.getElementById('courseDay').textContent=`${selectedExam} · Month ${p.month} · Day ${p.day}`;
     document.getElementById('courseSub').textContent=`Complete 10 questions to unlock Day ${p.day+1}`;
   }
 
