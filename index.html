@@ -1037,8 +1037,7 @@ async function startQuiz(){
     // RETAKE MODE: show ALL 10 same questions in new random order with shuffled options
     quizQuestions=shuffleArray(p.failedQs).map(q=>shuffleOptions(q));
     originalTenQuestions=p.failedQs; // Keep original 10 for further retakes
-    // Clear failed list (will be rebuilt if they fail again)
-    p.failedQs=[];
+    // Don't clear failedQs — keep until quiz is passed
     p.todayAnswered=0;
     p.todayCompleted=false;
     saveProgress(p);
@@ -1234,7 +1233,7 @@ function showQuizResults(){
   }else{
     // NOT PERFECT — Save ALL 10 original questions for retake (new order + shuffled options)
     p.todayCompleted=false;
-    p.failedQs=originalTenQuestions; // Store ORIGINAL 10 questions (will be reshuffled on retake)
+    p.failedQs=originalTenQuestions.length>0?originalTenQuestions:quizQuestions; // Store ORIGINAL 10 questions
     document.getElementById('quizResultText').textContent=`You got ${quizScore}/${total} correct. You need 10/10 to pass. Retake all questions in a new order.`;
     // Show "Retake" button, hide back to dashboard
     document.getElementById('quizResultBtn').classList.add('hidden');
@@ -1265,14 +1264,14 @@ function retakeQuiz(){
   const questionsToRetake=originalTenQuestions.length>0?originalTenQuestions:(p.failedQs||[]);
   if(questionsToRetake.length>0){
     document.getElementById('quizComplete').classList.add('hidden');
+    document.getElementById('quizLanding').classList.add('hidden');
     document.getElementById('quizActive').classList.remove('hidden');
     quizIndex=0;quizScore=0;quizWrong=0;selectedOption=null;quizStartTime=Date.now();
     failedQuestions=[];
     // Shuffle question order AND shuffle each question's options
     quizQuestions=shuffleArray(questionsToRetake).map(q=>shuffleOptions(q));
     originalTenQuestions=questionsToRetake; // Keep original for further retakes
-    // Clear saved failed list
-    p.failedQs=[];
+    // Don't clear failedQs yet — keep them in case user navigates away
     p.todayAnswered=0;
     saveProgress(p);
     renderQuestion();
