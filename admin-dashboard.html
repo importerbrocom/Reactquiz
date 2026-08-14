@@ -869,15 +869,17 @@ async function loadQuestionsFromServer(){
 function updateDashboardFromProgress(){
   const p=getProgress();
   const accuracy=p.totalAnswered>0?Math.round((p.totalCorrect/p.totalAnswered)*100):0;
+  // Questions Answered = 10 per completed day (unique questions mastered)
+  const questionsAnswered=p.daysCompleted*10;
   document.getElementById('statAccuracy').textContent=accuracy+'%';
   document.getElementById('statAccuracy2').textContent=accuracy+'%';
-  document.getElementById('statAnswered').textContent=p.totalAnswered;
-  document.getElementById('statAnswered2').textContent=p.totalAnswered;
+  document.getElementById('statAnswered').textContent=questionsAnswered;
+  document.getElementById('statAnswered2').textContent=questionsAnswered;
   document.getElementById('statDays').textContent=p.daysCompleted;
   document.getElementById('statDays2').textContent=p.daysCompleted;
   document.getElementById('statStreak').textContent=p.streak;
   document.getElementById('statStreak2').textContent=p.streak;
-  document.getElementById('monthProgress').textContent=`${p.questionsThisMonth} of 300 pool questions completed`;
+  document.getElementById('monthProgress').textContent=`${questionsAnswered} of 300 pool questions completed`;
 
   // Course progress card
   if(p.todayCompleted&&p.todayDate===new Date().toDateString()){
