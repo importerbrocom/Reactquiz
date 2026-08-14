@@ -221,7 +221,7 @@ td{padding:.8rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <h3 style="margin-bottom:1rem">Today's Quiz</h3>
 <div style="background:#0f172a;border-radius:9999px;height:12px;margin-bottom:.8rem;overflow:hidden"><div id="quizProgress" style="height:100%;background:#818cf8;border-radius:9999px;width:0%;transition:width .4s ease"></div></div>
 <p id="quizProgressText" style="color:#94a3b8;margin-bottom:1.2rem">0 of 10 questions completed</p>
-<button class="btn btn-primary" onclick="startQuiz()">Start today's quiz</button>
+<button class="btn btn-primary" id="quizStartBtn" onclick="startQuiz()">Start today's quiz</button>
 </div>
 <div class="card"><h3>Quiz Rules</h3><p>Complete all 10 questions correctly to unlock the next day. Incorrect answers are requeued at the end. You must master every question to progress.</p></div>
 </div>
@@ -534,7 +534,7 @@ let quizQuestions=[],quizIndex=0,quizScore=0,quizWrong=0,selectedOption=null,qui
 // Persistent progress using localStorage
 function getProgress(){
   const saved=localStorage.getItem('qp_progress');
-  return saved?JSON.parse(saved):{day:1,month:1,daysCompleted:0,streak:0,totalAnswered:0,totalCorrect:0,questionsThisMonth:0};
+  return saved?JSON.parse(saved):{day:1,month:1,daysCompleted:0,streak:0,totalAnswered:0,totalCorrect:0,questionsThisMonth:0,todayCompleted:false,todayDate:'',todayAnswered:0};
 }
 function saveProgress(p){localStorage.setItem('qp_progress',JSON.stringify(p))}
 
@@ -563,8 +563,20 @@ function updateDashboardFromProgress(){
   }
 
   // Quiz landing progress
-  document.getElementById('quizProgress').style.width='0%';
-  document.getElementById('quizProgressText').textContent=`0 of 10 questions completed · Day ${p.day}`;
+  const today=new Date().toDateString();
+  if(p.todayCompleted&&p.todayDate===today){
+    document.getElementById('quizProgress').style.width='100%';
+    document.getElementById('quizProgressText').textContent=`✓ Today's quiz completed · Day ${p.day}`;
+    document.getElementById('quizStartBtn').textContent='Retake quiz';
+    document.getElementById('quizStartBtn').style.background='#334155';
+  }else{
+    const answered=p.todayDate===today?(p.todayAnswered||0):0;
+    const pct=Math.round((answered/10)*100);
+    document.getElementById('quizProgress').style.width=pct+'%';
+    document.getElementById('quizProgressText').textContent=`${answered} of 10 questions completed · Day ${p.day}`;
+    document.getElementById('quizStartBtn').textContent=answered>0?'Continue today\'s quiz':'Start today\'s quiz';
+    document.getElementById('quizStartBtn').style.background='';
+  }
 
   // Update Level Progress table
   updateLevelProgress(p);
@@ -601,6 +613,13 @@ async function startQuiz(){
   document.getElementById('quizActive').classList.remove('hidden');
   document.getElementById('quizComplete').classList.add('hidden');
   quizIndex=0;quizScore=0;quizWrong=0;selectedOption=null;quizStartTime=Date.now();
+
+  // Reset today's partial progress
+  const pp=getProgress();
+  pp.todayAnswered=0;
+  pp.todayDate=new Date().toDateString();
+  pp.todayCompleted=false;
+  saveProgress(pp);
 
   // Try to load questions from API first
   let loaded=false;
@@ -741,6 +760,13 @@ async function submitAnswer(){
   const pct=Math.round((answered/total)*100);
   document.getElementById('quizProgress').style.width=pct+'%';
   document.getElementById('quizProgressText').textContent=`${answered} of ${total} questions completed`;
+
+  // Save partial progress
+  const pp=getProgress();
+  const today=new Date().toDateString();
+  pp.todayDate=today;
+  pp.todayAnswered=answered;
+  saveProgress(pp);
 }
 
 function nextQuestion(){
@@ -763,9 +789,13 @@ function showQuizResults(){
 
   // Save progress
   const p=getProgress();
+  const today=new Date().toDateString();
   p.totalAnswered+=total;
   p.totalCorrect+=quizScore;
   p.questionsThisMonth+=total;
+  p.todayCompleted=true;
+  p.todayDate=today;
+  p.todayAnswered=total;
 
   if(quizScore===total){
     // Perfect score — unlock next day!
