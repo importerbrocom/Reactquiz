@@ -508,38 +508,56 @@ function loadStudents(){
 
   // Try multiple API endpoints to get all students
   const endpoints=['/admin/users','/admin/students','/admin/users?per_page=100','/users'];
-  let found=false;
-
+  
   Promise.all(endpoints.map(ep=>apiFetch(ep).catch(()=>({data:null})))).then(results=>{
     let allStudents=[];
 
     results.forEach(d=>{
+      if(!d||!d.data)return;
       let users=[];
-      if(d.data&&Array.isArray(d.data)) users=d.data;
+      // Handle all possible response formats
+      if(Array.isArray(d.data)) users=d.data;
       else if(d.data?.data&&Array.isArray(d.data.data)) users=d.data.data;
       else if(d.data?.users&&Array.isArray(d.data.users)) users=d.data.users;
+      else if(typeof d.data==='object'&&!Array.isArray(d.data)){
+        // Maybe paginated response with items
+        const possibleArrays=Object.values(d.data).filter(v=>Array.isArray(v));
+        if(possibleArrays.length>0) users=possibleArrays[0];
+      }
 
       users.forEach(u=>{
         const email=(u.email||'').toLowerCase();
-        const role=(u.role||u.roles?.[0]?.name||u.roles?.[0]||'').toLowerCase();
-        // Add if not admin and not already in list
-        if(role!=='admin'&&role!=='super-admin'&&!email.includes('admin@')){
-          if(!allStudents.some(s=>s.email?.toLowerCase()===email)){
-            allStudents.push(u);
-          }
+        // Add ALL users (we'll show everyone, admin can see all)
+        if(!allStudents.some(s=>s.email?.toLowerCase()===email)){
+          allStudents.push(u);
         }
       });
     });
 
+    // Separate admins and students
+    let students=allStudents.filter(u=>{
+      const email=(u.email||'').toLowerCase();
+      const role=(u.role||u.roles?.[0]?.name||u.roles?.[0]||'').toLowerCase();
+      return role!=='admin'&&role!=='super-admin'&&!email.includes('admin@quizpath');
+    });
+
+    // If no students found from filtering, show all non-admin users
+    if(students.length===0){
+      students=allStudents.filter(u=>{
+        const email=(u.email||'').toLowerCase();
+        return email!=='admin@quizpath.test';
+      });
+    }
+
     // Merge with locally tracked students
     const localStudents=JSON.parse(localStorage.getItem('qp_registered_students')||'[]');
     localStudents.forEach(ls=>{
-      if(!allStudents.some(s=>(s.email||'').toLowerCase()===ls.email.toLowerCase())){
-        allStudents.push(ls);
+      if(!students.some(s=>(s.email||'').toLowerCase()===ls.email.toLowerCase())){
+        students.push(ls);
       }
     });
 
-    renderStudentsTable(el,allStudents);
+    renderStudentsTable(el,students);
   });
 }
 
