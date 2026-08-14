@@ -277,10 +277,13 @@ td{padding:.8rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 </div>
 <div class="card"><h3>Level Progress</h3>
 <table><thead><tr><th>Level</th><th>Days</th><th>Questions</th><th>Status</th></tr></thead>
-<tbody>
-<tr><td>Level 1</td><td>2 / 30</td><td>10 / 300</td><td><span class="badge badge-blue">In Progress</span></td></tr>
+<tbody id="levelProgressBody">
+<tr><td>Level 1</td><td>0 / 30</td><td>0 / 300</td><td><span class="badge badge-blue">In Progress</span></td></tr>
 <tr><td>Level 2</td><td>0 / 30</td><td>0 / 300</td><td><span class="badge badge-green">Locked</span></td></tr>
 <tr><td>Level 3</td><td>0 / 30</td><td>0 / 300</td><td><span class="badge badge-green">Locked</span></td></tr>
+<tr><td>Level 4</td><td>0 / 30</td><td>0 / 300</td><td><span class="badge badge-green">Locked</span></td></tr>
+<tr><td>Level 5</td><td>0 / 30</td><td>0 / 300</td><td><span class="badge badge-green">Locked</span></td></tr>
+<tr><td>Level 6</td><td>0 / 30</td><td>0 / 300</td><td><span class="badge badge-green">Locked</span></td></tr>
 </tbody></table>
 </div>
 </div>
@@ -532,6 +535,32 @@ function updateDashboardFromProgress(){
   // Quiz landing progress
   document.getElementById('quizProgress').style.width='0%';
   document.getElementById('quizProgressText').textContent=`0 of 10 questions completed · Day ${p.day}`;
+
+  // Update Level Progress table
+  updateLevelProgress(p);
+}
+
+function updateLevelProgress(p){
+  const tbody=document.getElementById('levelProgressBody');
+  if(!tbody)return;
+  const currentLevel=Math.ceil(p.day/30)||1;
+  const dayInLevel=((p.day-1)%30)+1;
+  let html='';
+  for(let lvl=1;lvl<=6;lvl++){
+    let days,questions,status,badge;
+    if(lvl<currentLevel){
+      days='30 / 30';questions='300 / 300';status='Completed';badge='badge-green';
+    }else if(lvl===currentLevel){
+      const daysComplete=p.daysCompleted>30*(lvl-1)?p.daysCompleted-30*(lvl-1):p.daysCompleted%30;
+      days=`${daysComplete} / 30`;
+      questions=`${daysComplete*10} / 300`;
+      status='In Progress';badge='badge-blue';
+    }else{
+      days='0 / 30';questions='0 / 300';status='Locked';badge='badge-green';
+    }
+    html+=`<tr><td>Level ${lvl}</td><td>${days}</td><td>${questions}</td><td><span class="badge ${badge}">${status}</span></td></tr>`;
+  }
+  tbody.innerHTML=html;
 }
 
 function continueQuiz(){startQuiz();}
