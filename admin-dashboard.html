@@ -438,11 +438,12 @@ function loadSettings(){
 }
 
 async function loadImportHistory(){
+  renderImportHistory();
   try{
     const d=await apiFetch('/admin/questions/imports');
     if(d.data&&d.data.length>0){
       const el=document.getElementById('importHistory');
-      let html='';
+      let html=el.innerHTML;
       d.data.forEach(imp=>{
         html+=`<div class="q-item"><div class="q-text">✓ Imported ${imp.count||imp.questions_count||'?'} questions</div><div class="q-meta">${imp.created_at||imp.date||''} · ${imp.filename||'file'}</div></div>`;
       });
@@ -952,9 +953,30 @@ async function confirmImport(){
 function addImportHistory(count){
   const el=document.getElementById('importHistory');
   const now=new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata'});
-  const entry=`<div class="q-item"><div class="q-text">✓ Imported ${count} questions</div><div class="q-meta">${now} · by ${currentUser?.name||'Admin'}</div></div>`;
-  if(el.querySelector('p')) el.innerHTML='';
-  el.insertAdjacentHTML('afterbegin',entry);
+  const entry={count,date:now,by:currentUser?.name||'Admin'};
+  // Save to localStorage
+  const history=JSON.parse(localStorage.getItem('qp_import_history')||'[]');
+  history.unshift(entry);
+  localStorage.setItem('qp_import_history',JSON.stringify(history));
+  renderImportHistory();
+}
+
+function renderImportHistory(){
+  const el=document.getElementById('importHistory');
+  const history=JSON.parse(localStorage.getItem('qp_import_history')||'[]');
+  const stored=JSON.parse(localStorage.getItem('qp_questions')||'[]');
+  if(history.length===0&&stored.length===0){
+    el.innerHTML='<p style="color:#64748b;font-size:.9rem">No imports yet. Upload a PDF or CSV to get started.</p>';
+    return;
+  }
+  let html='';
+  if(stored.length>0){
+    html+=`<div class="q-item" style="border-left:3px solid #16a34a"><div class="q-text">📚 ${stored.length} questions in quiz pool</div><div class="q-meta">Available for student quizzes</div></div>`;
+  }
+  history.forEach(h=>{
+    html+=`<div class="q-item"><div class="q-text">✓ Imported ${h.count} questions</div><div class="q-meta">${h.date} · by ${h.by}</div></div>`;
+  });
+  el.innerHTML=html;
 }
 </script>
 </body>
