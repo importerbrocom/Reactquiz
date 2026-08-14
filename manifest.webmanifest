@@ -1,29 +1,24 @@
 {
-  "name": "QuizPath — Daily Exam Practice",
+  "name": "QuizPath - MediPrep",
   "short_name": "QuizPath",
-  "description": "Complete 10 questions a day, master every one, and unlock the next day.",
-  "id": "/?source=pwa",
-  "start_url": "/?source=pwa",
-  "scope": "/",
+  "description": "Daily medical exam preparation - 10 questions a day",
+  "start_url": "/",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui"],
-  "orientation": "portrait",
   "background_color": "#0B1120",
   "theme_color": "#4F46E5",
-  "lang": "en",
-  "dir": "ltr",
-  "categories": ["education", "productivity"],
+  "orientation": "portrait",
   "icons": [
-    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icons/icon-256.png", "sizes": "256x256", "type": "image/png" },
-    { "src": "/icons/icon-384.png", "sizes": "384x384", "type": "image/png" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
-  ],
-  "shortcuts": [
-    { "name": "Today's Quiz", "url": "/quiz/today", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Review Mistakes", "url": "/mistakes" },
-    { "name": "Progress", "url": "/progress" }
-  ],
-  "prefer_related_applications": false
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
 }
