@@ -568,6 +568,8 @@ function renderStudentsTable(el,students){
       rows+=`<tr><td>${s.name||'-'}</td><td>${s.email||'-'}</td><td><span class="badge badge-teal">Student</span></td><td><span class="badge badge-green">${s.status||'Active'}</span></td></tr>`;
     });
     el.innerHTML=`<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table><p style="color:#64748b;font-size:.8rem;margin-top:1rem">${students.length} student(s) registered</p>`;
+    // Cache students for future visits
+    localStorage.setItem('qp_registered_students',JSON.stringify(students.map(s=>({name:s.name||'-',email:s.email||'-',status:s.status||'Active'}))));
   }else{
     el.innerHTML=`<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr></thead><tbody><tr><td colspan="4" style="color:#64748b;text-align:center;padding:1.5rem">No students registered yet. Students will appear here after they register.</td></tr></tbody></table>`;
   }
