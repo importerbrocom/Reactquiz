@@ -471,6 +471,7 @@ function showStudentPage(page,el){
   document.getElementById('studentPageTitle').textContent=titles[page]||'Dashboard';
   document.querySelectorAll('#studentPage .nav-item').forEach(e=>e.classList.remove('active'));
   if(el)el.classList.add('active');
+  if(page==='s-dashboard'||page==='s-progress') updateDashboardFromProgress();
 }
 
 async function loadStudentData(){
@@ -543,19 +544,20 @@ function updateDashboardFromProgress(){
 function updateLevelProgress(p){
   const tbody=document.getElementById('levelProgressBody');
   if(!tbody)return;
-  const currentLevel=Math.ceil(p.day/30)||1;
-  const dayInLevel=((p.day-1)%30)+1;
+  let daysLeft=p.daysCompleted;
   let html='';
   for(let lvl=1;lvl<=6;lvl++){
     let days,questions,status,badge;
-    if(lvl<currentLevel){
-      days='30 / 30';questions='300 / 300';status='Completed';badge='badge-green';
-    }else if(lvl===currentLevel){
-      const daysComplete=p.daysCompleted>30*(lvl-1)?p.daysCompleted-30*(lvl-1):p.daysCompleted%30;
-      days=`${daysComplete} / 30`;
-      questions=`${daysComplete*10} / 300`;
-      status='In Progress';badge='badge-blue';
+    if(daysLeft>=30){
+      // This level is fully completed
+      days='30 / 30';questions='300 / 300';status='Completed';badge='badge-teal';
+      daysLeft-=30;
+    }else if(daysLeft>0){
+      // This level is in progress
+      days=`${daysLeft} / 30`;questions=`${daysLeft*10} / 300`;status='In Progress';badge='badge-blue';
+      daysLeft=0;
     }else{
+      // This level is locked
       days='0 / 30';questions='0 / 300';status='Locked';badge='badge-green';
     }
     html+=`<tr><td>Level ${lvl}</td><td>${days}</td><td>${questions}</td><td><span class="badge ${badge}">${status}</span></td></tr>`;
