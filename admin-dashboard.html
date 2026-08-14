@@ -141,7 +141,7 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <p style="text-align:center;margin-top:1.2rem;color:#94a3b8;font-size:.95rem">Don't have an account? <a onclick="showRegister()" style="color:#3b82f6;cursor:pointer;font-weight:600">Register</a></p>
 </div>
 <div id="registerFormWrap" class="hidden">
-<form id="registerForm"><label>Activation Code</label><input type="text" id="regCode" placeholder="Enter 6-digit code" required maxlength="6" pattern="[0-9]{6}" style="font-family:monospace;font-size:1.3rem;letter-spacing:4px;text-align:center"><label>Full Name</label><input type="text" id="regName" placeholder="Enter your full name" required><label>Email</label><input type="email" id="regEmail" placeholder="Enter your email" required><label>Password</label><input type="password" id="regPassword" placeholder="Min 8 characters" required minlength="8"><label>Confirm Password</label><input type="password" id="regConfirm" placeholder="Confirm password" required><button type="submit" class="btn btn-primary" id="regBtn">Create Account</button></form>
+<form id="registerForm"><label>Full Name</label><input type="text" id="regName" placeholder="Enter your full name" required><label>Email</label><input type="email" id="regEmail" placeholder="Enter your email" required><label>Password</label><input type="password" id="regPassword" placeholder="Min 8 characters" required minlength="8"><label>Confirm Password</label><input type="password" id="regConfirm" placeholder="Confirm password" required><button type="submit" class="btn btn-primary" id="regBtn">Create Account</button></form>
 <div style="display:flex;align-items:center;margin:1.2rem 0;gap:.8rem"><div style="flex:1;height:1px;background:#334155"></div><span style="color:#64748b;font-size:.85rem">or</span><div style="flex:1;height:1px;background:#334155"></div></div>
 <button onclick="googleSignIn()" class="btn" style="background:#fff;color:#333;display:flex;align-items:center;justify-content:center;gap:.6rem;font-weight:600;border:1px solid #e2e8f0"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Sign up with Google</button>
 <p style="text-align:center;margin-top:1.2rem;color:#94a3b8;font-size:.95rem">Already have an account? <a onclick="showLogin()" style="color:#3b82f6;cursor:pointer;font-weight:600">Sign In</a></p>
@@ -270,6 +270,26 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <h2 style="text-align:center;color:#f8fafc;margin-bottom:.5rem" id="onboardingGreeting">Welcome!</h2>
 <p style="text-align:center;color:#94a3b8;margin-bottom:2rem">Select the exam you want to practice:</p>
 <div id="examChoices" style="display:flex;flex-direction:column;gap:.8rem"></div>
+</div>
+</div>
+
+<!-- ============ ACTIVATION SCREEN ============ -->
+<div id="activationPage" class="login-wrap hidden">
+<div class="login-box" style="max-width:420px">
+<img src="/icons/logo.avif" alt="ERO Logo" style="display:block;margin:0 auto 1rem;width:80px;height:auto">
+<div class="form-card">
+<div style="text-align:center;margin-bottom:1.5rem">
+<div style="font-size:2.5rem;margin-bottom:.5rem">🔒</div>
+<h2 style="color:#f8fafc;font-size:1.3rem;margin-bottom:.4rem">Activate Your Account</h2>
+<p style="color:#94a3b8;font-size:.9rem">Enter your 6-digit activation code to access the dashboard. Contact admin to get your code.</p>
+</div>
+<div id="activationError" class="error-msg"></div>
+<label>Activation Code</label>
+<input type="text" id="activationCodeInput" placeholder="000000" maxlength="6" pattern="[0-9]{6}" style="font-family:monospace;font-size:1.8rem;letter-spacing:6px;text-align:center;padding:1rem">
+<button class="btn btn-primary" onclick="submitActivation()">Activate Account</button>
+<p style="text-align:center;margin-top:1.2rem;color:#64748b;font-size:.8rem">Don't have a code? Contact your admin.</p>
+<a onclick="logout()" style="display:block;text-align:center;margin-top:.8rem;color:#ef4444;cursor:pointer;font-size:.85rem">Sign Out</a>
+</div>
 </div>
 </div>
 
@@ -552,15 +572,10 @@ async function handleGoogleToken(tokenResponse){
 document.getElementById('registerForm').addEventListener('submit',async e=>{
   e.preventDefault();
   const btn=document.getElementById('regBtn'),err=document.getElementById('errorMsg');
-  const activationCode=document.getElementById('regCode').value.trim();
   const name=document.getElementById('regName').value.trim();
   const email=document.getElementById('regEmail').value.trim();
   const password=document.getElementById('regPassword').value;
   const confirm=document.getElementById('regConfirm').value;
-
-  // Validate activation code first
-  if(!activationCode||activationCode.length!==6){err.textContent='Please enter a valid 6-digit activation code';err.style.display='block';return}
-  if(!validateActivationCode(activationCode)){err.textContent='Invalid or already used activation code. Please contact admin for a valid code.';err.style.display='block';return}
 
   if(password!==confirm){err.textContent='Passwords do not match';err.style.display='block';return}
   if(password.length<8){err.textContent='Password must be at least 8 characters';err.style.display='block';return}
@@ -573,14 +588,12 @@ document.getElementById('registerForm').addEventListener('submit',async e=>{
       token=d.data.access_token;
       localStorage.setItem('qp_token',token);
       currentUser=d.data.user||d.data;
-      // Track registered student locally and mark code used
+      // Track registered student locally
       trackRegisteredStudent(name,email);
-      markCodeUsed(activationCode,email);
       routeByRole();
     }else if(r.ok&&d.data?.user){
       // Registration successful but no auto-login, show login form
       trackRegisteredStudent(name,email);
-      markCodeUsed(activationCode,email);
       err.style.display='block';err.style.background='#052e16';err.style.border='1px solid #16a34a';err.style.color='#86efac';
       err.textContent='✓ Account created! Please sign in.';
       showLogin();
@@ -894,14 +907,22 @@ async function loadImportHistory(){
 // ============ STUDENT FUNCTIONS ============
 function showStudent(){
   const email=currentUser?.email||'default';
-  const selectedExam=localStorage.getItem('qp_exam_'+email);
 
+  // Check if account is activated
+  const isActivated=localStorage.getItem('qp_activated_'+email);
+  if(!isActivated){
+    showActivationScreen();
+    return;
+  }
+
+  // Check if exam is selected (onboarding)
+  const selectedExam=localStorage.getItem('qp_exam_'+email);
   if(!selectedExam){
-    // Show onboarding - student must select an exam
     showOnboarding();
     return;
   }
 
+  document.getElementById('activationPage').classList.add('hidden');
   document.getElementById('onboardingPage').classList.add('hidden');
   document.getElementById('studentPage').classList.remove('hidden');
   document.getElementById('adminPage').classList.add('hidden');
@@ -916,6 +937,39 @@ function showStudent(){
   });
   updateDashboardFromProgress();
   loadStudentData();
+}
+
+function showActivationScreen(){
+  document.getElementById('loginPage').classList.add('hidden');
+  document.getElementById('adminPage').classList.add('hidden');
+  document.getElementById('studentPage').classList.add('hidden');
+  document.getElementById('onboardingPage').classList.add('hidden');
+  document.getElementById('activationPage').classList.remove('hidden');
+}
+
+function submitActivation(){
+  const code=document.getElementById('activationCodeInput').value.trim();
+  const err=document.getElementById('activationError');
+
+  if(!code||code.length!==6){
+    err.textContent='Please enter a valid 6-digit code';
+    err.style.display='block';
+    return;
+  }
+
+  if(!validateActivationCode(code)){
+    err.textContent='Invalid or already used code. Please contact admin for a valid activation code.';
+    err.style.display='block';
+    return;
+  }
+
+  // Code is valid! Activate account
+  const email=currentUser?.email||'default';
+  markCodeUsed(code,email);
+  localStorage.setItem('qp_activated_'+email,'true');
+  err.style.display='none';
+  document.getElementById('activationPage').classList.add('hidden');
+  showStudent();
 }
 
 function showOnboarding(){
