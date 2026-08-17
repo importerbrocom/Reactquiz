@@ -1195,7 +1195,8 @@ async function loadQuestionsFromServer(){
 
 function updateDashboardFromProgress(){
   const p=getProgress();
-  const accuracy=p.totalAnswered>0?Math.round((p.totalCorrect/p.totalAnswered)*100):0;
+  // Accuracy = 100% for each completed day (since 10/10 required to pass)
+  const accuracy=p.daysCompleted>0?100:0;
   // Questions Answered = 10 per completed day (unique questions mastered)
   const questionsAnswered=p.daysCompleted*10;
   document.getElementById('statAccuracy').textContent=accuracy+'%';
