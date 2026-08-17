@@ -301,7 +301,6 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <aside class="sidebar" id="studentSidebar"><h1>ERO</h1>
 <a class="nav-item active" onclick="showStudentPage('s-dashboard',this)">📊 Dashboard</a>
 <a class="nav-item" onclick="showStudentPage('s-quiz',this)">📝 Today's Quiz</a>
-<a class="nav-item" onclick="showStudentPage('s-mistakes',this)">❌ Mistakes</a>
 <a class="nav-item" onclick="showStudentPage('s-progress',this)">📈 Progress</a>
 <a class="nav-item" onclick="showStudentPage('s-notifications',this)">🔔 Notifications</a>
 <a class="nav-item" onclick="showStudentPage('s-profile',this)">👤 Profile</a>
@@ -325,10 +324,9 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 </div>
 
 <!-- Quick Actions for Student -->
-<div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:1.2rem">
+<div class="stat-grid" style="grid-template-columns:repeat(2,1fr);margin-bottom:1.2rem">
 <div class="stat-card" style="cursor:pointer" onclick="showStudentPage('s-quiz',document.querySelector('#studentPage .nav-item:nth-child(2)'))"><div style="font-size:1.5rem;margin-bottom:.3rem">📝</div><div class="stat-label">Today's Quiz</div></div>
-<div class="stat-card" style="cursor:pointer" onclick="showStudentPage('s-mistakes',document.querySelector('#studentPage .nav-item:nth-child(3)'))"><div style="font-size:1.5rem;margin-bottom:.3rem">❌</div><div class="stat-label">Mistakes</div></div>
-<div class="stat-card" style="cursor:pointer" onclick="showStudentPage('s-progress',document.querySelector('#studentPage .nav-item:nth-child(4)'))"><div style="font-size:1.5rem;margin-bottom:.3rem">📈</div><div class="stat-label">Progress</div></div>
+<div class="stat-card" style="cursor:pointer" onclick="showStudentPage('s-progress',document.querySelector('#studentPage .nav-item:nth-child(3)'))"><div style="font-size:1.5rem;margin-bottom:.3rem">📈</div><div class="stat-label">Progress</div></div>
 </div>
 
 <div class="card">
