@@ -659,17 +659,14 @@ async function checkAuth(){
 // Route by role
 function routeByRole(){
   document.getElementById('loginPage').classList.add('hidden');
-  // Check user data - try multiple possible email locations
-  const email=(currentUser?.email||currentUser?.user?.email||'').toLowerCase().trim();
-  // STRICT: only admin@quizpath.test goes to admin
-  const isAdmin=(email==='admin@quizpath.test');
+  // Use role from API response
+  const role=(currentUser?.role||'').toLowerCase();
+  const isAdmin=(role==='admin'||role==='super-admin');
 
   // Track student login for admin visibility
-  if(!isAdmin&&email){
-    trackRegisteredStudent(currentUser?.name||'Student',email);
+  if(!isAdmin&&currentUser?.email){
+    trackRegisteredStudent(currentUser?.name||'Student',currentUser.email);
   }
-
-  console.log('Route by role:', {email, isAdmin, currentUser});
 
   if(isAdmin){
     showAdmin();
@@ -708,22 +705,19 @@ async function apiFetch(u){
 
 async function loadDashboard(){
   const g=document.getElementById('statsGrid');
-  const exams=JSON.parse(localStorage.getItem('qp_exams')||'[]');
-  const questions=JSON.parse(localStorage.getItem('qp_questions')||'[]');
-  const students=JSON.parse(localStorage.getItem('qp_registered_students')||'[]');
   const codes=JSON.parse(localStorage.getItem('qp_activation_codes')||'[]');
   const activeCodes=codes.filter(c=>!c.used).length;
-  const usedCodes=codes.filter(c=>c.used).length;
 
   try{
     const d=await apiFetch('/admin/counters');
     if(d.data){
-      const studentCount=d.data.students||students.length;
-      const questionCount=d.data.questions||questions.length;
-      g.innerHTML=`<div class="stat-card" style="cursor:pointer" onclick="showPage('students')"><div class="stat-value">${studentCount}</div><div class="stat-label">Students</div></div><div class="stat-card" style="cursor:pointer" onclick="showPage('questions')"><div class="stat-value">${questionCount}</div><div class="stat-label">Questions</div></div><div class="stat-card" style="cursor:pointer" onclick="showPage('exams')"><div class="stat-value">${exams.length}</div><div class="stat-label">Exams</div></div><div class="stat-card" style="cursor:pointer" onclick="showPage('codes')"><div class="stat-value">${activeCodes}</div><div class="stat-label">Active Codes</div></div>`;
+      const studentCount=d.data.students||0;
+      const questionCount=d.data.questions||0;
+      const examCount=d.data.levels||0;
+      g.innerHTML=`<div class="stat-card" style="cursor:pointer" onclick="showPage('students')"><div class="stat-value">${studentCount}</div><div class="stat-label">Students</div></div><div class="stat-card" style="cursor:pointer" onclick="showPage('questions')"><div class="stat-value">${questionCount}</div><div class="stat-label">Questions</div></div><div class="stat-card" style="cursor:pointer" onclick="showPage('exams')"><div class="stat-value">${examCount}</div><div class="stat-label">Levels</div></div><div class="stat-card" style="cursor:pointer" onclick="showPage('codes')"><div class="stat-value">${activeCodes}</div><div class="stat-label">Active Codes</div></div>`;
     }else throw'no data';
   }catch(e){
-    g.innerHTML=`<div class="stat-card" style="cursor:pointer" onclick="showPage('students')"><div class="stat-value">${students.length}</div><div class="stat-label">Students</div></div><div class="stat-card" style="cursor:pointer" onclick="showPage('questions')"><div class="stat-value">${questions.length}</div><div class="stat-label">Questions</div></div><div class="stat-card" style="cursor:pointer" onclick="showPage('exams')"><div class="stat-value">${exams.length}</div><div class="stat-label">Exams</div></div><div class="stat-card" style="cursor:pointer" onclick="showPage('codes')"><div class="stat-value">${activeCodes}</div><div class="stat-label">Active Codes</div></div>`;
+    g.innerHTML=`<div class="stat-card"><div class="stat-value">—</div><div class="stat-label">Students</div></div><div class="stat-card"><div class="stat-value">—</div><div class="stat-label">Questions</div></div><div class="stat-card"><div class="stat-value">—</div><div class="stat-label">Levels</div></div><div class="stat-card" style="cursor:pointer" onclick="showPage('codes')"><div class="stat-value">${activeCodes}</div><div class="stat-label">Active Codes</div></div>`;
   }
 }
 
@@ -941,7 +935,7 @@ async function loadImportHistory(){
 function showStudent(){
   const email=currentUser?.email||'default';
 
-  // Check if account is activated — NO ACCESS without activation
+  // Check if account is activated
   const isActivated=localStorage.getItem('qp_activated_'+email);
   if(!isActivated){
     showActivationScreen();
@@ -958,14 +952,32 @@ function showStudent(){
   document.getElementById('studentUserInfo').textContent=name;
   document.getElementById('profileName').textContent=currentUser?.name||'-';
   document.getElementById('profileEmail').textContent=currentUser?.email||'-';
-  // Load questions from server if not in localStorage (for new students)
-  loadQuestionsFromServer().then(()=>{
-    updateDashboardFromProgress();
-  });
+
+  // Load progress from API
+  loadStudentProgressFromAPI();
   updateDashboardFromProgress();
-  loadStudentData();
   // Go directly to Today's Quiz page
   showStudentPage('s-quiz',document.querySelector('#studentPage .nav-item:nth-child(2)'));
+}
+
+async function loadStudentProgressFromAPI(){
+  try{
+    const d=await apiFetch('/student/progress');
+    if(d.data){
+      const p=getProgress();
+      if(d.data.days_completed!==undefined) p.daysCompleted=d.data.days_completed;
+      if(d.data.current_streak!==undefined) p.streak=d.data.current_streak;
+      if(d.data.current_day!==undefined) p.day=d.data.current_day;
+      if(d.data.current_level!==undefined) p.month=d.data.current_level;
+      saveProgress(p);
+      updateDashboardFromProgress();
+    }
+  }catch(e){}
+}
+
+async function loadStudentData(){
+  // Sync progress from server
+  await loadStudentProgressFromAPI();
 }
 
 function showActivationScreen(){
@@ -1057,30 +1069,7 @@ function showStudentPage(page,el){
   if(page==='s-progress') updateLevelTestUI();
 }
 
-async function loadStudentData(){
-  try{
-    const progress=await apiFetch('/student/progress');
-    if(progress.data){
-      const p=progress.data;
-      if(p.accuracy!==undefined){document.getElementById('statAccuracy').textContent=Math.round(p.accuracy)+'%';document.getElementById('statAccuracy2').textContent=Math.round(p.accuracy)+'%'}
-      if(p.questions_answered!==undefined){document.getElementById('statAnswered').textContent=p.questions_answered;document.getElementById('statAnswered2').textContent=p.questions_answered}
-      if(p.days_completed!==undefined){document.getElementById('statDays').textContent=p.days_completed;document.getElementById('statDays2').textContent=p.days_completed}
-      if(p.current_streak!==undefined){
-        document.getElementById('statStreak').textContent=p.current_streak;
-        document.getElementById('statStreak2').textContent=p.current_streak;
-        document.getElementById('streakMsg').textContent=`🔥 You're on a ${p.current_streak}-day streak! Keep it up!`;
-      }
-      if(p.today_completed!==undefined&&p.today_total!==undefined){
-        const pct=Math.round((p.today_completed/p.today_total)*100);
-        document.getElementById('quizProgress').style.width=pct+'%';
-        document.getElementById('quizProgressText').textContent=`${p.today_completed} of ${p.today_total} questions completed`;
-      }
-      if(p.month_completed!==undefined&&p.month_total!==undefined){
-        document.getElementById('monthProgress').textContent=`${p.month_completed} of ${p.month_total} pool questions completed`;
-      }
-    }
-  }catch(e){console.log('Using default student stats')}
-}
+// (loadStudentData defined in showStudent section above)
 
 // ============ QUIZ ENGINE ============
 let quizQuestions=[],quizIndex=0,quizScore=0,quizWrong=0,selectedOption=null,quizStartTime=null,quizAnswered=false;
@@ -1353,16 +1342,31 @@ async function startQuiz(){
     p.failedQs=[];
     saveProgress(p);
 
-    // Try API first
+    // Try API first — start or resume a day attempt
     let loaded=false;
     try{
-      const d=await apiFetch('/student/quiz/today');
-      if(d.data&&d.data.questions&&d.data.questions.length>0){
-        quizQuestions=d.data.questions;loaded=true;
+      const attemptRes=await fetch(API+'/student/days/'+p.day+'/attempt',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({})});
+      const attemptData=await attemptRes.json();
+      if(attemptRes.ok&&attemptData.data){
+        const attempt=attemptData.data;
+        localStorage.setItem('qp_current_attempt',attempt.uuid||attempt.id||'');
+        if(attempt.questions&&attempt.questions.length>0){
+          quizQuestions=attempt.questions.map(q=>({
+            id:q.id,questionText:q.question_text||q.questionText||q.text||'',
+            optionA:q.options?.[0]?.text||q.option_a||q.optionA||'',
+            optionB:q.options?.[1]?.text||q.option_b||q.optionB||'',
+            optionC:q.options?.[2]?.text||q.option_c||q.optionC||'',
+            optionD:q.options?.[3]?.text||q.option_d||q.optionD||'',
+            correctOption:q.correct_option||q.correctOption||'A',
+            explanation:q.explanation||'',subject:q.subject||q.topic||'General',
+            imageUrl:q.image_url||q.imageUrl||''
+          }));
+          loaded=true;
+        }
       }
     }catch(e){}
     if(!loaded){
-      // Load from localStorage pool (no repetition)
+      // Fallback: load from localStorage pool
       quizQuestions=getTodayQuestions();
     }
   }
@@ -1454,13 +1458,23 @@ async function submitAnswer(){
   }
 
   // Submit to API (with offline fallback)
-  if(navigator.onLine){
+  const attemptUuid=localStorage.getItem('qp_current_attempt')||'';
+  if(navigator.onLine&&attemptUuid){
     try{
-      await fetch(API+'/student/quiz-attempts/answers',{
+      const r=await fetch(API+'/student/attempts/'+attemptUuid+'/answers',{
         method:'POST',
         headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',Accept:'application/json'},
-        body:JSON.stringify({question_id:q.id,selected_option:selectedOption,is_correct:isCorrect})
+        body:JSON.stringify({question_id:q.id,selected_option:selectedOption,client_answer_uuid:crypto.randomUUID?crypto.randomUUID():(Date.now()+'_'+Math.random())})
       });
+      const result=await r.json();
+      // Use server response if available
+      if(result.data){
+        if(result.data.is_correct!==undefined&&result.data.is_correct!==isCorrect){
+          // Server says different — trust server
+        }
+        if(result.data.explanation) q.explanation=result.data.explanation;
+        if(result.data.correct_option) q.correctOption=result.data.correct_option;
+      }
     }catch(e){saveAnswerOffline(q,selectedOption,isCorrect)}
   }else{
     saveAnswerOffline(q,selectedOption,isCorrect);
