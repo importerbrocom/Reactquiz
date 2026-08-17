@@ -301,11 +301,13 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <aside class="sidebar" id="studentSidebar"><h1>ERO</h1>
 <a class="nav-item active" onclick="showStudentPage('s-dashboard',this)">📊 Dashboard</a>
 <a class="nav-item" onclick="showStudentPage('s-quiz',this)">📝 Today's Quiz</a>
+<a class="nav-item" onclick="showStudentPage('s-mistakes',this)">❌ Mistakes</a>
 <a class="nav-item" onclick="showStudentPage('s-progress',this)">📈 Progress</a>
 <a class="nav-item" onclick="showStudentPage('s-notifications',this)">🔔 Notifications</a>
 <a class="nav-item" onclick="showStudentPage('s-profile',this)">👤 Profile</a>
 </aside>
 <main class="main">
+<div id="offlineBanner" class="hidden" style="background:#451a03;border:1px solid #f59e0b;border-radius:10px;padding:.6rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem;font-size:.85rem;color:#fbbf24">⚠️ You're offline. Answers will sync when connected.</div>
 <div class="topbar" style="position:relative"><button class="hamburger" onclick="toggleSidebar('student')">☰</button><h2 class="page-title" id="studentPageTitle">Dashboard</h2><div style="display:flex;align-items:center;gap:1rem"><span class="user-info" id="studentUserInfo"></span><a onclick="logout()" style="color:#ef4444;cursor:pointer;font-size:.9rem;font-weight:500">Sign Out</a></div></div>
 
 <!-- Student Dashboard -->
@@ -325,8 +327,8 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <!-- Quick Actions for Student -->
 <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:1.2rem">
 <div class="stat-card" style="cursor:pointer" onclick="showStudentPage('s-quiz',document.querySelector('#studentPage .nav-item:nth-child(2)'))"><div style="font-size:1.5rem;margin-bottom:.3rem">📝</div><div class="stat-label">Today's Quiz</div></div>
-<div class="stat-card" style="cursor:pointer" onclick="showStudentPage('s-progress',document.querySelector('#studentPage .nav-item:nth-child(3)'))"><div style="font-size:1.5rem;margin-bottom:.3rem">📈</div><div class="stat-label">Progress</div></div>
-<div class="stat-card" style="cursor:pointer" onclick="showStudentPage('s-profile',document.querySelector('#studentPage .nav-item:nth-child(5)'))"><div style="font-size:1.5rem;margin-bottom:.3rem">👤</div><div class="stat-label">Profile</div></div>
+<div class="stat-card" style="cursor:pointer" onclick="showStudentPage('s-mistakes',document.querySelector('#studentPage .nav-item:nth-child(3)'))"><div style="font-size:1.5rem;margin-bottom:.3rem">❌</div><div class="stat-label">Mistakes</div></div>
+<div class="stat-card" style="cursor:pointer" onclick="showStudentPage('s-progress',document.querySelector('#studentPage .nav-item:nth-child(4)'))"><div style="font-size:1.5rem;margin-bottom:.3rem">📈</div><div class="stat-label">Progress</div></div>
 </div>
 
 <div class="card">
@@ -420,11 +422,31 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <tr><td>Level 6</td><td>0 / 30</td><td>0 / 300</td><td><span class="badge badge-green">Locked</span></td></tr>
 </tbody></table>
 </div>
+<!-- Level Test Card -->
+<div class="card" id="levelTestCard">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem">
+<h3>Level Test</h3>
+<span class="badge badge-blue" id="levelTestBadge">Locked</span>
+</div>
+<p id="levelTestDesc" style="color:#94a3b8;margin-bottom:1rem;font-size:.9rem">Complete all 30 days to unlock the Level Test. Pass to advance to the next level.</p>
+<button class="btn btn-primary" id="levelTestBtn" onclick="startLevelTest()" disabled style="opacity:.6">Take Level Test</button>
+</div>
+</div>
+<div id="pg-s-mistakes" class="hidden">
+<div class="card">
+<h3>Mistake Review</h3>
+<p style="color:#94a3b8;margin-bottom:1rem;font-size:.9rem">Review questions you got wrong. Learn from your mistakes!</p>
+<div id="mistakesList"><p style="color:#64748b">No mistakes recorded yet. Complete a quiz to see your mistakes here.</p></div>
+</div>
 </div>
 
 <!-- Student Notifications Page -->
 <div id="pg-s-notifications" class="hidden">
-<div class="card"><h3>Notifications</h3><p style="color:#64748b">No new notifications.</p></div>
+<div class="card"><h3>Notifications</h3>
+<div id="notificationsList">
+<div class="q-item" style="border-left:3px solid #3b82f6"><div class="q-text">🎉 Welcome to ERO!</div><div class="q-meta">Start your daily quiz to begin learning.</div></div>
+</div>
+</div>
 </div>
 
 <!-- Student Profile Page -->
@@ -802,9 +824,9 @@ function renderStudentsTable(el,students){
   if(students.length>0){
     let rows='';
     students.forEach(s=>{
-      rows+=`<tr><td>${s.name||'-'}</td><td>${s.email||'-'}</td><td><span class="badge badge-teal">Student</span></td><td><span class="badge badge-green">${s.status||'Active'}</span></td></tr>`;
+      rows+=`<tr style="cursor:pointer" onclick="showStudentDetail('${s.email||''}','${s.name||''}')"><td>${s.name||'-'}</td><td>${s.email||'-'}</td><td><span class="badge badge-teal">Student</span></td><td><span class="badge badge-green">${s.status||'Active'}</span></td></tr>`;
     });
-    el.innerHTML=`<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table><p style="color:#64748b;font-size:.8rem;margin-top:1rem">${students.length} student(s) registered</p>`;
+    el.innerHTML=`<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table><p style="color:#64748b;font-size:.8rem;margin-top:1rem">${students.length} student(s) · Click a student for details</p>`;
     // Cache students for future visits
     localStorage.setItem('qp_registered_students',JSON.stringify(students.map(s=>({name:s.name||'-',email:s.email||'-',status:s.status||'Active'}))));
   }else{
@@ -1026,11 +1048,13 @@ function selectExam(examName){
 function showStudentPage(page,el){
   document.querySelectorAll('[id^=pg-s-]').forEach(e=>e.classList.add('hidden'));
   document.getElementById('pg-'+page).classList.remove('hidden');
-  const titles={'s-dashboard':'Dashboard','s-quiz':'Today\'s Quiz','s-progress':'Progress','s-notifications':'Notifications','s-profile':'Profile'};
+  const titles={'s-dashboard':'Dashboard','s-quiz':'Today\'s Quiz','s-mistakes':'Mistakes','s-progress':'Progress','s-notifications':'Notifications','s-profile':'Profile'};
   document.getElementById('studentPageTitle').textContent=titles[page]||'Dashboard';
   document.querySelectorAll('#studentPage .nav-item').forEach(e=>e.classList.remove('active'));
   if(el)el.classList.add('active');
   if(page==='s-dashboard'||page==='s-progress') updateDashboardFromProgress();
+  if(page==='s-mistakes') loadMistakes();
+  if(page==='s-progress') updateLevelTestUI();
 }
 
 async function loadStudentData(){
@@ -1416,7 +1440,7 @@ async function submitAnswer(){
   });
 
   // Update score
-  if(isCorrect){quizScore++}else{quizWrong++;failedQuestions.push(q)}
+  if(isCorrect){quizScore++}else{quizWrong++;failedQuestions.push(q);saveMistake(q,selectedOption)}
 
   // Show feedback
   const fb=document.getElementById('quizFeedback');
@@ -1429,14 +1453,18 @@ async function submitAnswer(){
     fb.innerHTML=`<strong>✗ Wrong!</strong> Correct answer: <strong>${correct}</strong>`+(q.explanation?'<br><span style="font-size:.9rem;opacity:.9">'+q.explanation+'</span>':'');
   }
 
-  // Try to submit to API
-  try{
-    await fetch(API+'/student/quiz-attempts/answers',{
-      method:'POST',
-      headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',Accept:'application/json'},
-      body:JSON.stringify({question_id:q.id,selected_option:selectedOption,is_correct:isCorrect})
-    });
-  }catch(e){}
+  // Submit to API (with offline fallback)
+  if(navigator.onLine){
+    try{
+      await fetch(API+'/student/quiz-attempts/answers',{
+        method:'POST',
+        headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',Accept:'application/json'},
+        body:JSON.stringify({question_id:q.id,selected_option:selectedOption,is_correct:isCorrect})
+      });
+    }catch(e){saveAnswerOffline(q,selectedOption,isCorrect)}
+  }else{
+    saveAnswerOffline(q,selectedOption,isCorrect);
+  }
 
   // Show next button
   document.getElementById('quizSubmitBtn').classList.add('hidden');
@@ -2029,6 +2057,196 @@ async function markCodeUsed(code,email){
     codes[idx].usedAt=new Date().toISOString();
     localStorage.setItem('qp_activation_codes',JSON.stringify(codes));
   }
+}
+
+// ============ MISTAKES REVIEW ============
+function loadMistakes(){
+  const email=currentUser?.email||'default';
+  const mistakesKey='qp_mistakes_'+email;
+  const mistakes=JSON.parse(localStorage.getItem(mistakesKey)||'[]');
+  const el=document.getElementById('mistakesList');
+
+  if(mistakes.length===0){
+    el.innerHTML='<p style="color:#64748b">No mistakes recorded yet. Complete a quiz to see your mistakes here.</p>';
+    return;
+  }
+
+  let html='';
+  mistakes.slice(0,50).forEach((m,i)=>{
+    const correct=m.correctOption||m.correct_option||'?';
+    const selected=m.selectedOption||'?';
+    html+=`<div class="q-item" style="border-left:3px solid #dc2626;margin-bottom:.8rem">
+      <div class="q-text" style="margin-bottom:.5rem">${m.questionText||m.question_text||'Question'}</div>
+      <div style="font-size:.8rem;color:#94a3b8;margin-bottom:.4rem">
+        <span style="color:#fca5a5">Your answer: ${selected}</span> · <span style="color:#86efac">Correct: ${correct}</span>
+      </div>
+      ${m.explanation?`<div style="font-size:.8rem;color:#64748b;background:#0f172a;padding:.6rem;border-radius:8px;margin-top:.3rem">${m.explanation}</div>`:''}
+      <div class="q-meta" style="margin-top:.4rem"><span class="badge badge-blue">${m.subject||'General'}</span> <span style="color:#64748b;font-size:.7rem">${m.date||''}</span></div>
+    </div>`;
+  });
+  if(mistakes.length>50) html+=`<p style="color:#64748b;text-align:center">Showing latest 50 of ${mistakes.length} mistakes</p>`;
+  el.innerHTML=html;
+}
+
+function saveMistake(question,selectedOption){
+  const email=currentUser?.email||'default';
+  const mistakesKey='qp_mistakes_'+email;
+  const mistakes=JSON.parse(localStorage.getItem(mistakesKey)||'[]');
+  mistakes.unshift({
+    questionText:question.questionText||question.question_text,
+    correctOption:question.correctOption||question.correct_option,
+    selectedOption:selectedOption,
+    explanation:question.explanation||'',
+    subject:question.subject||'General',
+    date:new Date().toLocaleDateString('en-IN')
+  });
+  // Keep max 200 mistakes
+  if(mistakes.length>200) mistakes.length=200;
+  localStorage.setItem(mistakesKey,JSON.stringify(mistakes));
+}
+
+// ============ LEVEL TEST ============
+function updateLevelTestUI(){
+  const p=getProgress();
+  const btn=document.getElementById('levelTestBtn');
+  const badge=document.getElementById('levelTestBadge');
+  const desc=document.getElementById('levelTestDesc');
+
+  if(p.daysCompleted>=30){
+    // Level test unlocked!
+    btn.disabled=false;
+    btn.style.opacity='1';
+    badge.textContent='Unlocked';
+    badge.className='badge badge-green';
+    desc.textContent='You have completed all 30 days! Take the Level Test to advance to the next level.';
+  }else{
+    btn.disabled=true;
+    btn.style.opacity='.6';
+    badge.textContent=`${30-p.daysCompleted} days left`;
+    badge.className='badge badge-blue';
+    desc.textContent=`Complete ${30-p.daysCompleted} more days to unlock the Level Test. You need all 30 days at 10/10.`;
+  }
+}
+
+function startLevelTest(){
+  const p=getProgress();
+  if(p.daysCompleted<30){alert('Complete all 30 days first!');return}
+  // Start level test — use all questions from the pool (up to 300)
+  showStudentPage('s-quiz',document.querySelector('#studentPage .nav-item:nth-child(2)'));
+  document.getElementById('quizLanding').classList.add('hidden');
+  document.getElementById('quizActive').classList.remove('hidden');
+  document.getElementById('quizComplete').classList.add('hidden');
+
+  const stored=JSON.parse(localStorage.getItem('qp_questions')||'[]');
+  quizQuestions=shuffleArray(stored).slice(0,Math.min(30,stored.length));
+  originalTenQuestions=quizQuestions;
+  quizIndex=0;quizScore=0;quizWrong=0;selectedOption=null;quizStartTime=Date.now();
+  failedQuestions=[];
+  renderQuestion();
+}
+
+// ============ OFFLINE SUPPORT ============
+let offlineAnswers=[];
+
+function saveAnswerOffline(question,selectedOption,isCorrect){
+  const email=currentUser?.email||'default';
+  const key='qp_offline_'+email;
+  const pending=JSON.parse(localStorage.getItem(key)||'[]');
+  pending.push({
+    questionId:question.id,
+    selectedOption,
+    isCorrect,
+    timestamp:Date.now()
+  });
+  localStorage.setItem(key,JSON.stringify(pending));
+}
+
+function syncOfflineAnswers(){
+  const email=currentUser?.email||'default';
+  const key='qp_offline_'+email;
+  const pending=JSON.parse(localStorage.getItem(key)||'[]');
+  if(pending.length===0)return;
+
+  // Try to sync each answer to server
+  Promise.all(pending.map(a=>
+    fetch(API+'/student/quiz-attempts/answers',{
+      method:'POST',
+      headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',Accept:'application/json'},
+      body:JSON.stringify(a)
+    }).then(r=>r.ok).catch(()=>false)
+  )).then(results=>{
+    // Remove successfully synced
+    const remaining=pending.filter((_,i)=>!results[i]);
+    localStorage.setItem(key,JSON.stringify(remaining));
+    if(remaining.length===0) localStorage.removeItem(key);
+  });
+}
+
+// Sync when coming back online
+window.addEventListener('online',()=>{
+  syncOfflineAnswers();
+  const banner=document.getElementById('offlineBanner');
+  if(banner)banner.classList.add('hidden');
+});
+window.addEventListener('offline',()=>{
+  const banner=document.getElementById('offlineBanner');
+  if(banner)banner.classList.remove('hidden');
+});
+
+// ============ ADMIN: STUDENT DETAIL VIEW ============
+function showStudentDetail(email,name){
+  const progressKey='qp_progress_'+email;
+  const progress=JSON.parse(localStorage.getItem(progressKey)||'{}');
+  const mistakes=JSON.parse(localStorage.getItem('qp_mistakes_'+email)||'[]');
+
+  const daysCompleted=progress.daysCompleted||0;
+  const streak=progress.streak||0;
+  const day=progress.day||1;
+  const accuracy=daysCompleted>0?100:0;
+  const questionsAnswered=daysCompleted*10;
+
+  const el=document.getElementById('studentsList');
+  el.innerHTML=`
+    <div style="margin-bottom:1rem"><a onclick="loadStudents()" style="color:#3b82f6;cursor:pointer;font-size:.9rem">← Back to all students</a></div>
+    <div class="card" style="border-left:3px solid #3b82f6">
+      <h3>${name||email}</h3>
+      <p style="color:#94a3b8;font-size:.85rem">${email}</p>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-value">${accuracy}%</div><div class="stat-label">Accuracy</div></div>
+      <div class="stat-card"><div class="stat-value">${questionsAnswered}</div><div class="stat-label">Questions</div></div>
+      <div class="stat-card"><div class="stat-value">${daysCompleted}</div><div class="stat-label">Days Done</div></div>
+      <div class="stat-card"><div class="stat-value">${streak}</div><div class="stat-label">Streak</div></div>
+    </div>
+    <div class="card">
+      <h3>Progress</h3>
+      <table>
+        <tr><td style="color:#94a3b8">Current Day</td><td>Day ${day}</td></tr>
+        <tr><td style="color:#94a3b8">Current Month</td><td>Month ${progress.month||1}</td></tr>
+        <tr><td style="color:#94a3b8">Days Completed</td><td>${daysCompleted} / 30</td></tr>
+        <tr><td style="color:#94a3b8">Status</td><td><span class="badge badge-green">${progress.todayCompleted?'Today Done':'Active'}</span></td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3>Recent Mistakes (${mistakes.length})</h3>
+      ${mistakes.length>0?mistakes.slice(0,5).map(m=>`<div class="q-item"><div class="q-text" style="font-size:.85rem">${(m.questionText||'').substring(0,80)}...</div><div class="q-meta">Answer: ${m.selectedOption} · Correct: ${m.correctOption}</div></div>`).join(''):'<p style="color:#64748b">No mistakes recorded</p>'}
+    </div>`;
+}
+
+// ============ ADMIN: CHARTS/ANALYTICS ============
+function loadAdminCharts(){
+  const students=JSON.parse(localStorage.getItem('qp_registered_students')||'[]');
+  const questions=JSON.parse(localStorage.getItem('qp_questions')||'[]');
+  const codes=JSON.parse(localStorage.getItem('qp_activation_codes')||'[]');
+
+  let totalDays=0,activeStudents=0;
+  students.forEach(s=>{
+    const p=JSON.parse(localStorage.getItem('qp_progress_'+s.email)||'{}');
+    if(p.daysCompleted) totalDays+=p.daysCompleted;
+    if(p.todayDate===new Date().toDateString()) activeStudents++;
+  });
+
+  return {totalStudents:students.length,totalQuestions:questions.length,totalDays,activeStudents,activeCodes:codes.filter(c=>!c.used).length,usedCodes:codes.filter(c=>c.used).length};
 }
 
 // ============ MOBILE SIDEBAR ============
