@@ -41,9 +41,13 @@ $checks['disk'] = ['ok' => $free > 1073741824, 'free_gb' => round($free / 107374
 
 // 5. Questions loaded
 try {
-    $stmt = $pdo->query('SELECT COUNT(*) as c FROM questions');
-    $questions = $stmt->fetch(PDO::FETCH_ASSOC)['c'];
-    $checks['questions'] = ['ok' => $questions > 0, 'count' => (int)$questions];
+    if (isset($pdo)) {
+        $stmt = $pdo->query('SELECT COUNT(*) as c FROM questions');
+        $questions = $stmt->fetch(PDO::FETCH_ASSOC)['c'];
+        $checks['questions'] = ['ok' => $questions > 0, 'count' => (int)$questions];
+    } else {
+        $checks['questions'] = ['ok' => false, 'error' => 'No DB connection'];
+    }
 } catch (Exception $e) {
     $checks['questions'] = ['ok' => false];
 }
