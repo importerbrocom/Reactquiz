@@ -28,7 +28,7 @@ function MainTabs() {
       tabBarActiveTintColor: '#3b82f6',
       tabBarInactiveTintColor: '#64748b',
       tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
-      tabBarIcon: ({ color, size }) => {
+      tabBarIcon: ({ color, size }: { color: string; size: number }) => {
         let iconName: any = 'home';
         if (route.name === 'Dashboard') iconName = 'home';
         else if (route.name === 'Quiz') iconName = 'document-text';
