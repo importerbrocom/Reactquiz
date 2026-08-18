@@ -21,25 +21,12 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0B1120"
       },
-      "package": "com.ero.quiz",
-      "permissions": ["NOTIFICATIONS"]
+      "package": "com.ero.quiz"
     },
-    "plugins": [
-      "expo-router",
-      "expo-secure-store",
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/notification-icon.png",
-          "color": "#3b82f6"
-        }
-      ]
-    ],
-    "scheme": "ero",
     "extra": {
       "apiBaseUrl": "https://mediprep.nokkoo.in/api/v1",
       "eas": {
-        "projectId": ""
+        "projectId": "6d4074a5-90ad-498b-a4d5-1b3c29679fe6"
       }
     }
   }
