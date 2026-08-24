@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { getResult } from '@/api/endpoints/final-test.api';
@@ -8,9 +9,11 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { PageSpinner } from '@/components/ui/Spinner';
+import { LevelAdvancementModal } from '@/features/progress/components/LevelAdvancementModal';
 
 function FinalTestResultScreen() {
   const { attemptId } = useParams<{ attemptId: string }>();
+  const [showAdvanceModal, setShowAdvanceModal] = useState(false);
 
   const { data: result, isLoading } = useQuery({
     queryKey: queryKeys.finalTest.result(attemptId!),
@@ -100,14 +103,27 @@ function FinalTestResultScreen() {
 
         {/* Actions */}
         <div className="space-y-3">
+          {result.passed && (
+            <Button fullWidth onClick={() => setShowAdvanceModal(true)}>
+              🚀 Advance to Next Level
+            </Button>
+          )}
           <Link to={ROUTES.DASHBOARD}>
-            <Button fullWidth>Back to Dashboard</Button>
+            <Button variant={result.passed ? 'secondary' : 'primary'} fullWidth>
+              Back to Dashboard
+            </Button>
           </Link>
           <Link to={ROUTES.MISTAKES}>
             <Button variant="ghost" fullWidth>Review All Mistakes</Button>
           </Link>
         </div>
       </div>
+
+      {/* Level advancement celebration */}
+      <LevelAdvancementModal
+        open={showAdvanceModal}
+        onClose={() => setShowAdvanceModal(false)}
+      />
     </div>
   );
 }

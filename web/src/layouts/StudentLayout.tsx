@@ -1,6 +1,9 @@
 import { Outlet, NavLink } from 'react-router';
 import { useNetworkStore } from '@/store/network.store';
+import { usePwaStore } from '@/store/pwa.store';
 import { ROUTES } from '@/config/routes.config';
+import { InstallPromptBanner } from '@/features/pwa/components/InstallPromptBanner';
+import { UpdateAvailableBanner } from '@/features/pwa/components/UpdateAvailableBanner';
 
 /**
  * Student layout — bottom nav (mobile) / sidebar (desktop).
@@ -8,6 +11,7 @@ import { ROUTES } from '@/config/routes.config';
  */
 function StudentLayout() {
   const { isOnline, pendingSyncCount } = useNetworkStore();
+  const { updateAvailable } = usePwaStore();
 
   return (
     <div className="flex min-h-dvh flex-col bg-surface-950">
@@ -22,6 +26,12 @@ function StudentLayout() {
           {pendingSyncCount > 0 && ` (${pendingSyncCount} pending)`}
         </div>
       )}
+
+      {/* PWA install prompt */}
+      <InstallPromptBanner />
+
+      {/* Update available banner */}
+      {updateAvailable && <UpdateAvailableBanner />}
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto pb-20 lg:pb-0 lg:pl-64">
