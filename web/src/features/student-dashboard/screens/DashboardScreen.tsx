@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import { getDashboard } from '@/api/endpoints/student-dashboard.api';
@@ -8,10 +9,14 @@ import { Button } from '@/components/ui/Button';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Badge } from '@/components/ui/Badge';
 import { PageSpinner } from '@/components/ui/Spinner';
+import { LevelAdvancementModal } from '@/features/progress/components/LevelAdvancementModal';
+import { StudyStreakCard } from '../components/StudyStreakCard';
 import { NextAction } from '@/types/enums';
 import type { Dashboard } from '@/types/models';
 
 function DashboardScreen() {
+  const [showAdvanceModal, setShowAdvanceModal] = useState(false);
+
   const { data: dashboard, isLoading } = useQuery({
     queryKey: queryKeys.dashboard.all,
     queryFn: getDashboard,
@@ -32,19 +37,10 @@ function DashboardScreen() {
       </div>
 
       {/* Primary action card */}
-      <PrimaryActionCard dashboard={dashboard} />
+      <PrimaryActionCard dashboard={dashboard} onAdvance={() => setShowAdvanceModal(true)} />
 
       {/* Streak */}
-      <Card variant="outlined" className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-surface-400">Current streak</p>
-          <p className="text-2xl font-bold text-white">{dashboard.streak.current} days</p>
-        </div>
-        <div className="text-right">
-          <p className="text-sm text-surface-400">Longest</p>
-          <p className="text-lg font-semibold text-surface-300">{dashboard.streak.longest} days</p>
-        </div>
-      </Card>
+      <StudyStreakCard streak={dashboard.streak} />
 
       {/* Progress overview */}
       <Card variant="outlined">
@@ -92,11 +88,17 @@ function DashboardScreen() {
       >
         View all days →
       </Link>
+
+      {/* Level advancement modal */}
+      <LevelAdvancementModal
+        open={showAdvanceModal}
+        onClose={() => setShowAdvanceModal(false)}
+      />
     </div>
   );
 }
 
-function PrimaryActionCard({ dashboard }: { dashboard: Dashboard }) {
+function PrimaryActionCard({ dashboard, onAdvance }: { dashboard: Dashboard; onAdvance: () => void }) {
   const { next_action, today, enrolment } = dashboard;
   const courseId = enrolment.course_id;
 
@@ -156,11 +158,17 @@ function PrimaryActionCard({ dashboard }: { dashboard: Dashboard }) {
       </div>
       <p className="text-lg font-semibold text-white">{action.label}</p>
       <p className="text-sm text-surface-400">{action.description}</p>
-      <Link to={action.to}>
-        <Button fullWidth variant={next_action === NextAction.Locked ? 'secondary' : 'primary'}>
-          {next_action === NextAction.Locked ? 'View Days' : 'Go'}
+      {next_action === NextAction.AdvanceLevel ? (
+        <Button fullWidth variant="primary" onClick={onAdvance}>
+          🚀 Advance Now
         </Button>
-      </Link>
+      ) : (
+        <Link to={action.to}>
+          <Button fullWidth variant={next_action === NextAction.Locked ? 'secondary' : 'primary'}>
+            {next_action === NextAction.Locked ? 'View Days' : 'Go'}
+          </Button>
+        </Link>
+      )}
     </Card>
   );
 }
