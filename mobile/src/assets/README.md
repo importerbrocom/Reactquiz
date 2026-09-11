@@ -1,3 +1,11 @@
+# App icon assets — ERO branding (resolves Google Play mismatch)
+
+> ✅ The real ERO chrome logo icons are now committed here
+> (`icon.png`, `adaptive-icon.png`, `splash.png`), generated from the official
+> `logo.avif`. These match the Play Store listing icon. Rebuild and resubmit.
+
+---
+
 # App icon assets — REQUIRED for Google Play
 
 Google Play rejected the app under the **Misleading Claims policy** because the
