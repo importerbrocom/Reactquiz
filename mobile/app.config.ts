@@ -2,13 +2,15 @@ import { ExpoConfig, ConfigContext } from 'expo/config';
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: 'QuizPath',
+  name: 'ERO - Daily Exam Practice',
   slug: 'quizpath',
   version: '1.0.0',
   orientation: 'portrait',
   icon: './src/assets/icon.png',
   userInterfaceStyle: 'dark',
   splash: {
+    image: './src/assets/splash.png',
+    resizeMode: 'contain',
     backgroundColor: '#0B1120',
   },
   assetBundlePatterns: ['**/*'],
@@ -23,6 +25,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     adaptiveIcon: {
+      foregroundImage: './src/assets/adaptive-icon.png',
       backgroundColor: '#0B1120',
     },
     package: 'com.quizpath.app',

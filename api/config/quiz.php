@@ -13,16 +13,16 @@ return [
     'default_timezone' => env('QUIZ_DEFAULT_TIMEZONE', 'Asia/Kolkata'),
 
     'defaults' => [
-        'total_levels' => env('QUIZ_DEFAULT_TOTAL_LEVELS', 6),
-        'total_cycles' => env('QUIZ_DEFAULT_TOTAL_CYCLES', 2),
-        'total_quiz_days' => env('QUIZ_DEFAULT_TOTAL_DAYS', 30),
-        'daily_question_count' => env('QUIZ_DEFAULT_DAILY_QUESTIONS', 10),
-        'test_day' => env('QUIZ_DEFAULT_TEST_DAY', 31),
-        'pass_percentage' => env('QUIZ_DEFAULT_PASS_PERCENTAGE', 50),
-        'test_attempt_limit' => env('QUIZ_DEFAULT_TEST_ATTEMPT_LIMIT', 0), // 0 = unlimited
+        'total_levels' => (int) env('QUIZ_DEFAULT_TOTAL_LEVELS', 6),
+        'total_cycles' => (int) env('QUIZ_DEFAULT_TOTAL_CYCLES', 2),
+        'total_quiz_days' => (int) env('QUIZ_DEFAULT_TOTAL_DAYS', 30),
+        'daily_question_count' => (int) env('QUIZ_DEFAULT_DAILY_QUESTIONS', 10),
+        'test_day' => (int) env('QUIZ_DEFAULT_TEST_DAY', 31),
+        'pass_percentage' => (int) env('QUIZ_DEFAULT_PASS_PERCENTAGE', 50),
+        'test_attempt_limit' => (int) env('QUIZ_DEFAULT_TEST_ATTEMPT_LIMIT', 0), // 0 = unlimited
     ],
 
-    'attempt_abandon_hours' => env('QUIZ_ATTEMPT_ABANDON_HOURS', 12),
+    'attempt_abandon_hours' => (int) env('QUIZ_ATTEMPT_ABANDON_HOURS', 12),
 
     // Answers arriving with a client timestamp outside this window are clamped.
     'answered_at_tolerance' => [
