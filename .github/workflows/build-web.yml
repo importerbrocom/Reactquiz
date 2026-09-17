@@ -30,7 +30,7 @@ jobs:
         env:
           VITE_API_BASE_URL: https://mediprep.nokkoo.in/api/v1
           VITE_API_CONTRACT_VERSION: '1'
-          VITE_APP_NAME: QuizPath
+          VITE_APP_NAME: ERO
 
       - name: Upload dist artifact
         uses: actions/upload-artifact@v4

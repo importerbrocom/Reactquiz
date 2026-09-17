@@ -1,6 +1,6 @@
 {
-  "name": "QuizPath — Daily Exam Practice",
-  "short_name": "QuizPath",
+  "name": "ERO - Daily Exam Practice",
+  "short_name": "ERO",
   "description": "Complete 10 questions a day, master every one, and unlock the next day.",
   "id": "/?source=pwa",
   "start_url": "/?source=pwa",

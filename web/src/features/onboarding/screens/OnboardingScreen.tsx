@@ -97,7 +97,7 @@ function OnboardingScreen() {
             <span className="text-4xl">📚</span>
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-white">Welcome to QuizPath</h2>
+            <h2 className="text-2xl font-bold text-white">Welcome to ERO</h2>
             <p className="mt-2 text-surface-400">
               Master your medical licensing exam with daily practice.
               10 questions a day, every day, until you&apos;re ready.

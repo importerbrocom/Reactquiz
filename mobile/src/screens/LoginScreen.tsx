@@ -35,7 +35,7 @@ export function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>QuizPath</Text>
+      <Text style={styles.title}>ERO</Text>
       <Text style={styles.subtitle}>Sign in to continue</Text>
 
       <TextInput
