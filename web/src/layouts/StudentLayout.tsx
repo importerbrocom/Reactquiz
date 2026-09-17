@@ -38,7 +38,7 @@ function StudentLayout() {
         <div className="flex h-16 items-center justify-around lg:h-full lg:flex-col lg:items-stretch lg:justify-start lg:gap-1 lg:px-3 lg:pt-6">
           {/* Logo (desktop sidebar only) */}
           <div className="hidden lg:mb-8 lg:block lg:px-3">
-            <h2 className="text-xl font-bold text-primary-400">QuizPath</h2>
+            <h2 className="text-xl font-bold text-primary-400">ERO</h2>
           </div>
 
           <NavItem to={ROUTES.DASHBOARD} icon={<HomeIcon />} label="Home" />

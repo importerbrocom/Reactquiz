@@ -20,7 +20,7 @@ function AuthLayout() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-primary-400">QuizPath</h1>
+          <h1 className="text-3xl font-bold text-primary-400">ERO</h1>
           <p className="mt-1 text-sm text-surface-400">Daily Exam Practice</p>
         </div>
 

@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#4F46E5">
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>QuizPath - MediPrep</title>
+<title>ERO - MediPrep</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:system-ui,-apple-system,sans-serif;background:#0B1120;color:#f8fafc;min-height:100vh;font-size:16px}
@@ -108,14 +108,14 @@ td{padding:.8rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 
 <!-- ============ LOGIN PAGE ============ -->
 <div id="loginPage" class="login-wrap">
-<div class="login-box"><h1>QuizPath</h1><p class="sub">MediPrep - Exam Preparation</p>
+<div class="login-box"><h1>ERO</h1><p class="sub">MediPrep - Exam Preparation</p>
 <div class="form-card"><div id="errorMsg" class="error-msg"></div>
 <form id="loginForm"><label>Email</label><input type="email" id="email" placeholder="Enter your email" required><label>Password</label><input type="password" id="password" placeholder="Enter password" required><button type="submit" class="btn btn-primary" id="loginBtn">Sign In</button></form>
 <p class="info-text">Admin: admin@quizpath.test / ChangeMe!2026<br>Student: student@mediprep.test / Student@123</p></div></div></div>
 
 <!-- ============ ADMIN PAGE ============ -->
 <div id="adminPage" class="app hidden">
-<aside class="sidebar"><h1>QuizPath</h1>
+<aside class="sidebar"><h1>ERO</h1>
 <a class="nav-item active" onclick="showPage('dashboard',this)">📊 Dashboard</a>
 <a class="nav-item" onclick="showPage('questions',this)">❓ Questions</a>
 <a class="nav-item" onclick="showPage('students',this)">👥 Students</a>
@@ -126,11 +126,11 @@ td{padding:.8rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <main class="main">
 <div class="topbar"><h2 class="page-title" id="pageTitle">Dashboard</h2><span class="user-info" id="userInfo"></span></div>
 
-<div id="installBanner" class="install-banner hidden"><p>📱 Install QuizPath as an app for quick access</p><button class="install-btn" onclick="installApp()">Install App</button></div>
+<div id="installBanner" class="install-banner hidden"><p>📱 Install ERO as an app for quick access</p><button class="install-btn" onclick="installApp()">Install App</button></div>
 
 <div id="pg-dashboard">
 <div class="stat-grid" id="statsGrid"></div>
-<div class="card"><h3>System Info</h3><p>QuizPath Medical Exam Preparation Platform. 300 FMGE questions loaded across 6 levels (30 days each, 10 questions per day). Students must master all 10 questions per day to unlock the next day.</p></div>
+<div class="card"><h3>System Info</h3><p>ERO Medical Exam Preparation Platform. 300 FMGE questions loaded across 6 levels (30 days each, 10 questions per day). Students must master all 10 questions per day to unlock the next day.</p></div>
 </div>
 <div id="pg-questions" class="hidden"><div class="card"><h3>Questions - Level 1</h3><div id="questionsList"></div></div></div>
 <div id="pg-students" class="hidden"><div class="card"><h3>Registered Users</h3><div id="studentsList"></div></div></div>
@@ -318,7 +318,7 @@ function loadCategories(){
 }
 
 function loadSettings(){
-  document.getElementById('settingsInfo').innerHTML=`<table><tr><td style="color:#94a3b8;width:40%">App Name</td><td>QuizPath</td></tr><tr><td style="color:#94a3b8">Domain</td><td>mediprep.nokkoo.in</td></tr><tr><td style="color:#94a3b8">API</td><td>/api/v1</td></tr><tr><td style="color:#94a3b8">Questions/Day</td><td>10</td></tr><tr><td style="color:#94a3b8">Days/Level</td><td>30</td></tr><tr><td style="color:#94a3b8">Total Levels</td><td>6</td></tr><tr><td style="color:#94a3b8">Timezone</td><td>Asia/Kolkata</td></tr><tr><td style="color:#94a3b8">Pass Requirement</td><td>10/10 (all correct)</td></tr><tr><td style="color:#94a3b8">Retry Mode</td><td>Requeue at end</td></tr></table>`;
+  document.getElementById('settingsInfo').innerHTML=`<table><tr><td style="color:#94a3b8;width:40%">App Name</td><td>ERO</td></tr><tr><td style="color:#94a3b8">Domain</td><td>mediprep.nokkoo.in</td></tr><tr><td style="color:#94a3b8">API</td><td>/api/v1</td></tr><tr><td style="color:#94a3b8">Questions/Day</td><td>10</td></tr><tr><td style="color:#94a3b8">Days/Level</td><td>30</td></tr><tr><td style="color:#94a3b8">Total Levels</td><td>6</td></tr><tr><td style="color:#94a3b8">Timezone</td><td>Asia/Kolkata</td></tr><tr><td style="color:#94a3b8">Pass Requirement</td><td>10/10 (all correct)</td></tr><tr><td style="color:#94a3b8">Retry Mode</td><td>Requeue at end</td></tr></table>`;
 }
 
 // ============ STUDENT FUNCTIONS ============
@@ -369,7 +369,7 @@ function showStudentTab(tab,el){
   document.querySelectorAll('.bottom-nav-item').forEach(e=>e.classList.remove('active'));
   if(el)el.classList.add('active');
   if(tab==='profile'){
-    if(confirm('Sign out of QuizPath?')) logout();
+    if(confirm('Sign out of ERO?')) logout();
   }else if(tab!=='home'){
     alert(tab.charAt(0).toUpperCase()+tab.slice(1)+' - Coming soon!');
   }

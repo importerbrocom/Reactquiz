@@ -10,7 +10,7 @@ function OnboardingLayout() {
       <div className="w-full max-w-lg">
         {/* Logo */}
         <div className="mb-6 text-center">
-          <h1 className="text-2xl font-bold text-primary-400">QuizPath</h1>
+          <h1 className="text-2xl font-bold text-primary-400">ERO</h1>
           <p className="mt-1 text-sm text-surface-400">Let&apos;s get you set up</p>
         </div>
 
