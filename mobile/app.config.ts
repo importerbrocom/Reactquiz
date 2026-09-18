@@ -36,11 +36,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: ['expo-secure-store', 'expo-notifications'],
   extra: {
     apiBaseUrl: process.env.API_BASE_URL || 'https://mediprep.nokkoo.in/api/v1',
-    eas: {
-      // Set your real EAS project ID here or via the EAS_PROJECT_ID env var.
-      // Get it by running `eas init` in the mobile/ directory (it also writes
-      // this value automatically). Builds fail to associate without it.
-      projectId: process.env.EAS_PROJECT_ID || 'your-eas-project-id',
-    },
+    // NOTE: eas.projectId is intentionally omitted. Run `eas init` in the
+    // mobile/ directory once; it writes the real projectId here automatically.
+    // A placeholder value here causes "Invalid UUID appId" build errors.
+    ...(process.env.EAS_PROJECT_ID
+      ? { eas: { projectId: process.env.EAS_PROJECT_ID } }
+      : {}),
   },
 });
