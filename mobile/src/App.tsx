@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { registerRootComponent } from 'expo';
 import { StatusBar } from 'expo-status-bar';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AppNavigator } from './navigation/AppNavigator';
@@ -60,3 +61,8 @@ export default function App() {
     </QueryClientProvider>
   );
 }
+
+// Register the root component so this file works as the app entry
+// ("main": "src/App.tsx" in package.json). Without this, the JS bundle
+// builds but no root component is registered with React Native.
+registerRootComponent(App);
