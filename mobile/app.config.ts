@@ -3,7 +3,7 @@ import { ExpoConfig, ConfigContext } from 'expo/config';
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: 'ERO - Daily Exam Practice',
-  slug: 'quizpath',
+  slug: 'ero-quiz',
   owner: 'importerbro',
   version: '1.0.0',
   orientation: 'portrait',
@@ -39,7 +39,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     apiBaseUrl: process.env.API_BASE_URL || 'https://mediprep.nokkoo.in/api/v1',
     eas: {
       // Real EAS project ID for @importerbro/quizpath.
-      projectId: process.env.EAS_PROJECT_ID || '8d7e9e0f-499d-44b0-b21f-22defa4511a9',
+      projectId: process.env.EAS_PROJECT_ID || '6d4074a5-90ad-498b-a4d5-1b3c29679fe6',
     },
   },
 });
