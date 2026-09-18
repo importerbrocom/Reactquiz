@@ -4,6 +4,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: 'ERO - Daily Exam Practice',
   slug: 'quizpath',
+  owner: 'importerbro',
   version: '1.0.0',
   orientation: 'portrait',
   icon: './src/assets/icon.png',
@@ -36,11 +37,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: ['expo-secure-store', 'expo-notifications'],
   extra: {
     apiBaseUrl: process.env.API_BASE_URL || 'https://mediprep.nokkoo.in/api/v1',
-    // NOTE: eas.projectId is intentionally omitted. Run `eas init` in the
-    // mobile/ directory once; it writes the real projectId here automatically.
-    // A placeholder value here causes "Invalid UUID appId" build errors.
-    ...(process.env.EAS_PROJECT_ID
-      ? { eas: { projectId: process.env.EAS_PROJECT_ID } }
-      : {}),
+    eas: {
+      // Real EAS project ID for @importerbro/quizpath.
+      projectId: process.env.EAS_PROJECT_ID || '8d7e9e0f-499d-44b0-b21f-22defa4511a9',
+    },
   },
 });
