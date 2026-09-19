@@ -5,7 +5,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: 'ERO - Daily Exam Practice',
   slug: 'ero-quiz',
   owner: 'importerbro',
-  version: '1.0.0',
+  version: '1.0.6',
   orientation: 'portrait',
   icon: './src/assets/icon.png',
   userInterfaceStyle: 'dark',
@@ -17,7 +17,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   assetBundlePatterns: ['**/*'],
   ios: {
     supportsTablet: false,
-    bundleIdentifier: 'com.quizpath.app',
+    bundleIdentifier: 'com.ero.quiz',
     infoPlist: {
       NSAppTransportSecurity: {
         NSAllowsArbitraryLoads: false,
@@ -29,10 +29,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       foregroundImage: './src/assets/adaptive-icon.png',
       backgroundColor: '#0B1120',
     },
-    package: 'com.quizpath.app',
-    // versionCode is intentionally omitted: eas.json uses
-    // cli.appVersionSource="remote" with autoIncrement, so EAS manages and
-    // auto-increments the Android versionCode on every production build.
+    package: 'com.ero.quiz',
+    // versionCode 7: Play already has versionCode 6 (v1.0.5). Each upload must
+    // be higher. Using local versioning (eas.json appVersionSource="local").
+    versionCode: 7,
   },
   plugins: ['expo-secure-store', 'expo-notifications'],
   extra: {
