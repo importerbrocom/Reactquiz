@@ -30,9 +30,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       backgroundColor: '#0B1120',
     },
     package: 'com.ero.quiz',
-    // versionCode 8: Play already has versionCode 7 (v1.0.6). Each upload must
-    // be higher. Using local versioning (eas.json appVersionSource="local").
-    versionCode: 8,
+    // versionCode 9: Play already has versionCode 8 (rejected: targeted API 34).
+    // Each upload must be higher. Using local versioning (appVersionSource="local").
+    versionCode: 9,
   },
   plugins: [
     'expo-secure-store',
