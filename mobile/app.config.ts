@@ -5,7 +5,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: 'ERO - Daily Exam Practice',
   slug: 'ero-quiz',
   owner: 'importerbro',
-  version: '1.0.6',
+  version: '1.0.7',
   orientation: 'portrait',
   icon: './src/assets/icon.png',
   userInterfaceStyle: 'dark',
@@ -30,9 +30,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       backgroundColor: '#0B1120',
     },
     package: 'com.ero.quiz',
-    // versionCode 7: Play already has versionCode 6 (v1.0.5). Each upload must
+    // versionCode 8: Play already has versionCode 7 (v1.0.6). Each upload must
     // be higher. Using local versioning (eas.json appVersionSource="local").
-    versionCode: 7,
+    versionCode: 8,
   },
   plugins: ['expo-secure-store', 'expo-notifications'],
   extra: {
