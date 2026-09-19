@@ -34,7 +34,21 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // be higher. Using local versioning (eas.json appVersionSource="local").
     versionCode: 8,
   },
-  plugins: ['expo-secure-store', 'expo-notifications'],
+  plugins: [
+    'expo-secure-store',
+    'expo-notifications',
+    [
+      'expo-build-properties',
+      {
+        android: {
+          // Google Play now requires new uploads to target API 36.
+          compileSdkVersion: 36,
+          targetSdkVersion: 36,
+          buildToolsVersion: '36.0.0',
+        },
+      },
+    ],
+  ],
   extra: {
     apiBaseUrl: process.env.API_BASE_URL || 'https://mediprep.nokkoo.in/api/v1',
     eas: {
