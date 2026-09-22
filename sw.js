@@ -1,4 +1,6 @@
-const CACHE_NAME = 'ero-v1';
+// Bumped so installed clients drop the old app shell and pick up the
+// safe-area/session fixes on their next launch.
+const CACHE_NAME = 'ero-v2';
 const ASSETS = [
   '/',
   '/index.html',
@@ -27,6 +29,10 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   if (e.request.url.includes('/api/')) return; // Don't cache API calls
+  // Activation state must never be answered from cache: a stale
+  // "activated:false" would ask an activated student for their code again.
+  // When offline this now fails fast and the client uses its local flag.
+  if (e.request.url.includes('/codes.php')) return;
 
   e.respondWith(
     fetch(e.request)
