@@ -565,7 +565,27 @@ function clearSession(){
   try{
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(TOKEN_EXP_KEY);
+    localStorage.removeItem(USER_KEY);
   }catch(e){}
+}
+
+/*
+ * Cached account snapshot.
+ *
+ * Opening the app with no connection cannot reach /auth/me, and without a cached
+ * account there is nothing to render, which is how an offline launch used to end
+ * up back on the login screen. Only the fields already shown in the UI are kept.
+ */
+const USER_KEY='qp_user';
+function cacheUser(u){
+  if(!u||!u.email) return;
+  try{localStorage.setItem(USER_KEY,JSON.stringify({name:u.name,email:u.email,role:u.role}))}catch(e){}
+}
+function cachedUser(){
+  try{
+    const u=JSON.parse(localStorage.getItem(USER_KEY)||'null');
+    return (u&&u.email)?u:null;
+  }catch(e){return null}
 }
 
 function tokenNeedsRefresh(){
@@ -643,28 +663,66 @@ function showLoginPage(){
   document.getElementById('loginPage').classList.remove('hidden');
 }
 
-/** Loads /auth/me and routes. Returns false if there is no usable session. */
+/**
+ * Loads /auth/me and routes.
+ *
+ * Returns 'ok', 'rejected' (the server positively refused the session) or
+ * 'unavailable' (no answer: offline, DNS, 5xx, Cloudflare error). The difference
+ * matters — treating "unavailable" as "rejected" is what signed people out when
+ * they opened the app on a bad connection.
+ */
 async function loadCurrentUser(){
+  let r;
   try{
-    const r=await authFetch('/auth/me');
-    if(!r.ok) return false;
+    r=await authFetch('/auth/me');
+  }catch(e){
+    return 'unavailable'; // transport failure is not a verdict on the session
+  }
+  // authFetch has already tried /auth/refresh and replayed, so a 401 here means
+  // the refresh token is gone too. Anything else non-OK is the server or network
+  // having a bad day and must not cost the user their session.
+  if(r.status===401) return 'rejected';
+  if(!r.ok) return 'unavailable';
+  try{
     const d=await r.json();
     const u=d.data?.user||d.data||d.user;
-    if(!u||!u.email) return false;
+    if(!u||!u.email) return 'rejected';
     currentUser=u;
     await routeByRole();
-    return true;
-  }catch(e){return false}
+    return 'ok';
+  }catch(e){return 'unavailable'}
+}
+
+/** Render from the cached account so an offline launch still opens the app. */
+async function resumeFromCache(){
+  const u=cachedUser();
+  if(!u||!token) return false;
+  currentUser=u;
+  await routeByRole();
+  return true;
 }
 
 async function restoreSession(){
   // Stored access token (authFetch already retries through /auth/refresh).
-  if(token&&await loadCurrentUser()) return true;
+  if(token){
+    const outcome=await loadCurrentUser();
+    if(outcome==='ok') return true;
+    if(outcome==='unavailable') return resumeFromCache();
+  }
   // No usable access token, but the refresh cookie may still be alive — this is
   // the path that survives iOS evicting localStorage on an installed PWA.
   // Skipped after an explicit sign-out, so a revoke that failed (e.g. the user
   // was offline) can never silently sign the device back in.
-  if(!signedOutDeliberately()&&await refreshSession()&&await loadCurrentUser()) return true;
+  if(!signedOutDeliberately()){
+    if(await refreshSession()){
+      const outcome=await loadCurrentUser();
+      if(outcome==='ok') return true;
+      if(outcome==='unavailable') return resumeFromCache();
+    }else if(!navigator.onLine){
+      // The refresh could not even be attempted. Keep everything.
+      return resumeFromCache();
+    }
+  }
   clearSession();
   return false;
 }
@@ -681,6 +739,13 @@ async function restoreSession(){
 // the first tap after reopening does not fail.
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible'&&token&&tokenNeedsRefresh()) refreshSession();
+});
+
+// Came back online after an offline launch: get a working token so the next call
+// succeeds. Deliberately does not sign anyone out on failure — a flaky network
+// mid-quiz must not end the session.
+window.addEventListener('online',()=>{
+  if(token&&tokenNeedsRefresh()) refreshSession();
 });
 
 // Show/hide login and register forms
@@ -853,6 +918,9 @@ document.getElementById('loginForm').addEventListener('submit',async e=>{
 
 // Route by role
 async function routeByRole(){
+  // Single choke point where the account is known good, so cache it here for
+  // offline launches rather than in each of the sign-in paths.
+  cacheUser(currentUser);
   document.getElementById('bootPage').classList.add('hidden');
   document.getElementById('loginPage').classList.add('hidden');
   // Use role from API response
