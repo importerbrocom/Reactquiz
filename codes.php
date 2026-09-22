@@ -47,6 +47,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         echo json_encode(['valid' => $found]);
         exit;
     }
+
+    /*
+     * Has this account already redeemed a code?
+     *
+     * The client used to record activation only in localStorage, so a reinstall,
+     * a second device, or iOS clearing the PWA's storage made an activated
+     * student look brand new and they were asked for a code again. This lets the
+     * client ask the server instead, so activation follows the account.
+     */
+    if ($action === 'status') {
+        $email = trim($_GET['email'] ?? '');
+        if ($email === '') {
+            http_response_code(400);
+            echo json_encode(['error' => 'Email is required']);
+            exit;
+        }
+        $activated = false;
+        $activatedAt = null;
+        foreach (loadCodes() as $c) {
+            $usedBy = $c['usedBy'] ?? null;
+            // Case-insensitive: emails are not stored normalised.
+            if (!empty($c['used']) && is_string($usedBy) && strcasecmp($usedBy, $email) === 0) {
+                $activated = true;
+                $activatedAt = $c['usedAt'] ?? null;
+                break;
+            }
+        }
+        echo json_encode(['activated' => $activated, 'activatedAt' => $activatedAt]);
+        exit;
+    }
     
     echo json_encode(['codes' => loadCodes()]);
     exit;

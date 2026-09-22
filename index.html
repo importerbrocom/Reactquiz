@@ -14,10 +14,31 @@
 <title>ERO - Elior Research Orbit</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:system-ui,-apple-system,sans-serif;background:#0B1120;color:#f8fafc;min-height:100vh;font-size:16px}
+
+/*
+ * iOS safe areas. The document is drawn edge-to-edge because the head sets
+ * viewport-fit=cover together with a black-translucent status bar, so every
+ * top-level container has to add these insets back or the notch / Dynamic
+ * Island sits on top of the content. 0px fallbacks keep non-notched devices
+ * and desktop unchanged.
+ */
+:root{
+  --sat:env(safe-area-inset-top,0px);
+  --sab:env(safe-area-inset-bottom,0px);
+  --sal:env(safe-area-inset-left,0px);
+  --sar:env(safe-area-inset-right,0px);
+}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0B1120;color:#f8fafc;min-height:100dvh;font-size:16px}
+
+/* ============ BOOT SPLASH ============ */
+/* Shown while the session is being restored so the login form never flashes. */
+.boot-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;min-height:100dvh;background:#0B1120;padding:calc(1.5rem + var(--sat)) 1.5rem calc(1.5rem + var(--sab))}
+.boot-spinner{width:38px;height:38px;border:3px solid #1e293b;border-top-color:#3b82f6;border-radius:50%;animation:boot-spin .8s linear infinite}
+@keyframes boot-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.boot-spinner{animation-duration:2s}}
 
 /* ============ LOGIN ============ */
-.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1.5rem;background:#0B1120}
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100dvh;background:#0B1120;padding:calc(1.5rem + var(--sat)) calc(1.5rem + var(--sar)) calc(1.5rem + var(--sab)) calc(1.5rem + var(--sal))}
 .login-box{width:100%;max-width:400px}
 .form-card{background:#1e293b;border-radius:20px;padding:2rem;border:1px solid #334155;box-shadow:0 20px 40px rgba(0,0,0,.3)}
 .error-msg{background:#450a0a;border:1px solid #dc2626;color:#fca5a5;padding:.8rem;border-radius:12px;margin-bottom:1rem;font-size:.9rem;display:none}
@@ -30,15 +51,19 @@ input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.1)}
 .info-text{margin-top:1.5rem;text-align:center;color:#64748b;font-size:.85rem;line-height:1.5}
 
 /* ============ ADMIN LAYOUT ============ */
-.app{display:flex;min-height:100vh}
-.sidebar{width:250px;background:#1e293b;border-right:1px solid #334155;padding:1.5rem 0;position:fixed;height:100vh;overflow-y:auto}
+.app{display:flex;min-height:100dvh}
+.sidebar{width:250px;background:#1e293b;border-right:1px solid #334155;position:fixed;top:0;left:0;height:100dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(1.5rem + var(--sat)) 0 calc(1.5rem + var(--sab));padding-left:var(--sal)}
 .sidebar h1{color:#3b82f6;font-size:1.6rem;padding:0 1.5rem;margin-bottom:2rem;background:linear-gradient(135deg,#3b82f6,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .nav-item{display:block;padding:.9rem 1.5rem;color:#94a3b8;text-decoration:none;font-size:.95rem;cursor:pointer;border-left:3px solid transparent;transition:all .2s}
 .nav-item:hover,.nav-item.active{color:#3b82f6;background:#0f172a;border-left-color:#3b82f6}
-.main{flex:1;margin-left:250px;padding:1.5rem 2rem}
-.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid #334155;position:relative;gap:1rem}
-.page-title{font-size:1.5rem;font-weight:700}
-.user-info{font-size:.85rem;color:#94a3b8}
+.main{flex:1;min-width:0;margin-left:250px;padding:calc(1.5rem + var(--sat)) calc(2rem + var(--sar)) calc(1.5rem + var(--sab)) 2rem}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid #334155;position:relative;gap:1rem;min-width:0}
+/* flex:1 + min-width:0 lets the title shrink and ellipsize instead of running
+   underneath the user name / Sign Out on narrow screens. */
+.page-title{flex:1 1 auto;min-width:0;font-size:1.5rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.topbar-actions{flex:0 0 auto;display:flex;align-items:center;gap:1rem;min-width:0}
+.user-info{font-size:.85rem;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sign-out{color:#ef4444;cursor:pointer;font-size:.9rem;font-weight:500;white-space:nowrap;flex:0 0 auto}
 .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}
 .stat-card{background:#1e293b;border-radius:16px;padding:1.3rem;border:1px solid #334155;text-align:center;transition:all .2s}
 .stat-card[style*="cursor:pointer"]:hover,.stat-card:hover{border-color:#3b82f6;transform:translateY(-2px);box-shadow:0 4px 12px rgba(59,130,246,.1)}
@@ -57,7 +82,9 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 .badge-amber{background:#451a03;color:#fbbf24}
 .badge-red{background:#450a0a;color:#fca5a5}
 .hidden{display:none!important}
-.hamburger{display:none;position:absolute;left:.8rem;top:50%;transform:translateY(-50%);background:none;border:none;color:#f8fafc;font-size:1.3rem;cursor:pointer;z-index:201;padding:.4rem .5rem;border-radius:6px}
+/* An in-flow flex item rather than absolutely positioned, so it reserves its
+   own space in the topbar instead of overlapping the page title. */
+.hamburger{display:none;flex:0 0 auto;background:none;border:none;color:#f8fafc;font-size:1.3rem;line-height:1;cursor:pointer;padding:.4rem .5rem;border-radius:6px;-webkit-tap-highlight-color:transparent}
 .hamburger:active{background:#334155}
 .q-item{background:#0f172a;border-radius:14px;padding:1rem;margin-bottom:.6rem;border:1px solid #334155}
 .q-text{font-size:.95rem;color:#e2e8f0;margin-bottom:.4rem}
@@ -81,14 +108,17 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 /* Responsive */
 @media(max-width:900px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:768px){
-  .sidebar{position:fixed;left:-260px;width:250px;z-index:200;transition:left .3s ease;box-shadow:2px 0 20px rgba(0,0,0,.5)}
-  .sidebar.open{left:0}
-  .main{margin-left:0;padding:1rem}
+  /* Slide with transform and hide with visibility. The old `left:-260px` left
+     the drawer's box-shadow bleeding onto the screen edge as a grey sliver. */
+  .sidebar{position:fixed;top:0;left:0;width:250px;z-index:200;transform:translateX(-100%);visibility:hidden;transition:transform .3s ease,visibility .3s ease;box-shadow:none}
+  .sidebar.open{transform:none;visibility:visible;box-shadow:2px 0 20px rgba(0,0,0,.5)}
+  .main{margin-left:0;padding:calc(1rem + var(--sat)) calc(1rem + var(--sar)) calc(1rem + var(--sab)) calc(1rem + var(--sal))}
   .stat-grid{grid-template-columns:1fr 1fr;gap:.8rem}
-  .topbar{padding-left:3rem;gap:.5rem;margin-bottom:1rem}
+  .topbar{gap:.5rem;margin-bottom:1rem}
   .page-title{font-size:1.2rem}
-  .user-info{font-size:.75rem}
-  .hamburger{display:block!important}
+  .topbar-actions{gap:.75rem}
+  .user-info{font-size:.75rem;max-width:10ch}
+  .hamburger{display:block}
   .overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:199}
   .overlay.open{display:block}
   .login-box{padding:0}
@@ -105,6 +135,13 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
   .btn{font-size:.95rem;padding:.8rem 1rem;border-radius:12px}
   .quiz-option{padding:.85rem 1rem;font-size:.9rem;border-radius:12px}
   .badge{font-size:.7rem;padding:.2rem .5rem}
+}
+/* Phone widths (iPhone is 390-430px). Three text items plus the hamburger do
+   not fit on one row, so the name is dropped here — it still shows in the
+   dashboard greeting and on the Profile page. */
+@media(max-width:480px){
+  .user-info{display:none}
+  .page-title{font-size:1.1rem}
 }
 
 /* ============ UPLOAD PAGE ============ */
@@ -130,8 +167,17 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 </head>
 <body>
 
+<!-- ============ BOOT SPLASH ============ -->
+<!-- Visible on first paint. `boot()` replaces it with either the dashboard or
+     the login page once the stored session has been checked, so a returning
+     user never sees the login form flash past. -->
+<div id="bootPage" class="boot-wrap">
+<img src="/icons/logo.avif" alt="ERO Logo" style="width:120px;height:auto">
+<div class="boot-spinner" role="status" aria-label="Signing you in"></div>
+</div>
+
 <!-- ============ LOGIN PAGE ============ -->
-<div id="loginPage" class="login-wrap">
+<div id="loginPage" class="login-wrap hidden">
 <div class="login-box"><img src="/icons/logo.avif" alt="ERO Logo" style="display:block;margin:0 auto 1.5rem;width:150px;height:auto">
 <div class="form-card"><div id="errorMsg" class="error-msg"></div>
 <div id="loginFormWrap">
@@ -161,7 +207,7 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <a class="nav-item" onclick="showPage('settings',this)">⚙️ Settings</a>
 </aside>
 <main class="main">
-<div class="topbar" style="position:relative"><button class="hamburger" onclick="toggleSidebar('admin')">☰</button><h2 class="page-title" id="pageTitle">Dashboard</h2><div style="display:flex;align-items:center;gap:1rem"><span class="user-info" id="userInfo"></span><a onclick="logout()" style="color:#ef4444;cursor:pointer;font-size:.9rem;font-weight:500">Sign Out</a></div></div>
+<div class="topbar"><button class="hamburger" onclick="toggleSidebar('admin')" aria-label="Open menu">☰</button><h2 class="page-title" id="pageTitle">Dashboard</h2><div class="topbar-actions"><span class="user-info" id="userInfo"></span><a class="sign-out" onclick="logout()">Sign Out</a></div></div>
 
 <div id="installBanner" class="install-banner hidden"><p>📱 Install ERO as an app for quick access</p><button class="install-btn" onclick="installApp()">Install App</button></div>
 
@@ -307,7 +353,7 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 </aside>
 <main class="main">
 <div id="offlineBanner" class="hidden" style="background:#451a03;border:1px solid #f59e0b;border-radius:10px;padding:.6rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem;font-size:.85rem;color:#fbbf24">⚠️ You're offline. Answers will sync when connected.</div>
-<div class="topbar" style="position:relative"><button class="hamburger" onclick="toggleSidebar('student')">☰</button><h2 class="page-title" id="studentPageTitle">Dashboard</h2><div style="display:flex;align-items:center;gap:1rem"><span class="user-info" id="studentUserInfo"></span><a onclick="logout()" style="color:#ef4444;cursor:pointer;font-size:.9rem;font-weight:500">Sign Out</a></div></div>
+<div class="topbar"><button class="hamburger" onclick="toggleSidebar('student')" aria-label="Open menu">☰</button><h2 class="page-title" id="studentPageTitle">Dashboard</h2><div class="topbar-actions"><span class="user-info" id="studentUserInfo"></span><a class="sign-out" onclick="logout()">Sign Out</a></div></div>
 
 <!-- Student Dashboard -->
 <div id="pg-s-dashboard">
@@ -463,15 +509,157 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 
 <script>
 const API='/api/v1';
-let token=localStorage.getItem('qp_token'),currentUser=null,deferredPrompt=null;
+const TOKEN_KEY='qp_token',TOKEN_EXP_KEY='qp_token_exp';
+let token=localStorage.getItem(TOKEN_KEY),currentUser=null,deferredPrompt=null;
 
 // PWA Install
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;const b=document.getElementById('installBanner');if(b)b.classList.remove('hidden')});
 function installApp(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null;document.getElementById('installBanner').classList.add('hidden')})}}
 
-// Auto-login check
-if(token)checkAuth();
-else document.getElementById('loginPage').classList.remove('hidden');
+/* ============================================================
+   SESSION
+   ------------------------------------------------------------
+   Access tokens live 15 minutes (api/config/security.php). The refresh token
+   is a 30-day HttpOnly cookie the API sets on login and rotates on every
+   /auth/refresh, so it is never readable from JS.
+
+   Previously this app stored only the access token and had no refresh call at
+   all, so the session died after 15 minutes and the user was bounced back to
+   the login form. Now: every request refreshes on 401 and replays, the app
+   refreshes proactively just before expiry and on resume, and cold start falls
+   back to the cookie when the access token is missing — which is what keeps an
+   installed iOS PWA signed in after iOS evicts localStorage.
+   ============================================================ */
+
+// 60s of slack so a request never leaves with a token that expires in flight.
+const TOKEN_SKEW_MS=60000;
+let tokenExpiresAt=Number(localStorage.getItem(TOKEN_EXP_KEY))||0;
+
+// "Signed out on purpose" latch. Cleared on the next successful sign-in.
+const SIGNED_OUT_KEY='qp_signed_out';
+function signedOutDeliberately(){
+  try{return localStorage.getItem(SIGNED_OUT_KEY)==='1'}catch(e){return false}
+}
+function setSignedOutFlag(on){
+  try{on?localStorage.setItem(SIGNED_OUT_KEY,'1'):localStorage.removeItem(SIGNED_OUT_KEY)}catch(e){}
+}
+
+function storeSession(accessToken,expiresIn){
+  if(!accessToken) return;
+  setSignedOutFlag(false);
+  token=accessToken;
+  // expires_in is seconds; fall back to the API's 15-minute default.
+  tokenExpiresAt=Date.now()+((Number(expiresIn)||900)*1000);
+  try{
+    localStorage.setItem(TOKEN_KEY,token);
+    localStorage.setItem(TOKEN_EXP_KEY,String(tokenExpiresAt));
+  }catch(e){/* private mode / quota — the in-memory token still works */}
+}
+
+function clearSession(){
+  token=null;currentUser=null;tokenExpiresAt=0;
+  try{
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(TOKEN_EXP_KEY);
+  }catch(e){}
+}
+
+function tokenNeedsRefresh(){
+  return !token || !tokenExpiresAt || Date.now()>(tokenExpiresAt-TOKEN_SKEW_MS);
+}
+
+// Single-flight: concurrent 401s share one /auth/refresh call instead of
+// racing and invalidating each other's rotated token.
+let refreshPromise=null;
+function refreshSession(){
+  if(refreshPromise) return refreshPromise;
+  refreshPromise=(async()=>{
+    try{
+      const r=await fetch(API+'/auth/refresh',{
+        method:'POST',
+        headers:{'Content-Type':'application/json',Accept:'application/json'},
+        credentials:'include', // sends the HttpOnly qp_refresh cookie
+        body:'{}'
+      });
+      if(!r.ok) return false;
+      const d=await r.json();
+      const at=d.data?.access_token;
+      if(!at) return false;
+      storeSession(at,d.data?.expires_in);
+      if(d.data?.user) currentUser=d.data.user;
+      return true;
+    }catch(e){return false}
+    finally{refreshPromise=null}
+  })();
+  return refreshPromise;
+}
+
+/**
+ * Every authenticated API call goes through here.
+ * Refreshes ahead of expiry, and on a 401 refreshes once and replays.
+ */
+async function authFetch(path,opts={}){
+  if(token&&tokenNeedsRefresh()) await refreshSession();
+  const build=()=>{
+    const headers=Object.assign({Accept:'application/json'},opts.headers||{});
+    if(token) headers.Authorization='Bearer '+token;
+    return Object.assign({},opts,{headers,credentials:'include'});
+  };
+  let r=await fetch(API+path,build());
+  if(r.status===401&&path!=='/auth/refresh'&&path!=='/auth/login'){
+    if(await refreshSession()) r=await fetch(API+path,build());
+  }
+  return r;
+}
+
+function showLoginPage(){
+  document.getElementById('bootPage').classList.add('hidden');
+  document.getElementById('adminPage').classList.add('hidden');
+  document.getElementById('studentPage').classList.add('hidden');
+  document.getElementById('activationPage').classList.add('hidden');
+  document.getElementById('onboardingPage').classList.add('hidden');
+  document.getElementById('loginPage').classList.remove('hidden');
+}
+
+/** Loads /auth/me and routes. Returns false if there is no usable session. */
+async function loadCurrentUser(){
+  try{
+    const r=await authFetch('/auth/me');
+    if(!r.ok) return false;
+    const d=await r.json();
+    const u=d.data?.user||d.data||d.user;
+    if(!u||!u.email) return false;
+    currentUser=u;
+    await routeByRole();
+    return true;
+  }catch(e){return false}
+}
+
+async function restoreSession(){
+  // Stored access token (authFetch already retries through /auth/refresh).
+  if(token&&await loadCurrentUser()) return true;
+  // No usable access token, but the refresh cookie may still be alive — this is
+  // the path that survives iOS evicting localStorage on an installed PWA.
+  // Skipped after an explicit sign-out, so a revoke that failed (e.g. the user
+  // was offline) can never silently sign the device back in.
+  if(!signedOutDeliberately()&&await refreshSession()&&await loadCurrentUser()) return true;
+  clearSession();
+  return false;
+}
+
+// Boot
+(async function boot(){
+  try{
+    if(await restoreSession()) return;
+  }catch(e){}
+  showLoginPage();
+})();
+
+// A suspended PWA can sit for hours; top the token up as soon as it resumes so
+// the first tap after reopening does not fail.
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'&&token&&tokenNeedsRefresh()) refreshSession();
+});
 
 // Show/hide login and register forms
 function showRegister(){
@@ -538,14 +726,13 @@ async function handleGoogleResponse(response){
     // Try to login/register via API with Google token
     let success=false;
     try{
-      const r=await fetch(API+'/auth/google',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({token:googleToken,name,email,device_name:'web'})});
+      const r=await fetch(API+'/auth/google',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},credentials:'include',body:JSON.stringify({token:googleToken,name,email,device_name:'web'})});
       const d=await r.json();
       if(r.ok&&d.data?.access_token){
-        token=d.data.access_token;
-        localStorage.setItem('qp_token',token);
+        storeSession(d.data.access_token,d.data.expires_in);
         currentUser=d.data.user||d.data;
         trackRegisteredStudent(name,email);
-        routeByRole();
+        await routeByRole();
         success=true;
       }
     }catch(e){}
@@ -553,24 +740,20 @@ async function handleGoogleResponse(response){
     // If API doesn't support Google auth, try normal login or register
     if(!success){
       try{
-        const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({email,password:'google_oauth_'+email,device_name:'web'})});
+        const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},credentials:'include',body:JSON.stringify({email,password:'google_oauth_'+email,device_name:'web'})});
         const d=await r.json();
         if(r.ok&&d.data?.access_token){
-          token=d.data.access_token;localStorage.setItem('qp_token',token);
+          storeSession(d.data.access_token,d.data.expires_in);
           currentUser=d.data.user||d.data;
           trackRegisteredStudent(name,email);
-          routeByRole();success=true;
+          await routeByRole();success=true;
         }
       }catch(e){}
     }
 
-    // If still not logged in, create local session
     if(!success){
-      currentUser={name,email,role:'student'};
-      token='google_local_'+Date.now();
-      localStorage.setItem('qp_token',token);
-      trackRegisteredStudent(name,email);
-      routeByRole();
+      err.textContent='Google sign-in is not available for this account. Please sign in with your email and password.';
+      err.style.display='block';
     }
   }catch(e){
     err.textContent='Failed to process Google sign-in. Please try email login.';
@@ -604,15 +787,14 @@ document.getElementById('registerForm').addEventListener('submit',async e=>{
 
   btn.disabled=true;btn.textContent='Creating account...';err.style.display='none';
   try{
-    const r=await fetch(API+'/auth/register',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({name,email,password,password_confirmation:confirm,device_name:'web'})});
+    const r=await fetch(API+'/auth/register',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},credentials:'include',body:JSON.stringify({name,email,password,password_confirmation:confirm,device_name:'web'})});
     const d=await r.json();
     if(r.ok&&d.data?.access_token){
-      token=d.data.access_token;
-      localStorage.setItem('qp_token',token);
+      storeSession(d.data.access_token,d.data.expires_in);
       currentUser=d.data.user||d.data;
       // Track registered student locally
       trackRegisteredStudent(name,email);
-      routeByRole();
+      await routeByRole();
     }else if(r.ok&&d.data?.user){
       // Registration successful but no auto-login, show login form
       trackRegisteredStudent(name,email);
@@ -634,28 +816,22 @@ document.getElementById('loginForm').addEventListener('submit',async e=>{
   const btn=document.getElementById('loginBtn'),err=document.getElementById('errorMsg');
   btn.disabled=true;btn.textContent='Signing in...';err.style.display='none';
   try{
-    const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({email:document.getElementById('email').value,password:document.getElementById('password').value,device_name:'web'})});
+    const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},credentials:'include',body:JSON.stringify({email:document.getElementById('email').value,password:document.getElementById('password').value,device_name:'web'})});
     const d=await r.json();
     if(r.ok&&d.data?.access_token){
-      token=d.data.access_token;
-      localStorage.setItem('qp_token',token);
+      // credentials:'include' above is what lets the browser keep the
+      // HttpOnly refresh cookie that keeps this session alive from now on.
+      storeSession(d.data.access_token,d.data.expires_in);
       currentUser=d.data.user||d.data;
-      routeByRole();
+      await routeByRole();
     }else{err.textContent=d.message||'Login failed';err.style.display='block'}
   }catch(x){err.textContent='Network error - check connection';err.style.display='block'}
   btn.disabled=false;btn.textContent='Sign In';
 });
 
-async function checkAuth(){
-  try{
-    const r=await fetch(API+'/auth/me',{headers:{Authorization:'Bearer '+token,Accept:'application/json'}});
-    if(r.ok){const d=await r.json();currentUser=d.data?.user||d.data||d.user||d;routeByRole()}
-    else{localStorage.removeItem('qp_token');token=null}
-  }catch(e){localStorage.removeItem('qp_token');token=null}
-}
-
 // Route by role
-function routeByRole(){
+async function routeByRole(){
+  document.getElementById('bootPage').classList.add('hidden');
   document.getElementById('loginPage').classList.add('hidden');
   // Use role from API response
   const role=(currentUser?.role||'').toLowerCase();
@@ -669,12 +845,13 @@ function routeByRole(){
   if(isAdmin){
     showAdmin();
   }else{
-    showStudent();
+    await showStudent();
   }
 }
 
 // ============ ADMIN FUNCTIONS ============
 function showAdmin(){
+  document.getElementById('bootPage').classList.add('hidden');
   document.getElementById('adminPage').classList.remove('hidden');
   document.getElementById('studentPage').classList.add('hidden');
   document.getElementById('userInfo').textContent=currentUser?.name||'Admin';
@@ -697,7 +874,7 @@ function showPage(page,el){
 }
 
 async function apiFetch(u){
-  try{const r=await fetch(API+u,{headers:{Authorization:'Bearer '+token,Accept:'application/json'}});return await r.json()}
+  try{const r=await authFetch(u);return await r.json()}
   catch(e){return{data:null}}
 }
 
@@ -930,17 +1107,43 @@ async function loadImportHistory(){
 }
 
 // ============ STUDENT FUNCTIONS ============
-function showStudent(){
+/**
+ * Is this account activated?
+ *
+ * codes.php is authoritative, because it is the only store that survives a
+ * reinstall, a second device, or iOS clearing the PWA's localStorage. The local
+ * flag used to be the only record, which is why an already-activated student
+ * kept being asked for the code again. It is now just an offline cache.
+ */
+async function isAccountActivated(email){
+  const localKey='qp_activated_'+email;
+  try{
+    const r=await fetch('/codes.php?action=status&email='+encodeURIComponent(email),{cache:'no-store'});
+    if(r.ok){
+      const d=await r.json();
+      if(typeof d.activated==='boolean'){
+        try{
+          if(d.activated) localStorage.setItem(localKey,'true');
+          else localStorage.removeItem(localKey);
+        }catch(e){}
+        return d.activated;
+      }
+    }
+  }catch(e){/* offline or codes.php missing — fall through to the cache */}
+  return localStorage.getItem(localKey)==='true';
+}
+
+async function showStudent(){
   const email=currentUser?.email||'default';
 
   // Check if account is activated
-  const isActivated=localStorage.getItem('qp_activated_'+email);
-  if(!isActivated){
+  if(!await isAccountActivated(email)){
     showActivationScreen();
     return;
   }
 
   // Activated — show dashboard with quiz
+  document.getElementById('bootPage').classList.add('hidden');
   document.getElementById('activationPage').classList.add('hidden');
   document.getElementById('onboardingPage').classList.add('hidden');
   document.getElementById('studentPage').classList.remove('hidden');
@@ -979,6 +1182,7 @@ async function loadStudentData(){
 }
 
 function showActivationScreen(){
+  document.getElementById('bootPage').classList.add('hidden');
   document.getElementById('loginPage').classList.add('hidden');
   document.getElementById('adminPage').classList.add('hidden');
   document.getElementById('studentPage').classList.add('hidden');
@@ -1019,14 +1223,15 @@ async function submitActivation(){
   // Code is valid! Activate account
   const email=currentUser?.email||'default';
   await markCodeUsed(code,email);
-  localStorage.setItem('qp_activated_'+email,'true');
+  try{localStorage.setItem('qp_activated_'+email,'true')}catch(e){}
   document.getElementById('activationPage').classList.add('hidden');
   document.querySelector('#activationPage .btn-primary').textContent='Activate Account';
   document.querySelector('#activationPage .btn-primary').disabled=false;
-  showStudent();
+  await showStudent();
 }
 
 function showOnboarding(){
+  document.getElementById('bootPage').classList.add('hidden');
   document.getElementById('loginPage').classList.add('hidden');
   document.getElementById('adminPage').classList.add('hidden');
   document.getElementById('studentPage').classList.add('hidden');
@@ -1048,11 +1253,11 @@ function showOnboarding(){
   el.innerHTML=html;
 }
 
-function selectExam(examName){
+async function selectExam(examName){
   const email=currentUser?.email||'default';
   localStorage.setItem('qp_exam_'+email,examName);
   document.getElementById('onboardingPage').classList.add('hidden');
-  showStudent();
+  await showStudent();
 }
 
 function showStudentPage(page,el){
@@ -1190,7 +1395,7 @@ async function loadQuestionsFromServer(){
 
   // Try loading from API
   try{
-    const r=await fetch(API+'/student/questions',{headers:{Authorization:'Bearer '+token,Accept:'application/json'}});
+    const r=await authFetch('/student/questions');
     if(r.ok){
       const d=await r.json();
       const questions=d.data?.questions||d.data||[];
@@ -1343,7 +1548,7 @@ async function startQuiz(){
     // Try API first — start or resume a day attempt
     let loaded=false;
     try{
-      const attemptRes=await fetch(API+'/student/days/'+p.day+'/attempt',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({})});
+      const attemptRes=await authFetch('/student/days/'+p.day+'/attempt',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
       const attemptData=await attemptRes.json();
       if(attemptRes.ok&&attemptData.data){
         const attempt=attemptData.data;
@@ -1459,9 +1664,9 @@ async function submitAnswer(){
   const attemptUuid=localStorage.getItem('qp_current_attempt')||'';
   if(navigator.onLine&&attemptUuid){
     try{
-      const r=await fetch(API+'/student/attempts/'+attemptUuid+'/answers',{
+      const r=await authFetch('/student/attempts/'+attemptUuid+'/answers',{
         method:'POST',
-        headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',Accept:'application/json'},
+        headers:{'Content-Type':'application/json'},
         body:JSON.stringify({question_id:q.id,selected_option:selectedOption,client_answer_uuid:crypto.randomUUID?crypto.randomUUID():(Date.now()+'_'+Math.random())})
       });
       const result=await r.json();
@@ -1598,12 +1803,25 @@ function retakeQuiz(){
 }
 
 // ============ LOGOUT ============
-function logout(){
-  fetch(API+'/auth/logout',{method:'POST',headers:{Authorization:'Bearer '+token,Accept:'application/json'}}).catch(()=>{});
-  localStorage.removeItem('qp_token');token=null;currentUser=null;
-  document.getElementById('loginPage').classList.remove('hidden');
-  document.getElementById('adminPage').classList.add('hidden');
-  document.getElementById('studentPage').classList.add('hidden');
+async function logout(){
+  // Capture before clearing, then tear the local session down synchronously so
+  // nothing can race with it. The revoke goes out with the captured token
+  // rather than through authFetch, which would read the already-cleared one.
+  const dyingToken=token;
+  setSignedOutFlag(true);
+  clearSession();
+  showLoginPage();
+  if(!dyingToken) return;
+  // Best effort: the API revokes the refresh token and expires the qp_refresh
+  // cookie. If this never lands (offline), the signed-out latch above is what
+  // stops the cookie from signing this device back in.
+  try{
+    await fetch(API+'/auth/logout',{
+      method:'POST',
+      headers:{Authorization:'Bearer '+dyingToken,Accept:'application/json'},
+      credentials:'include'
+    });
+  }catch(e){}
 }
 
 // ============ PDF/CSV UPLOAD ============
@@ -1838,7 +2056,7 @@ async function confirmImport(){
     const endpoints=['/admin/questions/bulk-import','/admin/questions/import','/admin/questions'];
     for(const ep of endpoints){
       try{
-        const r=await fetch(API+ep,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({questions:parsedQuestions})});
+        const r=await authFetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({questions:parsedQuestions})});
         if(r.ok){serverSaved=true;break}
       }catch(e){}
     }
@@ -2181,9 +2399,9 @@ function syncOfflineAnswers(){
 
   // Try to sync each answer to server
   Promise.all(pending.map(a=>
-    fetch(API+'/student/quiz-attempts/answers',{
+    authFetch('/student/quiz-attempts/answers',{
       method:'POST',
-      headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',Accept:'application/json'},
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify(a)
     }).then(r=>r.ok).catch(()=>false)
   )).then(results=>{
