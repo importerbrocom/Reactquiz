@@ -1,24 +1,29 @@
 {
-  "name": "ERO - Elior Research Orbit",
+  "name": "ERO - Daily Exam Practice",
   "short_name": "ERO",
-  "description": "Illuminating Knowledge - Daily medical exam preparation",
-  "start_url": "/",
+  "description": "Complete 10 questions a day, master every one, and unlock the next day.",
+  "id": "/?source=pwa",
+  "start_url": "/?source=pwa",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#0B1120",
-  "theme_color": "#1e3a8a",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
+  "background_color": "#0B1120",
+  "theme_color": "#4F46E5",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["education", "productivity"],
   "icons": [
-    {
-      "src": "/icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ]
+    { "src": "/icons/ero-192-v3.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/ero-256-v3.png", "sizes": "256x256", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/ero-384-v3.png", "sizes": "384x384", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/ero-512-v3.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/ero-maskable-512-v3.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Today's Quiz", "url": "/quiz/today", "icons": [{ "src": "/icons/ero-192-v3.png", "sizes": "192x192" }] },
+    { "name": "Review Mistakes", "url": "/mistakes" },
+    { "name": "Progress", "url": "/progress" }
+  ],
+  "prefer_related_applications": false
 }

@@ -8,6 +8,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="/manifest.webmanifest">
+<!-- iOS does not reliably take the home screen icon from the manifest; without
+     this it screenshots the page instead. -->
+<link rel="apple-touch-icon" href="/icons/ero-512-v3.png">
+<meta name="apple-mobile-web-app-title" content="ERO">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -172,13 +176,13 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
      the login page once the stored session has been checked, so a returning
      user never sees the login form flash past. -->
 <div id="bootPage" class="boot-wrap">
-<img src="/icons/logo.avif" alt="ERO Logo" style="width:120px;height:auto">
+<img src="/icons/logo.png" alt="ERO Logo" style="width:120px;height:auto">
 <div class="boot-spinner" role="status" aria-label="Signing you in"></div>
 </div>
 
 <!-- ============ LOGIN PAGE ============ -->
 <div id="loginPage" class="login-wrap hidden">
-<div class="login-box"><img src="/icons/logo.avif" alt="ERO Logo" style="display:block;margin:0 auto 1.5rem;width:150px;height:auto">
+<div class="login-box"><img src="/icons/logo.png" alt="ERO Logo" style="display:block;margin:0 auto 1.5rem;width:150px;height:auto">
 <div class="form-card"><div id="errorMsg" class="error-msg"></div>
 <div id="loginFormWrap">
 <form id="loginForm"><label>Email</label><input type="email" id="email" placeholder="Enter your email" required><label>Password</label><input type="password" id="password" placeholder="Enter password" required><button type="submit" class="btn btn-primary" id="loginBtn">Sign In</button></form>
@@ -314,7 +318,7 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <!-- ============ STUDENT ONBOARDING ============ -->
 <div id="onboardingPage" class="login-wrap hidden">
 <div class="login-box" style="max-width:500px">
-<img src="/icons/logo.avif" alt="ERO Logo" style="display:block;margin:0 auto 1rem;width:100px;height:auto">
+<img src="/icons/logo.png" alt="ERO Logo" style="display:block;margin:0 auto 1rem;width:100px;height:auto">
 <h2 style="text-align:center;color:#f8fafc;margin-bottom:.5rem" id="onboardingGreeting">Welcome!</h2>
 <p style="text-align:center;color:#94a3b8;margin-bottom:2rem">Select the exam you want to practice:</p>
 <div id="examChoices" style="display:flex;flex-direction:column;gap:.8rem"></div>
@@ -324,7 +328,7 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <!-- ============ ACTIVATION SCREEN ============ -->
 <div id="activationPage" class="login-wrap hidden">
 <div class="login-box" style="max-width:420px">
-<img src="/icons/logo.avif" alt="ERO Logo" style="display:block;margin:0 auto 1rem;width:80px;height:auto">
+<img src="/icons/logo.png" alt="ERO Logo" style="display:block;margin:0 auto 1rem;width:80px;height:auto">
 <div class="form-card">
 <div style="text-align:center;margin-bottom:1.5rem">
 <div style="font-size:2.5rem;margin-bottom:.5rem">🔒</div>
@@ -609,6 +613,24 @@ async function authFetch(path,opts={}){
   if(r.status===401&&path!=='/auth/refresh'&&path!=='/auth/login'){
     if(await refreshSession()) r=await fetch(API+path,build());
   }
+  return r;
+}
+
+/**
+ * Calls the standalone PHP helpers (codes.php, save-questions.php).
+ *
+ * They sit outside /api/v1 but verify the same bearer token, so the token has to
+ * be fresh here too — same proactive refresh and 401-replay as authFetch.
+ */
+async function helperFetch(url,opts={}){
+  if(token&&tokenNeedsRefresh()) await refreshSession();
+  const build=()=>{
+    const headers=Object.assign({Accept:'application/json'},opts.headers||{});
+    if(token) headers.Authorization='Bearer '+token;
+    return Object.assign({},opts,{headers});
+  };
+  let r=await fetch(url,build());
+  if(r.status===401&&await refreshSession()) r=await fetch(url,build());
   return r;
 }
 
@@ -1118,7 +1140,9 @@ async function loadImportHistory(){
 async function isAccountActivated(email){
   const localKey='qp_activated_'+email;
   try{
-    const r=await fetch('/codes.php?action=status&email='+encodeURIComponent(email),{cache:'no-store'});
+    // No email parameter: codes.php reads the account from the bearer token, so
+    // a student cannot probe anyone else's activation.
+    const r=await helperFetch('/codes.php?action=status',{cache:'no-store'});
     if(r.ok){
       const d=await r.json();
       if(typeof d.activated==='boolean'){
@@ -1133,11 +1157,13 @@ async function isAccountActivated(email){
   return localStorage.getItem(localKey)==='true';
 }
 
-async function showStudent(){
+async function showStudent(opts={}){
   const email=currentUser?.email||'default';
 
-  // Check if account is activated
-  if(!await isAccountActivated(email)){
+  // Check if account is activated. Skipped straight after redeeming a code,
+  // where the answer is already known — re-asking the server there only added a
+  // round trip and a blank flash between the two screens.
+  if(!opts.justActivated&&!await isAccountActivated(email)){
     showActivationScreen();
     return;
   }
@@ -1227,7 +1253,7 @@ async function submitActivation(){
   document.getElementById('activationPage').classList.add('hidden');
   document.querySelector('#activationPage .btn-primary').textContent='Activate Account';
   document.querySelector('#activationPage .btn-primary').disabled=false;
-  await showStudent();
+  await showStudent({justActivated:true});
 }
 
 function showOnboarding(){
@@ -2047,7 +2073,7 @@ async function confirmImport(){
   // Save to server as JSON file so ALL students on ALL devices can access
   let serverSaved=false;
   try{
-    const r=await fetch('/save-questions.php',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({questions:merged})});
+    const r=await helperFetch('/save-questions.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({questions:merged})});
     if(r.ok) serverSaved=true;
   }catch(e){}
 
@@ -2142,8 +2168,8 @@ function getActivationCodes(){
 }
 function saveActivationCodes(codes){
   localStorage.setItem('qp_activation_codes',JSON.stringify(codes));
-  // Also sync to server
-  fetch('/codes.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'replace',codes})}).catch(()=>{});
+  // Also sync to server (admin only, enforced server side)
+  helperFetch('/codes.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'replace',codes})}).catch(()=>{});
 }
 
 function generateCodes(){
@@ -2205,7 +2231,7 @@ function shareAllCodes(codes){
 
 function loadActivationCodes(){
   // Load from server first, then merge with local
-  fetch('/codes.php?action=list').then(r=>r.json()).then(d=>{
+  helperFetch('/codes.php?action=list').then(r=>r.json()).then(d=>{
     if(d.codes&&Array.isArray(d.codes)){
       localStorage.setItem('qp_activation_codes',JSON.stringify(d.codes));
     }
@@ -2263,7 +2289,7 @@ function deleteCode(code){
 async function validateActivationCode(code){
   // Try server first
   try{
-    const r=await fetch('/codes.php?action=validate&code='+code);
+    const r=await helperFetch('/codes.php?action=validate&code='+encodeURIComponent(code));
     const d=await r.json();
     if(d.valid===true) return true;
     if(d.valid===false) return false;
@@ -2274,9 +2300,10 @@ async function validateActivationCode(code){
 }
 
 async function markCodeUsed(code,email){
-  // Mark on server
+  // Mark on server. No email in the body — codes.php records the account that
+  // owns the bearer token, so a code cannot be redeemed on someone else's behalf.
   try{
-    await fetch('/codes.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'use',code,email})});
+    await helperFetch('/codes.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'use',code})});
   }catch(e){}
   // Also mark locally
   const codes=getActivationCodes();
