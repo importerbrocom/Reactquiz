@@ -14,7 +14,6 @@
 <meta name="apple-mobile-web-app-title" content="ERO">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <title>ERO - Elior Research Orbit</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -88,7 +87,13 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 .hidden{display:none!important}
 /* An in-flow flex item rather than absolutely positioned, so it reserves its
    own space in the topbar instead of overlapping the page title. */
-.hamburger{display:none;flex:0 0 auto;background:none;border:none;color:#f8fafc;font-size:1.3rem;line-height:1;cursor:pointer;padding:.4rem .5rem;border-radius:6px;-webkit-tap-highlight-color:transparent}
+/* Icon is drawn in CSS rather than the ☰ glyph, which renders as a tofu box in
+   webviews / on devices without that symbol in their font. */
+.hamburger{display:none;flex:0 0 auto;box-sizing:content-box;width:22px;height:16px;background:none;border:none;cursor:pointer;padding:.5rem;border-radius:6px;-webkit-tap-highlight-color:transparent;position:relative}
+.hamburger::before,.hamburger::after,.hamburger span{content:"";position:absolute;left:.5rem;right:.5rem;height:2px;background:#f8fafc;border-radius:2px}
+.hamburger::before{top:.5rem}
+.hamburger span{top:calc(50% - 1px)}
+.hamburger::after{bottom:.5rem}
 .hamburger:active{background:#334155}
 .q-item{background:#0f172a;border-radius:14px;padding:1rem;margin-bottom:.6rem;border:1px solid #334155}
 .q-text{font-size:.95rem;color:#e2e8f0;margin-bottom:.4rem}
@@ -186,14 +191,10 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <div class="form-card"><div id="errorMsg" class="error-msg"></div>
 <div id="loginFormWrap">
 <form id="loginForm"><label>Email</label><input type="email" id="email" placeholder="Enter your email" required><label>Password</label><input type="password" id="password" placeholder="Enter password" required><button type="submit" class="btn btn-primary" id="loginBtn">Sign In</button></form>
-<div style="display:flex;align-items:center;margin:1.2rem 0;gap:.8rem"><div style="flex:1;height:1px;background:#334155"></div><span style="color:#64748b;font-size:.85rem">or</span><div style="flex:1;height:1px;background:#334155"></div></div>
-<button onclick="googleSignIn()" class="btn" style="background:#fff;color:#333;display:flex;align-items:center;justify-content:center;gap:.6rem;font-weight:600;border:1px solid #e2e8f0"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Continue with Google</button>
 <p style="text-align:center;margin-top:1.2rem;color:#94a3b8;font-size:.95rem">Don't have an account? <a onclick="showRegister()" style="color:#3b82f6;cursor:pointer;font-weight:600">Register</a></p>
 </div>
 <div id="registerFormWrap" class="hidden">
 <form id="registerForm"><label>Full Name</label><input type="text" id="regName" placeholder="Enter your full name" required minlength="2"><label>Email</label><input type="email" id="regEmail" placeholder="Enter your email" required><label>Password</label><input type="password" id="regPassword" placeholder="At least 10 characters" required minlength="10"><p style="color:#64748b;font-size:.78rem;margin:-.4rem 0 1rem">Use at least 10 characters with letters and numbers. Avoid common passwords.</p><label>Confirm Password</label><input type="password" id="regConfirm" placeholder="Re-enter your password" required><button type="submit" class="btn btn-primary" id="regBtn">Create Account</button></form>
-<div style="display:flex;align-items:center;margin:1.2rem 0;gap:.8rem"><div style="flex:1;height:1px;background:#334155"></div><span style="color:#64748b;font-size:.85rem">or</span><div style="flex:1;height:1px;background:#334155"></div></div>
-<button onclick="googleSignIn()" class="btn" style="background:#fff;color:#333;display:flex;align-items:center;justify-content:center;gap:.6rem;font-weight:600;border:1px solid #e2e8f0"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Sign up with Google</button>
 <p style="text-align:center;margin-top:1.2rem;color:#94a3b8;font-size:.95rem">Already have an account? <a onclick="showLogin()" style="color:#3b82f6;cursor:pointer;font-weight:600">Sign In</a></p>
 </div>
 </div></div></div>
@@ -211,7 +212,7 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <a class="nav-item" onclick="showPage('settings',this)">⚙️ Settings</a>
 </aside>
 <main class="main">
-<div class="topbar"><button class="hamburger" onclick="toggleSidebar('admin')" aria-label="Open menu">☰</button><h2 class="page-title" id="pageTitle">Dashboard</h2><div class="topbar-actions"><span class="user-info" id="userInfo"></span><a class="sign-out" onclick="logout()">Sign Out</a></div></div>
+<div class="topbar"><button class="hamburger" onclick="toggleSidebar('admin')" aria-label="Open menu"><span></span></button><h2 class="page-title" id="pageTitle">Dashboard</h2><div class="topbar-actions"><span class="user-info" id="userInfo"></span><a class="sign-out" onclick="logout()">Sign Out</a></div></div>
 
 <div id="installBanner" class="install-banner hidden"><p>📱 Install ERO as an app for quick access</p><button class="install-btn" onclick="installApp()">Install App</button></div>
 
@@ -357,7 +358,7 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 </aside>
 <main class="main">
 <div id="offlineBanner" class="hidden" style="background:#451a03;border:1px solid #f59e0b;border-radius:10px;padding:.6rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem;font-size:.85rem;color:#fbbf24">⚠️ You're offline. Answers will sync when connected.</div>
-<div class="topbar"><button class="hamburger" onclick="toggleSidebar('student')" aria-label="Open menu">☰</button><h2 class="page-title" id="studentPageTitle">Dashboard</h2><div class="topbar-actions"><span class="user-info" id="studentUserInfo"></span><a class="sign-out" onclick="logout()">Sign Out</a></div></div>
+<div class="topbar"><button class="hamburger" onclick="toggleSidebar('student')" aria-label="Open menu"><span></span></button><h2 class="page-title" id="studentPageTitle">Dashboard</h2><div class="topbar-actions"><span class="user-info" id="studentUserInfo"></span><a class="sign-out" onclick="logout()">Sign Out</a></div></div>
 
 <!-- Student Dashboard -->
 <div id="pg-s-dashboard">
@@ -775,97 +776,13 @@ function trackRegisteredStudent(name,email){
   }
 }
 
-// Google Sign-In
-const GOOGLE_CLIENT_ID='239766530691-nta89nk6c2bnpvfvjpkjaq5c3r5plfdh.apps.googleusercontent.com';
-
-function googleSignIn(){
-  const err=document.getElementById('errorMsg');
-  if(GOOGLE_CLIENT_ID.includes('YOUR_GOOGLE')){
-    err.textContent='Google Sign-In not configured yet. Please set up a Google Client ID.';
-    err.style.display='block';
-    return;
-  }
-  try{
-    google.accounts.id.initialize({
-      client_id:GOOGLE_CLIENT_ID,
-      callback:handleGoogleResponse,
-      auto_select:false
-    });
-    google.accounts.id.prompt((notification)=>{
-      if(notification.isNotDisplayed()||notification.isSkippedMoment()){
-        // Fallback: use popup mode
-        google.accounts.oauth2.initTokenClient({
-          client_id:GOOGLE_CLIENT_ID,
-          scope:'email profile',
-          callback:handleGoogleToken
-        }).requestAccessToken();
-      }
-    });
-  }catch(e){
-    err.textContent='Google Sign-In failed to load. Please try again.';
-    err.style.display='block';
-  }
-}
-
-async function handleGoogleResponse(response){
-  const err=document.getElementById('errorMsg');
-  err.style.display='none';
-  try{
-    // Decode the JWT token to get user info
-    const payload=JSON.parse(atob(response.credential.split('.')[1]));
-    const name=payload.name||'';
-    const email=payload.email||'';
-    const googleToken=response.credential;
-
-    // Try to login/register via API with Google token
-    let success=false;
-    try{
-      const r=await fetch(API+'/auth/google',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},credentials:'include',body:JSON.stringify({token:googleToken,name,email,device_name:'web'})});
-      const d=await r.json();
-      if(r.ok&&d.data?.access_token){
-        storeSession(d.data.access_token,d.data.expires_in);
-        currentUser=d.data.user||d.data;
-        trackRegisteredStudent(name,email);
-        await routeByRole();
-        success=true;
-      }
-    }catch(e){}
-
-    // If API doesn't support Google auth, try normal login or register
-    if(!success){
-      try{
-        const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},credentials:'include',body:JSON.stringify({email,password:'google_oauth_'+email,device_name:'web'})});
-        const d=await r.json();
-        if(r.ok&&d.data?.access_token){
-          storeSession(d.data.access_token,d.data.expires_in);
-          currentUser=d.data.user||d.data;
-          trackRegisteredStudent(name,email);
-          await routeByRole();success=true;
-        }
-      }catch(e){}
-    }
-
-    if(!success){
-      err.textContent='Google sign-in is not available for this account. Please sign in with your email and password.';
-      err.style.display='block';
-    }
-  }catch(e){
-    err.textContent='Failed to process Google sign-in. Please try email login.';
-    err.style.display='block';
-  }
-}
-
-async function handleGoogleToken(tokenResponse){
-  const err=document.getElementById('errorMsg');
-  try{
-    const r=await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+tokenResponse.access_token}});
-    const profile=await r.json();
-    handleGoogleResponse({credential:btoa(JSON.stringify({alg:'none'}))+'.'+btoa(JSON.stringify({name:profile.name,email:profile.email,sub:profile.sub}))+'.fake'});
-  }catch(e){
-    err.textContent='Failed to get Google profile. Please try email login.';
-    err.style.display='block';
-  }
-}
+// Google sign-in was removed: the API has no /auth/google endpoint (it 404s), so
+// the button could never establish a real session. Its old fallback minted a
+// fake "google_local_" token that had no server session behind it, which is
+// exactly what made "sign in with Google, then refresh" drop back to the login
+// screen. Email/password is the only supported method. If Google is wanted later
+// it needs a real backend (e.g. Laravel Socialite) verifying the Google ID token
+// and issuing normal access + refresh tokens; the button can come back then.
 
 // Register form
 document.getElementById('registerForm').addEventListener('submit',async e=>{
