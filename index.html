@@ -8,9 +8,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="/manifest.webmanifest">
+<!-- iOS does not reliably take the home screen icon from the manifest; without
+     this it screenshots the page instead. -->
+<link rel="apple-touch-icon" href="/icons/ero-512-v3.png">
+<meta name="apple-mobile-web-app-title" content="ERO">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <title>ERO - Elior Research Orbit</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -84,7 +87,13 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 .hidden{display:none!important}
 /* An in-flow flex item rather than absolutely positioned, so it reserves its
    own space in the topbar instead of overlapping the page title. */
-.hamburger{display:none;flex:0 0 auto;background:none;border:none;color:#f8fafc;font-size:1.3rem;line-height:1;cursor:pointer;padding:.4rem .5rem;border-radius:6px;-webkit-tap-highlight-color:transparent}
+/* Icon is drawn in CSS rather than the ☰ glyph, which renders as a tofu box in
+   webviews / on devices without that symbol in their font. */
+.hamburger{display:none;flex:0 0 auto;box-sizing:content-box;width:22px;height:16px;background:none;border:none;cursor:pointer;padding:.5rem;border-radius:6px;-webkit-tap-highlight-color:transparent;position:relative}
+.hamburger::before,.hamburger::after,.hamburger span{content:"";position:absolute;left:.5rem;right:.5rem;height:2px;background:#f8fafc;border-radius:2px}
+.hamburger::before{top:.5rem}
+.hamburger span{top:calc(50% - 1px)}
+.hamburger::after{bottom:.5rem}
 .hamburger:active{background:#334155}
 .q-item{background:#0f172a;border-radius:14px;padding:1rem;margin-bottom:.6rem;border:1px solid #334155}
 .q-text{font-size:.95rem;color:#e2e8f0;margin-bottom:.4rem}
@@ -172,24 +181,20 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
      the login page once the stored session has been checked, so a returning
      user never sees the login form flash past. -->
 <div id="bootPage" class="boot-wrap">
-<img src="/icons/logo.avif" alt="ERO Logo" style="width:120px;height:auto">
+<img src="/icons/logo.png" alt="ERO Logo" style="width:120px;height:auto">
 <div class="boot-spinner" role="status" aria-label="Signing you in"></div>
 </div>
 
 <!-- ============ LOGIN PAGE ============ -->
 <div id="loginPage" class="login-wrap hidden">
-<div class="login-box"><img src="/icons/logo.avif" alt="ERO Logo" style="display:block;margin:0 auto 1.5rem;width:150px;height:auto">
+<div class="login-box"><img src="/icons/logo.png" alt="ERO Logo" style="display:block;margin:0 auto 1.5rem;width:150px;height:auto">
 <div class="form-card"><div id="errorMsg" class="error-msg"></div>
 <div id="loginFormWrap">
 <form id="loginForm"><label>Email</label><input type="email" id="email" placeholder="Enter your email" required><label>Password</label><input type="password" id="password" placeholder="Enter password" required><button type="submit" class="btn btn-primary" id="loginBtn">Sign In</button></form>
-<div style="display:flex;align-items:center;margin:1.2rem 0;gap:.8rem"><div style="flex:1;height:1px;background:#334155"></div><span style="color:#64748b;font-size:.85rem">or</span><div style="flex:1;height:1px;background:#334155"></div></div>
-<button onclick="googleSignIn()" class="btn" style="background:#fff;color:#333;display:flex;align-items:center;justify-content:center;gap:.6rem;font-weight:600;border:1px solid #e2e8f0"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Continue with Google</button>
 <p style="text-align:center;margin-top:1.2rem;color:#94a3b8;font-size:.95rem">Don't have an account? <a onclick="showRegister()" style="color:#3b82f6;cursor:pointer;font-weight:600">Register</a></p>
 </div>
 <div id="registerFormWrap" class="hidden">
-<form id="registerForm"><label>Full Name</label><input type="text" id="regName" placeholder="Enter your full name" required><label>Email</label><input type="email" id="regEmail" placeholder="Enter your email" required><label>Password</label><input type="password" id="regPassword" placeholder="Min 8 characters" required minlength="8"><label>Confirm Password</label><input type="password" id="regConfirm" placeholder="Confirm password" required><button type="submit" class="btn btn-primary" id="regBtn">Create Account</button></form>
-<div style="display:flex;align-items:center;margin:1.2rem 0;gap:.8rem"><div style="flex:1;height:1px;background:#334155"></div><span style="color:#64748b;font-size:.85rem">or</span><div style="flex:1;height:1px;background:#334155"></div></div>
-<button onclick="googleSignIn()" class="btn" style="background:#fff;color:#333;display:flex;align-items:center;justify-content:center;gap:.6rem;font-weight:600;border:1px solid #e2e8f0"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Sign up with Google</button>
+<form id="registerForm"><label>Full Name</label><input type="text" id="regName" placeholder="Enter your full name" required minlength="2"><label>Email</label><input type="email" id="regEmail" placeholder="Enter your email" required><label>Password</label><input type="password" id="regPassword" placeholder="At least 10 characters" required minlength="10"><p style="color:#64748b;font-size:.78rem;margin:-.4rem 0 1rem">Use at least 10 characters with letters and numbers. Avoid common passwords.</p><label>Confirm Password</label><input type="password" id="regConfirm" placeholder="Re-enter your password" required><button type="submit" class="btn btn-primary" id="regBtn">Create Account</button></form>
 <p style="text-align:center;margin-top:1.2rem;color:#94a3b8;font-size:.95rem">Already have an account? <a onclick="showLogin()" style="color:#3b82f6;cursor:pointer;font-weight:600">Sign In</a></p>
 </div>
 </div></div></div>
@@ -207,7 +212,7 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <a class="nav-item" onclick="showPage('settings',this)">⚙️ Settings</a>
 </aside>
 <main class="main">
-<div class="topbar"><button class="hamburger" onclick="toggleSidebar('admin')" aria-label="Open menu">☰</button><h2 class="page-title" id="pageTitle">Dashboard</h2><div class="topbar-actions"><span class="user-info" id="userInfo"></span><a class="sign-out" onclick="logout()">Sign Out</a></div></div>
+<div class="topbar"><button class="hamburger" onclick="toggleSidebar('admin')" aria-label="Open menu"><span></span></button><h2 class="page-title" id="pageTitle">Dashboard</h2><div class="topbar-actions"><span class="user-info" id="userInfo"></span><a class="sign-out" onclick="logout()">Sign Out</a></div></div>
 
 <div id="installBanner" class="install-banner hidden"><p>📱 Install ERO as an app for quick access</p><button class="install-btn" onclick="installApp()">Install App</button></div>
 
@@ -314,7 +319,7 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <!-- ============ STUDENT ONBOARDING ============ -->
 <div id="onboardingPage" class="login-wrap hidden">
 <div class="login-box" style="max-width:500px">
-<img src="/icons/logo.avif" alt="ERO Logo" style="display:block;margin:0 auto 1rem;width:100px;height:auto">
+<img src="/icons/logo.png" alt="ERO Logo" style="display:block;margin:0 auto 1rem;width:100px;height:auto">
 <h2 style="text-align:center;color:#f8fafc;margin-bottom:.5rem" id="onboardingGreeting">Welcome!</h2>
 <p style="text-align:center;color:#94a3b8;margin-bottom:2rem">Select the exam you want to practice:</p>
 <div id="examChoices" style="display:flex;flex-direction:column;gap:.8rem"></div>
@@ -324,7 +329,7 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 <!-- ============ ACTIVATION SCREEN ============ -->
 <div id="activationPage" class="login-wrap hidden">
 <div class="login-box" style="max-width:420px">
-<img src="/icons/logo.avif" alt="ERO Logo" style="display:block;margin:0 auto 1rem;width:80px;height:auto">
+<img src="/icons/logo.png" alt="ERO Logo" style="display:block;margin:0 auto 1rem;width:80px;height:auto">
 <div class="form-card">
 <div style="text-align:center;margin-bottom:1.5rem">
 <div style="font-size:2.5rem;margin-bottom:.5rem">🔒</div>
@@ -353,10 +358,11 @@ td{padding:.7rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 </aside>
 <main class="main">
 <div id="offlineBanner" class="hidden" style="background:#451a03;border:1px solid #f59e0b;border-radius:10px;padding:.6rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem;font-size:.85rem;color:#fbbf24">⚠️ You're offline. Answers will sync when connected.</div>
-<div class="topbar"><button class="hamburger" onclick="toggleSidebar('student')" aria-label="Open menu">☰</button><h2 class="page-title" id="studentPageTitle">Dashboard</h2><div class="topbar-actions"><span class="user-info" id="studentUserInfo"></span><a class="sign-out" onclick="logout()">Sign Out</a></div></div>
+<div class="topbar"><button class="hamburger" onclick="toggleSidebar('student')" aria-label="Open menu"><span></span></button><h2 class="page-title" id="studentPageTitle">Dashboard</h2><div class="topbar-actions"><span class="user-info" id="studentUserInfo"></span><a class="sign-out" onclick="logout()">Sign Out</a></div></div>
 
 <!-- Student Dashboard -->
 <div id="pg-s-dashboard">
+<div id="verifyBanner" class="hidden"></div>
 <div class="card" style="border-left:3px solid #3b82f6;margin-bottom:1.5rem">
 <h3 id="studentGreeting" style="font-size:1.4rem;margin-bottom:.3rem">Hello, Student!</h3>
 <p id="streakMsg" style="color:#3b82f6;font-size:.95rem">Start your first quiz to begin your streak!</p>
@@ -561,7 +567,27 @@ function clearSession(){
   try{
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(TOKEN_EXP_KEY);
+    localStorage.removeItem(USER_KEY);
   }catch(e){}
+}
+
+/*
+ * Cached account snapshot.
+ *
+ * Opening the app with no connection cannot reach /auth/me, and without a cached
+ * account there is nothing to render, which is how an offline launch used to end
+ * up back on the login screen. Only the fields already shown in the UI are kept.
+ */
+const USER_KEY='qp_user';
+function cacheUser(u){
+  if(!u||!u.email) return;
+  try{localStorage.setItem(USER_KEY,JSON.stringify({name:u.name,email:u.email,role:u.role}))}catch(e){}
+}
+function cachedUser(){
+  try{
+    const u=JSON.parse(localStorage.getItem(USER_KEY)||'null');
+    return (u&&u.email)?u:null;
+  }catch(e){return null}
 }
 
 function tokenNeedsRefresh(){
@@ -612,6 +638,24 @@ async function authFetch(path,opts={}){
   return r;
 }
 
+/**
+ * Calls the standalone PHP helpers (codes.php, save-questions.php).
+ *
+ * They sit outside /api/v1 but verify the same bearer token, so the token has to
+ * be fresh here too — same proactive refresh and 401-replay as authFetch.
+ */
+async function helperFetch(url,opts={}){
+  if(token&&tokenNeedsRefresh()) await refreshSession();
+  const build=()=>{
+    const headers=Object.assign({Accept:'application/json'},opts.headers||{});
+    if(token) headers.Authorization='Bearer '+token;
+    return Object.assign({},opts,{headers});
+  };
+  let r=await fetch(url,build());
+  if(r.status===401&&await refreshSession()) r=await fetch(url,build());
+  return r;
+}
+
 function showLoginPage(){
   document.getElementById('bootPage').classList.add('hidden');
   document.getElementById('adminPage').classList.add('hidden');
@@ -621,28 +665,66 @@ function showLoginPage(){
   document.getElementById('loginPage').classList.remove('hidden');
 }
 
-/** Loads /auth/me and routes. Returns false if there is no usable session. */
+/**
+ * Loads /auth/me and routes.
+ *
+ * Returns 'ok', 'rejected' (the server positively refused the session) or
+ * 'unavailable' (no answer: offline, DNS, 5xx, Cloudflare error). The difference
+ * matters — treating "unavailable" as "rejected" is what signed people out when
+ * they opened the app on a bad connection.
+ */
 async function loadCurrentUser(){
+  let r;
   try{
-    const r=await authFetch('/auth/me');
-    if(!r.ok) return false;
+    r=await authFetch('/auth/me');
+  }catch(e){
+    return 'unavailable'; // transport failure is not a verdict on the session
+  }
+  // authFetch has already tried /auth/refresh and replayed, so a 401 here means
+  // the refresh token is gone too. Anything else non-OK is the server or network
+  // having a bad day and must not cost the user their session.
+  if(r.status===401) return 'rejected';
+  if(!r.ok) return 'unavailable';
+  try{
     const d=await r.json();
     const u=d.data?.user||d.data||d.user;
-    if(!u||!u.email) return false;
+    if(!u||!u.email) return 'rejected';
     currentUser=u;
     await routeByRole();
-    return true;
-  }catch(e){return false}
+    return 'ok';
+  }catch(e){return 'unavailable'}
+}
+
+/** Render from the cached account so an offline launch still opens the app. */
+async function resumeFromCache(){
+  const u=cachedUser();
+  if(!u||!token) return false;
+  currentUser=u;
+  await routeByRole();
+  return true;
 }
 
 async function restoreSession(){
   // Stored access token (authFetch already retries through /auth/refresh).
-  if(token&&await loadCurrentUser()) return true;
+  if(token){
+    const outcome=await loadCurrentUser();
+    if(outcome==='ok') return true;
+    if(outcome==='unavailable') return resumeFromCache();
+  }
   // No usable access token, but the refresh cookie may still be alive — this is
   // the path that survives iOS evicting localStorage on an installed PWA.
   // Skipped after an explicit sign-out, so a revoke that failed (e.g. the user
   // was offline) can never silently sign the device back in.
-  if(!signedOutDeliberately()&&await refreshSession()&&await loadCurrentUser()) return true;
+  if(!signedOutDeliberately()){
+    if(await refreshSession()){
+      const outcome=await loadCurrentUser();
+      if(outcome==='ok') return true;
+      if(outcome==='unavailable') return resumeFromCache();
+    }else if(!navigator.onLine){
+      // The refresh could not even be attempted. Keep everything.
+      return resumeFromCache();
+    }
+  }
   clearSession();
   return false;
 }
@@ -661,16 +743,29 @@ document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible'&&token&&tokenNeedsRefresh()) refreshSession();
 });
 
+// Came back online after an offline launch: get a working token so the next call
+// succeeds. Deliberately does not sign anyone out on failure — a flaky network
+// mid-quiz must not end the session.
+window.addEventListener('online',()=>{
+  if(token&&tokenNeedsRefresh()) refreshSession();
+});
+
 // Show/hide login and register forms
+function resetFormError(){
+  const el=document.getElementById('errorMsg');
+  el.style.display='none';
+  // Drop any leftover success (green) styling so the next error shows red.
+  el.style.background='';el.style.border='';el.style.color='';el.textContent='';
+}
 function showRegister(){
   document.getElementById('loginFormWrap').classList.add('hidden');
   document.getElementById('registerFormWrap').classList.remove('hidden');
-  document.getElementById('errorMsg').style.display='none';
+  resetFormError();
 }
 function showLogin(){
   document.getElementById('registerFormWrap').classList.add('hidden');
   document.getElementById('loginFormWrap').classList.remove('hidden');
-  document.getElementById('errorMsg').style.display='none';
+  resetFormError();
 }
 function trackRegisteredStudent(name,email){
   const students=JSON.parse(localStorage.getItem('qp_registered_students')||'[]');
@@ -681,97 +776,13 @@ function trackRegisteredStudent(name,email){
   }
 }
 
-// Google Sign-In
-const GOOGLE_CLIENT_ID='239766530691-nta89nk6c2bnpvfvjpkjaq5c3r5plfdh.apps.googleusercontent.com';
-
-function googleSignIn(){
-  const err=document.getElementById('errorMsg');
-  if(GOOGLE_CLIENT_ID.includes('YOUR_GOOGLE')){
-    err.textContent='Google Sign-In not configured yet. Please set up a Google Client ID.';
-    err.style.display='block';
-    return;
-  }
-  try{
-    google.accounts.id.initialize({
-      client_id:GOOGLE_CLIENT_ID,
-      callback:handleGoogleResponse,
-      auto_select:false
-    });
-    google.accounts.id.prompt((notification)=>{
-      if(notification.isNotDisplayed()||notification.isSkippedMoment()){
-        // Fallback: use popup mode
-        google.accounts.oauth2.initTokenClient({
-          client_id:GOOGLE_CLIENT_ID,
-          scope:'email profile',
-          callback:handleGoogleToken
-        }).requestAccessToken();
-      }
-    });
-  }catch(e){
-    err.textContent='Google Sign-In failed to load. Please try again.';
-    err.style.display='block';
-  }
-}
-
-async function handleGoogleResponse(response){
-  const err=document.getElementById('errorMsg');
-  err.style.display='none';
-  try{
-    // Decode the JWT token to get user info
-    const payload=JSON.parse(atob(response.credential.split('.')[1]));
-    const name=payload.name||'';
-    const email=payload.email||'';
-    const googleToken=response.credential;
-
-    // Try to login/register via API with Google token
-    let success=false;
-    try{
-      const r=await fetch(API+'/auth/google',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},credentials:'include',body:JSON.stringify({token:googleToken,name,email,device_name:'web'})});
-      const d=await r.json();
-      if(r.ok&&d.data?.access_token){
-        storeSession(d.data.access_token,d.data.expires_in);
-        currentUser=d.data.user||d.data;
-        trackRegisteredStudent(name,email);
-        await routeByRole();
-        success=true;
-      }
-    }catch(e){}
-
-    // If API doesn't support Google auth, try normal login or register
-    if(!success){
-      try{
-        const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},credentials:'include',body:JSON.stringify({email,password:'google_oauth_'+email,device_name:'web'})});
-        const d=await r.json();
-        if(r.ok&&d.data?.access_token){
-          storeSession(d.data.access_token,d.data.expires_in);
-          currentUser=d.data.user||d.data;
-          trackRegisteredStudent(name,email);
-          await routeByRole();success=true;
-        }
-      }catch(e){}
-    }
-
-    if(!success){
-      err.textContent='Google sign-in is not available for this account. Please sign in with your email and password.';
-      err.style.display='block';
-    }
-  }catch(e){
-    err.textContent='Failed to process Google sign-in. Please try email login.';
-    err.style.display='block';
-  }
-}
-
-async function handleGoogleToken(tokenResponse){
-  const err=document.getElementById('errorMsg');
-  try{
-    const r=await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+tokenResponse.access_token}});
-    const profile=await r.json();
-    handleGoogleResponse({credential:btoa(JSON.stringify({alg:'none'}))+'.'+btoa(JSON.stringify({name:profile.name,email:profile.email,sub:profile.sub}))+'.fake'});
-  }catch(e){
-    err.textContent='Failed to get Google profile. Please try email login.';
-    err.style.display='block';
-  }
-}
+// Google sign-in was removed: the API has no /auth/google endpoint (it 404s), so
+// the button could never establish a real session. Its old fallback minted a
+// fake "google_local_" token that had no server session behind it, which is
+// exactly what made "sign in with Google, then refresh" drop back to the login
+// screen. Email/password is the only supported method. If Google is wanted later
+// it needs a real backend (e.g. Laravel Socialite) verifying the Google ID token
+// and issuing normal access + refresh tokens; the button can come back then.
 
 // Register form
 document.getElementById('registerForm').addEventListener('submit',async e=>{
@@ -782,33 +793,67 @@ document.getElementById('registerForm').addEventListener('submit',async e=>{
   const password=document.getElementById('regPassword').value;
   const confirm=document.getElementById('regConfirm').value;
 
-  if(password!==confirm){err.textContent='Passwords do not match';err.style.display='block';return}
-  if(password.length<8){err.textContent='Password must be at least 8 characters';err.style.display='block';return}
+  // Match the server's rules (api RegisterRequest + Password::defaults) up front,
+  // so the common mistakes are caught instantly instead of after a round trip.
+  if(name.length<2){showFormError(err,'Please enter your full name.');return}
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){showFormError(err,'Please enter a valid email address.');return}
+  if(password!==confirm){showFormError(err,'Passwords do not match.');return}
+  if(password.length<10){showFormError(err,'Password must be at least 10 characters.');return}
+  if(!/[a-zA-Z]/.test(password)||!/[0-9]/.test(password)){showFormError(err,'Password must include both letters and numbers.');return}
 
   btn.disabled=true;btn.textContent='Creating account...';err.style.display='none';
   try{
+    // credentials:'include' lets the browser keep the HttpOnly refresh cookie the
+    // API sets on register, so the new account stays signed in across reloads.
     const r=await fetch(API+'/auth/register',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},credentials:'include',body:JSON.stringify({name,email,password,password_confirmation:confirm,device_name:'web'})});
-    const d=await r.json();
+    const d=await r.json().catch(()=>({}));
     if(r.ok&&d.data?.access_token){
       storeSession(d.data.access_token,d.data.expires_in);
       currentUser=d.data.user||d.data;
-      // Track registered student locally
       trackRegisteredStudent(name,email);
       await routeByRole();
     }else if(r.ok&&d.data?.user){
-      // Registration successful but no auto-login, show login form
+      // Created but not auto-logged-in: send them to sign in.
       trackRegisteredStudent(name,email);
-      err.style.display='block';err.style.background='#052e16';err.style.border='1px solid #16a34a';err.style.color='#86efac';
-      err.textContent='✓ Account created! Please sign in.';
+      showFormSuccess(err,'✓ Account created! Please sign in.');
       showLogin();
       document.getElementById('email').value=email;
     }else{
-      const msg=d.message||d.errors?Object.values(d.errors||{}).flat().join(', '):'Registration failed';
-      err.textContent=msg;err.style.display='block';
+      showFormError(err,registrationErrorMessage(r.status,d));
     }
-  }catch(x){err.textContent='Network error - check connection';err.style.display='block'}
+  }catch(x){showFormError(err,'Network error — please check your connection and try again.')}
   btn.disabled=false;btn.textContent='Create Account';
 });
+
+/** Flatten a Laravel validation envelope into one readable line. */
+function registrationErrorMessage(status,d){
+  const errs=d&&d.errors;
+  if(errs&&typeof errs==='object'){
+    // Prefer field messages; ignore the machine-readable `code` entry.
+    const msgs=[];
+    for(const k in errs){
+      if(k==='code') continue;
+      const v=errs[k];
+      if(Array.isArray(v)) msgs.push(...v); else if(typeof v==='string') msgs.push(v);
+    }
+    if(msgs.length) return msgs.join(' ');
+  }
+  if(d&&d.message&&d.message!=='The given data was invalid.') return d.message;
+  if(status===422) return 'Please check the details you entered and try again.';
+  if(status===429) return 'Too many attempts. Please wait a minute and try again.';
+  return 'Registration failed. Please try again.';
+}
+
+function showFormError(el,msg){
+  el.textContent=msg;
+  el.style.background='';el.style.border='';el.style.color='';
+  el.style.display='block';
+}
+function showFormSuccess(el,msg){
+  el.textContent=msg;
+  el.style.background='#052e16';el.style.border='1px solid #16a34a';el.style.color='#86efac';
+  el.style.display='block';
+}
 
 // Login form
 document.getElementById('loginForm').addEventListener('submit',async e=>{
@@ -817,20 +862,26 @@ document.getElementById('loginForm').addEventListener('submit',async e=>{
   btn.disabled=true;btn.textContent='Signing in...';err.style.display='none';
   try{
     const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},credentials:'include',body:JSON.stringify({email:document.getElementById('email').value,password:document.getElementById('password').value,device_name:'web'})});
-    const d=await r.json();
+    const d=await r.json().catch(()=>({}));
     if(r.ok&&d.data?.access_token){
       // credentials:'include' above is what lets the browser keep the
       // HttpOnly refresh cookie that keeps this session alive from now on.
       storeSession(d.data.access_token,d.data.expires_in);
       currentUser=d.data.user||d.data;
       await routeByRole();
-    }else{err.textContent=d.message||'Login failed';err.style.display='block'}
-  }catch(x){err.textContent='Network error - check connection';err.style.display='block'}
+    }else{
+      const msg=r.status===429?'Too many attempts. Please wait a minute and try again.':(d.message||'Login failed. Please check your email and password.');
+      showFormError(err,msg);
+    }
+  }catch(x){showFormError(err,'Network error — please check your connection and try again.')}
   btn.disabled=false;btn.textContent='Sign In';
 });
 
 // Route by role
 async function routeByRole(){
+  // Single choke point where the account is known good, so cache it here for
+  // offline launches rather than in each of the sign-in paths.
+  cacheUser(currentUser);
   document.getElementById('bootPage').classList.add('hidden');
   document.getElementById('loginPage').classList.add('hidden');
   // Use role from API response
@@ -1118,7 +1169,9 @@ async function loadImportHistory(){
 async function isAccountActivated(email){
   const localKey='qp_activated_'+email;
   try{
-    const r=await fetch('/codes.php?action=status&email='+encodeURIComponent(email),{cache:'no-store'});
+    // No email parameter: codes.php reads the account from the bearer token, so
+    // a student cannot probe anyone else's activation.
+    const r=await helperFetch('/codes.php?action=status',{cache:'no-store'});
     if(r.ok){
       const d=await r.json();
       if(typeof d.activated==='boolean'){
@@ -1133,11 +1186,13 @@ async function isAccountActivated(email){
   return localStorage.getItem(localKey)==='true';
 }
 
-async function showStudent(){
+async function showStudent(opts={}){
   const email=currentUser?.email||'default';
 
-  // Check if account is activated
-  if(!await isAccountActivated(email)){
+  // Check if account is activated. Skipped straight after redeeming a code,
+  // where the answer is already known — re-asking the server there only added a
+  // round trip and a blank flash between the two screens.
+  if(!opts.justActivated&&!await isAccountActivated(email)){
     showActivationScreen();
     return;
   }
@@ -1154,11 +1209,43 @@ async function showStudent(){
   document.getElementById('profileName').textContent=currentUser?.name||'-';
   document.getElementById('profileEmail').textContent=currentUser?.email||'-';
 
+  // A freshly registered account is created PendingVerification, so the student
+  // endpoints return 403 EMAIL_NOT_VERIFIED and the dashboard would silently show
+  // nothing. Surface it plainly with a way to resend the email instead.
+  renderVerifyBanner();
+
   // Load progress from API
   loadStudentProgressFromAPI();
   updateDashboardFromProgress();
   // Go directly to Today's Quiz page
   showStudentPage('s-quiz',document.querySelector('#studentPage .nav-item:nth-child(2)'));
+}
+
+function renderVerifyBanner(){
+  const holder=document.getElementById('verifyBanner');
+  if(!holder) return;
+  // email_verified comes from /auth/me (UserResource). Only nag when we know it
+  // is explicitly false — never on a cached user where the field is absent.
+  if(currentUser&&currentUser.email_verified===false){
+    holder.innerHTML='<div style="background:#451a03;border:1px solid #f59e0b;border-radius:10px;padding:.8rem 1rem;margin-bottom:1rem;font-size:.9rem;color:#fbbf24;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">'
+      +'<span>📧 Please verify your email to unlock quizzes. Check your inbox for the link.</span>'
+      +'<button onclick="resendVerification(this)" style="background:#f59e0b;color:#111;border:none;padding:.45rem .9rem;border-radius:8px;font-size:.82rem;font-weight:600;cursor:pointer;white-space:nowrap">Resend email</button>'
+      +'</div>';
+    holder.classList.remove('hidden');
+  }else{
+    holder.innerHTML='';
+    holder.classList.add('hidden');
+  }
+}
+
+async function resendVerification(btn){
+  const original=btn.textContent;
+  btn.disabled=true;btn.textContent='Sending...';
+  try{
+    const r=await authFetch('/auth/email/resend',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+    btn.textContent=r.ok?'Email sent ✓':'Try again later';
+  }catch(e){btn.textContent='Try again later'}
+  setTimeout(()=>{btn.disabled=false;btn.textContent=original},4000);
 }
 
 async function loadStudentProgressFromAPI(){
@@ -1227,7 +1314,7 @@ async function submitActivation(){
   document.getElementById('activationPage').classList.add('hidden');
   document.querySelector('#activationPage .btn-primary').textContent='Activate Account';
   document.querySelector('#activationPage .btn-primary').disabled=false;
-  await showStudent();
+  await showStudent({justActivated:true});
 }
 
 function showOnboarding(){
@@ -2047,7 +2134,7 @@ async function confirmImport(){
   // Save to server as JSON file so ALL students on ALL devices can access
   let serverSaved=false;
   try{
-    const r=await fetch('/save-questions.php',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({questions:merged})});
+    const r=await helperFetch('/save-questions.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({questions:merged})});
     if(r.ok) serverSaved=true;
   }catch(e){}
 
@@ -2142,8 +2229,8 @@ function getActivationCodes(){
 }
 function saveActivationCodes(codes){
   localStorage.setItem('qp_activation_codes',JSON.stringify(codes));
-  // Also sync to server
-  fetch('/codes.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'replace',codes})}).catch(()=>{});
+  // Also sync to server (admin only, enforced server side)
+  helperFetch('/codes.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'replace',codes})}).catch(()=>{});
 }
 
 function generateCodes(){
@@ -2205,7 +2292,7 @@ function shareAllCodes(codes){
 
 function loadActivationCodes(){
   // Load from server first, then merge with local
-  fetch('/codes.php?action=list').then(r=>r.json()).then(d=>{
+  helperFetch('/codes.php?action=list').then(r=>r.json()).then(d=>{
     if(d.codes&&Array.isArray(d.codes)){
       localStorage.setItem('qp_activation_codes',JSON.stringify(d.codes));
     }
@@ -2263,7 +2350,7 @@ function deleteCode(code){
 async function validateActivationCode(code){
   // Try server first
   try{
-    const r=await fetch('/codes.php?action=validate&code='+code);
+    const r=await helperFetch('/codes.php?action=validate&code='+encodeURIComponent(code));
     const d=await r.json();
     if(d.valid===true) return true;
     if(d.valid===false) return false;
@@ -2274,9 +2361,10 @@ async function validateActivationCode(code){
 }
 
 async function markCodeUsed(code,email){
-  // Mark on server
+  // Mark on server. No email in the body — codes.php records the account that
+  // owns the bearer token, so a code cannot be redeemed on someone else's behalf.
   try{
-    await fetch('/codes.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'use',code,email})});
+    await helperFetch('/codes.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'use',code})});
   }catch(e){}
   // Also mark locally
   const codes=getActivationCodes();
