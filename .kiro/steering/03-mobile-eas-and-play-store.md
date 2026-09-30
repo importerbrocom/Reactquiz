@@ -1,7 +1,7 @@
-# Mobile (Expo/EAS) & Google Play — Build and Release Guide
+# Mobile (Expo/EAS), Google Play & Apple App Store — Build and Release Guide
 
-Project-specific knowledge for the `mobile/` Expo app and the Google Play
-release process. Captures hard-won fixes so we don't repeat the debugging.
+Project-specific knowledge for the `mobile/` Expo app and both store release
+processes. Captures hard-won fixes so we don't repeat the debugging.
 
 ## Identities (do NOT change without verifying against Play + Expo)
 
@@ -50,6 +50,55 @@ release process. Captures hard-won fixes so we don't repeat the debugging.
 - Play already used **versionCode 6** (v1.0.5). Current config = **versionCode 7,
   version 1.0.6**. For each new upload, bump `android.versionCode` (+1) and
   usually `version` too.
+
+## iOS / Apple App Store (the side that keeps failing)
+
+The iOS App Store build fails at ~39s while the Android build of the same commit
+succeeds. A sub-60s failure is **before the Xcode compile** — it is config or
+credentials, never app code. The two causes, in order of likelihood:
+
+1. **Apple signing/credentials.** EAS needs a Distribution Certificate and an App
+   Store provisioning profile for `com.ero.quiz`, tied to an **active Apple
+   Developer Program membership ($99/yr)**. No membership → no way to produce
+   either → the build dies early. Set these up interactively with `eas
+   credentials` (choose iOS → production → let EAS generate and store them). This
+   is the step a machine without the owner's Apple login CANNOT do for him.
+2. **Missing iOS `buildNumber`.** `eas.json` has `appVersionSource: "local"`, so
+   EAS reads versions from `app.config.ts`, not the server. Android works because
+   `android.versionCode` is set; the `ios` block has **no `buildNumber`**, so
+   there is nothing to stamp the build with. Add `ios.buildNumber` (a string) and
+   bump it on every App Store upload, exactly as `android.versionCode` is bumped:
+
+   ```ts
+   ios: {
+     supportsTablet: false,
+     bundleIdentifier: 'com.ero.quiz',
+     buildNumber: '9',            // string; +1 every App Store build
+     infoPlist: { NSAppTransportSecurity: { NSAllowsArbitraryLoads: false } },
+   },
+   ```
+
+- The `production` profile in `eas.json` configures only `android`; iOS falls back
+  to defaults. That is fine for building, but be explicit if a distribution quirk
+  appears.
+- **Reading the failure is mandatory before guessing.** The dashboard shows *that*
+  it failed; the build detail page shows *why*. Open the red phase (Install
+  dependencies / Prebuild / Fastlane / credentials) and read the last ~20 lines.
+  From a machine with the owner logged in: `eas build:list --platform ios
+  --limit 3` then `eas build:view <BUILD_ID>`.
+- Build/submit commands (mirror the Android flow):
+
+  ```
+  eas build  --platform ios --profile production
+  eas submit --platform ios --profile production   # uploads to App Store Connect
+  ```
+
+- After `eas submit`, finish in **App Store Connect**: attach the build to an app
+  record (bundle id `com.ero.quiz`), fill listing + privacy, submit for App
+  Review (1–3 days). TestFlight is the way to test a production build on device.
+- The `agent`/sandbox cannot log into Expo or Apple as the owner, so it can fix
+  **config** (buildNumber, eas.json) and explain **credentials**, but the owner
+  must run `eas credentials`, `eas build`, and the App Store Connect steps himself.
 
 ## Build & release procedure (run on a real machine, NOT cPanel)
 
