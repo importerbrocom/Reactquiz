@@ -12,13 +12,12 @@ function AdminLayout() {
     <div className="flex min-h-dvh bg-surface-950">
       {/* Sidebar */}
       <aside className="fixed inset-y-0 left-0 z-30 w-64 overflow-y-auto border-r border-surface-800 bg-surface-900">
-        <div className="flex h-16 items-center gap-2 px-6">
+        <div className="flex h-16 items-center px-6">
           <img
             src="/icons/icon-192.png"
-            alt="ERO logo"
-            className="h-8 w-8 rounded-lg object-cover"
+            alt="ERO Admin"
+            className="h-9 w-9 rounded-lg object-cover"
           />
-          <h1 className="text-lg font-bold text-primary-400">ERO Admin</h1>
         </div>
         <nav className="space-y-1 px-3 pb-6" aria-label="Admin navigation">
           <AdminNavItem to="/admin" label="Dashboard" icon="📊" end />

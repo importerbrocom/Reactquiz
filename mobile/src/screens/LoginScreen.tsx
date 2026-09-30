@@ -35,10 +35,7 @@ export function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.brand}>
-        <Image source={require('../assets/icon.png')} style={styles.logo} />
-        <Text style={styles.title}>ERO</Text>
-      </View>
+      <Image source={require('../assets/icon.png')} style={styles.logo} />
       <Text style={styles.subtitle}>Sign in to continue</Text>
 
       <TextInput
@@ -78,9 +75,7 @@ export function LoginScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0B1120', justifyContent: 'center', padding: 24 },
-  brand: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 4 },
-  logo: { width: 48, height: 48, borderRadius: 12 },
-  title: { fontSize: 32, fontWeight: '700', color: '#818cf8', textAlign: 'center' },
+  logo: { width: 88, height: 88, borderRadius: 20, alignSelf: 'center', marginBottom: 8 },
   subtitle: { fontSize: 14, color: '#94a3b8', textAlign: 'center', marginBottom: 32 },
   input: { backgroundColor: '#1e293b', borderRadius: 12, padding: 16, fontSize: 16, color: '#f8fafc', marginBottom: 12, borderWidth: 1, borderColor: '#334155' },
   button: { backgroundColor: '#4f46e5', borderRadius: 12, padding: 16, alignItems: 'center', marginTop: 8 },
