@@ -10,8 +10,15 @@ function OnboardingLayout() {
       <div className="w-full max-w-lg">
         {/* Logo */}
         <div className="mb-6 text-center">
-          <h1 className="text-2xl font-bold text-primary-400">ERO</h1>
-          <p className="mt-1 text-sm text-surface-400">Let&apos;s get you set up</p>
+          <div className="flex items-center justify-center gap-3">
+            <img
+              src="/icons/icon-192.png"
+              alt="ERO logo"
+              className="h-12 w-12 rounded-xl object-cover"
+            />
+            <h1 className="text-2xl font-bold text-primary-400">ERO</h1>
+          </div>
+          <p className="mt-2 text-sm text-surface-400">Let&apos;s get you set up</p>
         </div>
 
         <Outlet />
