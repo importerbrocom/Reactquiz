@@ -29,7 +29,12 @@ input:focus{border-color:#818cf8}
 /* ============ ADMIN LAYOUT ============ */
 .app{display:flex;min-height:100vh}
 .sidebar{width:250px;background:#1e293b;border-right:1px solid #334155;padding:1.5rem 0;position:fixed;height:100vh;overflow-y:auto}
-.sidebar h1{color:#818cf8;font-size:1.6rem;padding:0 1.5rem;margin-bottom:2rem}
+.sidebar h1{color:#818cf8;font-size:1.6rem;margin:0}
+.brand{display:flex;align-items:center;gap:.6rem}
+.brand-sidebar{padding:0 1.5rem;margin-bottom:2rem}
+.brand-login{justify-content:center;margin-bottom:.5rem}
+.brand-logo{width:40px;height:40px;border-radius:10px;object-fit:cover}
+.brand-login .brand-logo{width:56px;height:56px}
 .nav-item{display:block;padding:.9rem 1.5rem;color:#94a3b8;text-decoration:none;font-size:1rem;cursor:pointer;border-left:3px solid transparent;transition:all .2s}
 .nav-item:hover,.nav-item.active{color:#818cf8;background:#0f172a;border-left-color:#818cf8}
 .main{flex:1;margin-left:250px;padding:2rem 2.5rem}
@@ -108,14 +113,14 @@ td{padding:.8rem;border-bottom:1px solid #0f172a;color:#e2e8f0}
 
 <!-- ============ LOGIN PAGE ============ -->
 <div id="loginPage" class="login-wrap">
-<div class="login-box"><h1>ERO</h1><p class="sub">MediPrep - Exam Preparation</p>
+<div class="login-box"><div class="brand brand-login"><img src="/icons/icon-192.png" alt="ERO logo" class="brand-logo"><h1>ERO</h1></div><p class="sub">MediPrep - Exam Preparation</p>
 <div class="form-card"><div id="errorMsg" class="error-msg"></div>
 <form id="loginForm"><label>Email</label><input type="email" id="email" placeholder="Enter your email" required><label>Password</label><input type="password" id="password" placeholder="Enter password" required><button type="submit" class="btn btn-primary" id="loginBtn">Sign In</button></form>
 <p class="info-text">Admin: admin@quizpath.test / ChangeMe!2026<br>Student: student@mediprep.test / Student@123</p></div></div></div>
 
 <!-- ============ ADMIN PAGE ============ -->
 <div id="adminPage" class="app hidden">
-<aside class="sidebar"><h1>ERO</h1>
+<aside class="sidebar"><div class="brand brand-sidebar"><img src="/icons/icon-192.png" alt="ERO logo" class="brand-logo"><h1>ERO</h1></div>
 <a class="nav-item active" onclick="showPage('dashboard',this)">📊 Dashboard</a>
 <a class="nav-item" onclick="showPage('questions',this)">❓ Questions</a>
 <a class="nav-item" onclick="showPage('students',this)">👥 Students</a>
