@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useAuthStore } from '../store/auth.store';
+import { colors } from '../theme';
 
 // Screens
 import { LoginScreen } from '../screens/LoginScreen';
@@ -49,9 +50,9 @@ function MainNavigator() {
     <MainTab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarStyle: { backgroundColor: '#0f172a', borderTopColor: '#1e293b' },
-        tabBarActiveTintColor: '#818cf8',
-        tabBarInactiveTintColor: '#64748b',
+        tabBarStyle: { backgroundColor: colors.bgCard, borderTopColor: colors.border },
+        tabBarActiveTintColor: colors.primaryBright,
+        tabBarInactiveTintColor: colors.textMuted,
       }}
     >
       <MainTab.Screen name="Home" component={DashboardScreen} options={{ tabBarLabel: 'Home' }} />
