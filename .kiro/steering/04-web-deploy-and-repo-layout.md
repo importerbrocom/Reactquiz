@@ -81,3 +81,50 @@ npx vite build      # production build; also surfaces most runtime-shape errors
 A clean `tsc -b` + `vite build` is the bar before opening a web PR. (Mobile:
 `cd mobile && npx tsc --noEmit`; there is no committed lockfile, so deps install
 with `npm install --legacy-peer-deps`.)
+
+## The WORKING manual deploy (until the Actions pipeline is fixed)
+
+The server (cPanel, user `uddjzwrz`, host `s803`) serves the site from
+`~/mediprep.nokkoo.in/`. Confirmed facts about that folder:
+
+- It is BOTH the Laravel API root AND the served web root AND a (broken) git
+  clone on an empty `master` with no commits. `git pull` there is not viable.
+- `.htaccess` routes `^api/(.*)$` → `public/index.php` (Laravel), and everything
+  else → `index.html` (the SPA). So the live frontend is literally `index.html`
+  + `assets/` sitting in that folder.
+- **No Node/npm on the server** (`node: command not found`). The build CANNOT
+  run there — it must be built off-server and the output uploaded.
+- The API is confirmed at **`/api/v1`** (Laravel `routes/api.php` has
+  `Route::prefix('v1')`). A POST to `/api/v1/auth/login` returns **422**
+  (validation) when empty — that 422 is the "API is alive" signal. There is no
+  `/health` route, so `/api/v1/health` 404s — that is NOT a failure.
+- The web build's `VITE_API_BASE_URL` must therefore be
+  `https://mediprep.nokkoo.in/api/v1` (this is already the default in
+  `web/src/config/env.ts` and `build-web.yml`).
+
+Proven deploy procedure (used successfully Oct 2026):
+
+1. Ensure the redesign/changes are merged to `main`.
+2. Trigger the build artifact (the `build-web.yml` workflow has
+   `workflow_dispatch`): `gh api -X POST
+   repos/importerbrocom/Reactquiz/actions/workflows/332727965/dispatches
+   -f ref=main`. It builds `web/` with the right prod API URL and uploads a
+   `web-dist` artifact (30-day retention).
+3. Owner downloads the `web-dist` artifact from the run page (browser, logged in
+   as importerbro).
+4. On the server, BACK UP first:
+   `mkdir -p ~/backup-frontend-$(date +%F) && cp -a index.html assets
+   manifest.webmanifest service-worker.js sw.js offline.html favicon.svg icons
+   ~/backup-frontend-$(date +%F)/`
+5. Upload the zip, then: `rm -rf assets` (clear old hashed chunks),
+   `unzip -o web-dist.zip -d web-dist-new`, `cp -a web-dist-new/. ./`, clean up.
+6. Verify `index.html`'s `assets/index-*.js|css` refs exist in `assets/`.
+7. **Bust caches or the change is invisible:** Cloudflare → Purge Everything,
+   and the Workbox service worker reactivates on the second load / can be
+   unregistered via DevTools → Application → Service Workers.
+8. Rollback if needed: `rm -rf assets && cp -a ~/backup-frontend-<date>/. ./`.
+
+The redesigned UI was deployed this way and confirmed live. To make this
+automatic, `deploy-web.yml` still needs the `DEPLOY_*` secrets AND a real
+publish step (rsync `web/dist` into `~/mediprep.nokkoo.in/`, excluding the
+Laravel dirs) — until then, the manual steps above are the path.
