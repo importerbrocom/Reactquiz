@@ -12,6 +12,15 @@ export interface User {
   avatar_url: string | null;
 }
 
+export interface ExamCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  icon_url: string | null;
+  courses_count: number;
+}
+
 export interface Dashboard {
   user: Pick<User, 'id' | 'name' | 'avatar_url'>;
   enrolment: {

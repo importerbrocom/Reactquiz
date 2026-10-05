@@ -135,6 +135,10 @@ export const router = createBrowserRouter([
                     lazy: () => import('@/features/student-dashboard/screens/DashboardScreen'),
                   },
                   {
+                    path: '/exams',
+                    lazy: () => import('@/features/exams/screens/ExamsScreen'),
+                  },
+                  {
                     path: '/courses/:courseId/days',
                     lazy: () => import('@/features/student-dashboard/screens/DaysScreen'),
                   },
