@@ -12,19 +12,19 @@ interface QuizOptionButtonProps {
 }
 
 const stateStyles: Record<OptionState, string> = {
-  idle: 'border-surface-700 bg-surface-900 hover:border-surface-500 hover:bg-surface-800',
-  selected: 'border-primary-500 bg-primary-500/10',
-  correct: 'border-success-500 bg-success-500/10',
-  incorrect: 'border-danger-500 bg-danger-500/10',
-  disabled: 'border-surface-700 bg-surface-900 opacity-60',
+  idle: 'border-surface-700 bg-surface-900/60 hover:border-primary-500/60 hover:bg-surface-800',
+  selected: 'border-primary-500 bg-primary-500/15',
+  correct: 'border-success-500 bg-success-500/15',
+  incorrect: 'border-danger-500 bg-danger-500/15',
+  disabled: 'border-surface-800 bg-surface-900/60 opacity-60',
 };
 
 const iconStyles: Record<OptionState, string> = {
-  idle: 'border-surface-600 text-surface-400',
+  idle: 'border-surface-600 text-surface-300',
   selected: 'border-primary-500 bg-primary-500 text-white',
   correct: 'border-success-500 bg-success-500 text-white',
   incorrect: 'border-danger-500 bg-danger-500 text-white',
-  disabled: 'border-surface-600 text-surface-500',
+  disabled: 'border-surface-700 text-surface-500',
 };
 
 /**
@@ -43,9 +43,9 @@ export function QuizOptionButton({
     <button
       type="button"
       className={cn(
-        'flex min-h-[44px] w-full items-start gap-3 rounded-xl border-2 px-4 py-3 text-left transition-all',
+        'flex min-h-[56px] w-full items-center gap-3.5 rounded-2xl border px-4 py-3.5 text-left transition-all',
         stateStyles[state],
-        !disabled && state === 'idle' && 'active:scale-[0.98]',
+        !disabled && state === 'idle' && 'active:scale-[0.99]',
       )}
       disabled={disabled}
       onClick={() => onSelect(optionKey)}
@@ -54,21 +54,23 @@ export function QuizOptionButton({
     >
       <span
         className={cn(
-          'flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold',
+          'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold',
           iconStyles[state],
         )}
       >
-        {state === 'correct' ? (
+        {optionKey.toUpperCase()}
+      </span>
+      <span className="flex-1 text-[15px] leading-relaxed text-surface-100">{text}</span>
+      {state === 'correct' && (
+        <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-success-500 text-white">
           <CheckIcon />
-        ) : state === 'incorrect' ? (
+        </span>
+      )}
+      {state === 'incorrect' && (
+        <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-danger-500 text-white">
           <XIcon />
-        ) : (
-          optionKey.toUpperCase()
-        )}
-      </span>
-      <span className="flex-1 pt-0.5 text-sm leading-relaxed text-surface-100">
-        {text}
-      </span>
+        </span>
+      )}
     </button>
   );
 }

@@ -1,8 +1,9 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, Image } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
+import { colors, radius, spacing } from '../theme';
 import type { QuizQuestion, AnswerResult } from '../types/models';
 
 function uuid() {
@@ -102,63 +103,132 @@ export function QuizScreen() {
     <View style={s.container}>
       {/* Header */}
       <View style={s.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={s.closeWrap}>
           <Text style={s.closeBtn}>✕</Text>
         </TouchableOpacity>
         <Text style={s.headerText}>Day {day}</Text>
-        <Text style={s.score}>{mastered}/10</Text>
+        <View style={s.scorePill}>
+          <Text style={s.score}>✓ {mastered}/10</Text>
+        </View>
       </View>
 
       {/* Progress bar */}
-      <View style={s.progressBar}>
+      <View style={s.progressTrack}>
         <View style={[s.progressFill, { width: `${(mastered / 10) * 100}%` }]} />
       </View>
 
-      <ScrollView style={s.body}>
-        {/* Question */}
-        <Text style={s.qNum}>Q{currentIdx + 1} of {questions.length}</Text>
-        <Text style={s.qText}>{currentQ.text}</Text>
+      <ScrollView style={s.body} contentContainerStyle={s.bodyContent}>
+        {/* Question card */}
+        <View style={s.qCard}>
+          <Text style={s.qNum}>
+            Q{currentIdx + 1}.
+          </Text>
+          <Text style={s.qText}>{currentQ.text}</Text>
+          {currentQ.image_url ? (
+            <View style={s.qImageWrap}>
+              <Image source={{ uri: currentQ.image_url }} style={s.qImage} resizeMode="contain" />
+            </View>
+          ) : null}
+          <Text style={s.qCount}>
+            Question {currentIdx + 1} of {questions.length}
+          </Text>
+        </View>
 
         {/* Options */}
-        {currentQ.options
-          .sort((a, b) => a.display_position - b.display_position)
-          .map((opt) => {
-            let bg = '#1e293b';
-            let border = '#334155';
-            if (result) {
-              if (opt.key === result.correct_option) { bg = '#052e16'; border = '#22c55e'; }
-              else if (opt.key === selected && !result.is_correct) { bg = '#450a0a'; border = '#ef4444'; }
-            } else if (opt.key === selected) { bg = '#1e1b4b'; border = '#818cf8'; }
+        <View style={s.options}>
+          {currentQ.options
+            .slice()
+            .sort((a, b) => a.display_position - b.display_position)
+            .map((opt) => {
+              let bg: string = colors.bgCard;
+              let border: string = colors.border;
+              let badgeBg: string = colors.bgElevated;
+              let badgeColor: string = colors.textSecondary;
+              if (result) {
+                if (opt.key === result.correct_option) {
+                  bg = 'rgba(34,197,94,0.15)';
+                  border = colors.success;
+                  badgeBg = colors.success;
+                  badgeColor = '#fff';
+                } else if (opt.key === selected && !result.is_correct) {
+                  bg = 'rgba(239,68,68,0.15)';
+                  border = colors.danger;
+                  badgeBg = colors.danger;
+                  badgeColor = '#fff';
+                }
+              } else if (opt.key === selected) {
+                bg = colors.primaryTint;
+                border = colors.primary;
+                badgeBg = colors.primary;
+                badgeColor = '#fff';
+              }
 
-            return (
-              <TouchableOpacity
-                key={opt.key}
-                style={[s.option, { backgroundColor: bg, borderColor: border }]}
-                onPress={() => !result && setSelected(opt.key)}
-                disabled={!!result}
-              >
-                <Text style={s.optKey}>{opt.key.toUpperCase()}</Text>
-                <Text style={s.optText}>{opt.text}</Text>
-              </TouchableOpacity>
-            );
-          })}
+              const showCheck = !!result && opt.key === result.correct_option;
+              const showX = !!result && opt.key === selected && !result.is_correct;
+
+              return (
+                <TouchableOpacity
+                  key={opt.key}
+                  style={[s.option, { backgroundColor: bg, borderColor: border }]}
+                  onPress={() => !result && setSelected(opt.key)}
+                  disabled={!!result}
+                  activeOpacity={0.85}
+                >
+                  <View style={[s.optKey, { backgroundColor: badgeBg }]}>
+                    <Text style={[s.optKeyText, { color: badgeColor }]}>{opt.key.toUpperCase()}</Text>
+                  </View>
+                  <Text style={s.optText}>{opt.text}</Text>
+                  {showCheck ? <Text style={s.markCorrect}>✓</Text> : null}
+                  {showX ? <Text style={s.markWrong}>✕</Text> : null}
+                </TouchableOpacity>
+              );
+            })}
+        </View>
 
         {/* Submit */}
         {!result && selected && (
-          <TouchableOpacity style={s.submitBtn} onPress={() => submitMutation.mutate()}>
-            <Text style={s.submitText}>Submit</Text>
+          <TouchableOpacity style={s.submitBtn} onPress={() => submitMutation.mutate()} activeOpacity={0.9}>
+            <Text style={s.submitText}>Submit Answer</Text>
           </TouchableOpacity>
         )}
 
         {/* Feedback */}
-        {result && !result.is_correct && (
-          <View style={s.feedback}>
-            <Text style={s.feedbackTitle}>Incorrect</Text>
-            {result.correct_answer_text && <Text style={s.feedbackCorrect}>Correct: {result.correct_answer_text}</Text>}
-            {result.explanation && <Text style={s.feedbackExpl}>{result.explanation}</Text>}
-            <TouchableOpacity style={s.nextBtn} onPress={handleNext}>
-              <Text style={s.submitText}>Continue</Text>
-            </TouchableOpacity>
+        {result && (
+          <View style={s.feedbackWrap}>
+            <View
+              style={[
+                s.banner,
+                result.is_correct ? s.bannerCorrect : s.bannerWrong,
+              ]}
+            >
+              <View style={[s.bannerIcon, { backgroundColor: result.is_correct ? colors.success : colors.danger }]}>
+                <Text style={s.bannerIconText}>{result.is_correct ? '✓' : '✕'}</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[s.bannerTitle, { color: result.is_correct ? colors.success : colors.danger }]}>
+                  {result.is_correct ? 'Correct!' : 'Incorrect'}
+                </Text>
+                {result.correct_answer_text ? (
+                  <Text style={s.bannerSub}>
+                    <Text style={s.bannerSubLabel}>Correct answer: </Text>
+                    {result.correct_answer_text}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+
+            {result.explanation ? (
+              <View style={s.explCard}>
+                <Text style={s.explTitle}>📖 Explanation</Text>
+                <Text style={s.explText}>{result.explanation}</Text>
+              </View>
+            ) : null}
+
+            {!result.is_correct && (
+              <TouchableOpacity style={s.nextBtn} onPress={handleNext} activeOpacity={0.9}>
+                <Text style={s.submitText}>Continue</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
       </ScrollView>
@@ -167,25 +237,127 @@ export function QuizScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0B1120' },
-  loading: { color: '#94a3b8', textAlign: 'center', marginTop: 200 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 60, paddingBottom: 12 },
-  closeBtn: { color: '#94a3b8', fontSize: 20 },
-  headerText: { color: '#f8fafc', fontSize: 16, fontWeight: '600' },
-  score: { color: '#818cf8', fontSize: 16, fontWeight: '700' },
-  progressBar: { height: 4, backgroundColor: '#334155', marginHorizontal: 20, borderRadius: 2 },
-  progressFill: { height: 4, backgroundColor: '#22c55e', borderRadius: 2 },
-  body: { flex: 1, padding: 20 },
-  qNum: { color: '#64748b', fontSize: 12, marginBottom: 8 },
-  qText: { color: '#f8fafc', fontSize: 17, lineHeight: 26, marginBottom: 24 },
-  option: { flexDirection: 'row', alignItems: 'center', borderRadius: 12, borderWidth: 2, padding: 14, marginBottom: 10 },
-  optKey: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#334155', textAlign: 'center', lineHeight: 28, color: '#f8fafc', fontWeight: '700', fontSize: 12, marginRight: 12 },
-  optText: { flex: 1, color: '#e2e8f0', fontSize: 15 },
-  submitBtn: { backgroundColor: '#4f46e5', borderRadius: 12, padding: 16, alignItems: 'center', marginTop: 16 },
+  container: { flex: 1, backgroundColor: colors.bg },
+  loading: { color: colors.textSecondary, textAlign: 'center', marginTop: 200 },
+
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+    paddingTop: 56,
+    paddingBottom: spacing.md,
+  },
+  closeWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.bgCard,
+  },
+  closeBtn: { color: colors.textSecondary, fontSize: 18 },
+  headerText: { color: colors.textPrimary, fontSize: 16, fontWeight: '600' },
+  scorePill: {
+    backgroundColor: colors.primaryTint,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+  },
+  score: { color: colors.primaryBright, fontSize: 14, fontWeight: '700' },
+
+  progressTrack: {
+    height: 8,
+    backgroundColor: colors.bgElevated,
+    marginHorizontal: spacing.xl,
+    borderRadius: 4,
+  },
+  progressFill: { height: 8, backgroundColor: colors.success, borderRadius: 4 },
+
+  body: { flex: 1 },
+  bodyContent: { padding: spacing.xl, gap: spacing.lg },
+
+  qCard: {
+    backgroundColor: colors.bgCard,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.lg,
+  },
+  qNum: { color: colors.primaryBright, fontSize: 18, fontWeight: '700', marginBottom: spacing.sm },
+  qText: { color: colors.textPrimary, fontSize: 17, lineHeight: 26 },
+  qImageWrap: {
+    marginTop: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.bg,
+    overflow: 'hidden',
+  },
+  qImage: { width: '100%', height: 200 },
+  qCount: { color: colors.textMuted, fontSize: 11, textAlign: 'right', marginTop: spacing.md },
+
+  options: { gap: spacing.md },
+  option: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    padding: spacing.lg,
+    minHeight: 56,
+  },
+  optKey: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  optKeyText: { fontWeight: '700', fontSize: 14 },
+  optText: { flex: 1, color: colors.textPrimary, fontSize: 15, lineHeight: 21 },
+  markCorrect: { color: colors.success, fontSize: 18, fontWeight: '700', marginLeft: spacing.sm },
+  markWrong: { color: colors.danger, fontSize: 18, fontWeight: '700', marginLeft: spacing.sm },
+
+  submitBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    alignItems: 'center',
+  },
   submitText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  feedback: { backgroundColor: '#1e293b', borderRadius: 12, padding: 16, marginTop: 16 },
-  feedbackTitle: { color: '#ef4444', fontWeight: '600', marginBottom: 8 },
-  feedbackCorrect: { color: '#22c55e', fontSize: 13, marginBottom: 4 },
-  feedbackExpl: { color: '#94a3b8', fontSize: 13, lineHeight: 20, marginBottom: 12 },
-  nextBtn: { backgroundColor: '#334155', borderRadius: 10, padding: 14, alignItems: 'center' },
+
+  feedbackWrap: { gap: spacing.md },
+  banner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    padding: spacing.lg,
+  },
+  bannerCorrect: { borderColor: 'rgba(34,197,94,0.4)', backgroundColor: 'rgba(34,197,94,0.1)' },
+  bannerWrong: { borderColor: 'rgba(239,68,68,0.4)', backgroundColor: 'rgba(239,68,68,0.1)' },
+  bannerIcon: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  bannerIconText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  bannerTitle: { fontSize: 15, fontWeight: '700' },
+  bannerSub: { color: colors.textPrimary, fontSize: 13, marginTop: 2 },
+  bannerSubLabel: { color: colors.textSecondary },
+
+  explCard: {
+    backgroundColor: colors.bgCard,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.lg,
+  },
+  explTitle: { color: colors.textPrimary, fontSize: 14, fontWeight: '600', marginBottom: 6 },
+  explText: { color: colors.textSecondary, fontSize: 13, lineHeight: 20 },
+
+  nextBtn: {
+    backgroundColor: colors.bgElevated,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    alignItems: 'center',
+  },
 });
