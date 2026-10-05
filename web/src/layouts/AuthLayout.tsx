@@ -1,6 +1,7 @@
 import { Outlet, Navigate } from 'react-router';
 import { useAuthStore } from '@/store/auth.store';
 import { ROUTES } from '@/config/routes.config';
+import { Logo } from '@/components/ui/Logo';
 
 /**
  * Layout for public auth pages (login, register, forgot password, etc.).
@@ -19,16 +20,9 @@ function AuthLayout() {
     <div className="flex min-h-dvh flex-col items-center justify-center bg-surface-950 px-4 py-8">
       <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="mb-8 text-center">
-          <div className="flex items-center justify-center gap-3">
-            <img
-              src="/icons/icon-192.png"
-              alt="ERO logo"
-              className="h-14 w-14 rounded-xl object-cover"
-            />
-            <h1 className="text-3xl font-bold text-primary-400">ERO</h1>
-          </div>
-          <p className="mt-2 text-sm text-surface-400">Daily Exam Practice</p>
+        <div className="mb-8 flex flex-col items-center text-center">
+          <Logo size={56} />
+          <p className="mt-3 text-sm text-surface-400">Daily Exam Practice</p>
         </div>
 
         {/* Page content */}
