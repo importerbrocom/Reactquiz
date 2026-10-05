@@ -15,19 +15,20 @@ interface QuizProgressHeaderProps {
  */
 export function QuizProgressHeader({ mastered, required, courseId, dayNumber }: QuizProgressHeaderProps) {
   return (
-    <header className="space-y-3 border-b border-surface-800 bg-surface-950 px-4 pb-4 pt-4">
-      <div className="flex items-center justify-between">
+    <header className="space-y-3 border-b border-surface-800 bg-surface-950/95 px-4 pb-4 pt-4 backdrop-blur-sm">
+      <div className="flex items-center justify-between gap-3">
         <Link
           to={ROUTES.COURSE_DAYS(courseId)}
-          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-surface-400 hover:text-surface-200"
+          className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-surface-400 hover:bg-surface-800 hover:text-surface-200"
           aria-label="Exit quiz"
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </Link>
-        <span className="text-sm font-medium text-surface-300">Day {dayNumber}</span>
-        <span className="min-w-[44px] text-right text-sm font-bold text-primary-400">
+        <span className="text-sm font-semibold text-surface-200">Day {dayNumber}</span>
+        <span className="flex items-center gap-1.5 rounded-full bg-primary-500/15 px-3 py-1.5 text-sm font-bold text-primary-400">
+          <span aria-hidden>✓</span>
           {mastered}/{required}
         </span>
       </div>
@@ -35,7 +36,7 @@ export function QuizProgressHeader({ mastered, required, courseId, dayNumber }: 
         value={mastered}
         max={required}
         variant="success"
-        size="sm"
+        size="md"
         ariaLabel={`${mastered} of ${required} questions mastered`}
       />
     </header>
