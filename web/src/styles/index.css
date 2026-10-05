@@ -1,18 +1,22 @@
 @import "tailwindcss";
 
-/* === Theme tokens === */
+/* === Theme tokens ===
+   Palette derived from the ERO redesign mockups: a brighter blue primary
+   (#2563eb) replacing the old indigo, plus accent hues used for the subject
+   tiles and stat cards. Keep web and mobile (mobile/src/theme.ts) in sync. */
 @theme {
-  --color-primary-50: #eef2ff;
-  --color-primary-100: #e0e7ff;
-  --color-primary-200: #c7d2fe;
-  --color-primary-300: #a5b4fc;
-  --color-primary-400: #818cf8;
-  --color-primary-500: #6366f1;
-  --color-primary-600: #4f46e5;
-  --color-primary-700: #4338ca;
-  --color-primary-800: #3730a3;
-  --color-primary-900: #312e81;
-  --color-primary-950: #1e1b4b;
+  /* Primary — mockup blue (was indigo #6366f1) */
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+  --color-primary-950: #172554;
 
   --color-success-50: #f0fdf4;
   --color-success-500: #22c55e;
@@ -28,6 +32,15 @@
   --color-warning-500: #f59e0b;
   --color-warning-600: #d97706;
 
+  /* Accents — subject tiles / stat cards in the mockups */
+  --color-accent-teal: #14b8a6;
+  --color-accent-purple: #8b5cf6;
+  --color-accent-amber: #f59e0b;
+  --color-accent-pink: #ec4899;
+  --color-accent-green: #22c55e;
+  --color-accent-cyan: #06b6d4;
+
+  /* Surface — deep navy scale from the mockups */
   --color-surface-50: #f8fafc;
   --color-surface-100: #f1f5f9;
   --color-surface-200: #e2e8f0;
@@ -36,9 +49,9 @@
   --color-surface-500: #64748b;
   --color-surface-600: #475569;
   --color-surface-700: #334155;
-  --color-surface-800: #1e293b;
-  --color-surface-900: #0f172a;
-  --color-surface-950: #0B1120;
+  --color-surface-800: #16213a;
+  --color-surface-900: #0f1830;
+  --color-surface-950: #0a0e1a;
 
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
