@@ -14,6 +14,7 @@ import { ROUTES } from '@/config/routes.config';
 import { StepIndicator } from '../components/StepIndicator';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { Logo } from '@/components/ui/Logo';
 import { PageSpinner } from '@/components/ui/Spinner';
 import type { ExamCategory, Course } from '@/types/models';
 
@@ -92,17 +93,30 @@ function OnboardingScreen() {
 
       {/* Step 1: Welcome */}
       {step === 1 && (
-        <div className="space-y-6 text-center">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-primary-500/15">
-            <span className="text-4xl">📚</span>
+        <div className="space-y-6">
+          {/* Gradient hero */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-700 via-primary-600 to-primary-900 p-6 text-center">
+            <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+            <div className="relative flex flex-col items-center gap-4">
+              <Logo size={64} />
+              <div>
+                <h2 className="text-2xl font-bold text-white">Welcome to ERO</h2>
+                <p className="mt-2 text-sm text-blue-100/90">
+                  Master your medical licensing exam with daily practice. 10 questions a day,
+                  every day, until you&apos;re ready.
+                </p>
+              </div>
+            </div>
           </div>
-          <div>
-            <h2 className="text-2xl font-bold text-white">Welcome to ERO</h2>
-            <p className="mt-2 text-surface-400">
-              Master your medical licensing exam with daily practice.
-              10 questions a day, every day, until you&apos;re ready.
-            </p>
+
+          {/* Feature highlights */}
+          <div className="grid grid-cols-2 gap-3">
+            <Highlight icon="📝" label="Daily Practice" />
+            <Highlight icon="🏆" label="Monthly Tests" />
+            <Highlight icon="📈" label="Track Progress" />
+            <Highlight icon="🔥" label="Build Streaks" />
           </div>
+
           <Button fullWidth onClick={() => setStep(2)}>
             Get Started
           </Button>
@@ -275,6 +289,15 @@ function OnboardingScreen() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function Highlight({ icon, label }: { icon: string; label: string }) {
+  return (
+    <div className="flex items-center gap-2.5 rounded-xl border border-surface-700 bg-surface-900/50 p-3">
+      <span className="text-lg">{icon}</span>
+      <span className="text-sm font-medium text-surface-200">{label}</span>
     </div>
   );
 }

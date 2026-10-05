@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useMutation } from '@tanstack/react-query';
 import * as SecureStore from 'expo-secure-store';
 import { apiClient, setAccessToken } from '../api/client';
 import { useAuthStore } from '../store/auth.store';
+import { Logo } from '../components/Logo';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../navigation/AppNavigator';
 
@@ -36,8 +37,7 @@ export function LoginScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.brand}>
-        <Image source={require('../assets/icon.png')} style={styles.logo} />
-        <Text style={styles.title}>ERO</Text>
+        <Logo size={56} />
       </View>
       <Text style={styles.subtitle}>Sign in to continue</Text>
 
