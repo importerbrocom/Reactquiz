@@ -1,6 +1,7 @@
 import { Outlet, NavLink } from 'react-router';
 import { useNetworkStore } from '@/store/network.store';
 import { ROUTES } from '@/config/routes.config';
+import { Logo } from '@/components/ui/Logo';
 
 /**
  * Student layout — bottom nav (mobile) / sidebar (desktop).
@@ -37,13 +38,8 @@ function StudentLayout() {
       >
         <div className="flex h-16 items-center justify-around lg:h-full lg:flex-col lg:items-stretch lg:justify-start lg:gap-1 lg:px-3 lg:pt-6">
           {/* Logo (desktop sidebar only) */}
-          <div className="hidden lg:mb-8 lg:flex lg:items-center lg:gap-2 lg:px-3">
-            <img
-              src="/icons/icon-192.png"
-              alt="ERO logo"
-              className="h-9 w-9 rounded-lg object-cover"
-            />
-            <h2 className="text-xl font-bold text-primary-400">ERO</h2>
+          <div className="hidden lg:mb-8 lg:block lg:px-3">
+            <Logo size={40} showWordmark tagline="Daily Exam Practice" />
           </div>
 
           <NavItem to={ROUTES.DASHBOARD} icon={<HomeIcon />} label="Home" />
