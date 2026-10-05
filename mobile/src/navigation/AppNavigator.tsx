@@ -9,6 +9,7 @@ import { colors } from '../theme';
 import { LoginScreen } from '../screens/LoginScreen';
 import { RegisterScreen } from '../screens/RegisterScreen';
 import { DashboardScreen } from '../screens/DashboardScreen';
+import { ExamsScreen } from '../screens/ExamsScreen';
 import { QuizScreen } from '../screens/QuizScreen';
 import { DaysScreen } from '../screens/DaysScreen';
 import { ProgressScreen } from '../screens/ProgressScreen';
@@ -27,6 +28,7 @@ export type AuthStackParamList = {
 
 export type MainTabParamList = {
   Home: undefined;
+  Exams: undefined;
   Days: undefined;
   Progress: undefined;
   Profile: undefined;
@@ -56,6 +58,7 @@ function MainNavigator() {
       }}
     >
       <MainTab.Screen name="Home" component={DashboardScreen} options={{ tabBarLabel: 'Home' }} />
+      <MainTab.Screen name="Exams" component={ExamsScreen} options={{ tabBarLabel: 'Exams' }} />
       <MainTab.Screen name="Days" component={DaysScreen} options={{ tabBarLabel: 'Days' }} />
       <MainTab.Screen name="Progress" component={ProgressScreen} options={{ tabBarLabel: 'Progress' }} />
       <MainTab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Profile' }} />
