@@ -42,8 +42,10 @@ ambiguous between the month and the 6-month programme. `programme` = the 6-month
 ## Stack
 
 Monorepo. `api/` is **Laravel 13** (PHP 8.4) REST API with Sanctum **token** auth.
-The frontend will be **React 19** PWA (Phase 4+, not yet started). MySQL + Redis in production;
-the sandbox has neither, so tests run on SQLite in-memory.
+The frontend is a **React 19 + Vite PWA** in `web/` (student + admin screens, 17 API endpoint
+modules, 6 layouts — substantially built), plus an **Expo React Native app** in `mobile/`.
+MySQL + Redis in production; the sandbox has neither, so tests run on SQLite in-memory.
+See `04-web-deploy-and-repo-layout.md` for how the web app ships (and why its deploy is broken).
 
 ## Delivery status
 
@@ -53,8 +55,8 @@ the sandbox has neither, so tests run on SQLite in-memory.
 | 2 | Laravel foundation: 36 migrations, 23 enums, 31 models, Sanctum token auth, 11 exceptions, 7 middleware, 5 policies | **Merged** (PR #1) |
 | — | Question extraction tooling (`tools/question-extraction/`) | **PR #2 open** |
 | 3 | Quiz engine + student API | **PR #3 open**, branch `phase-3-quiz-engine` |
-| 4 | React 19 PWA | Not started |
-| 5–11 | Admin panel, imports, notifications, reporting, hardening, deployment | Not started |
+| 4 | React 19 PWA (`web/`) + Expo app (`mobile/`) | **Substantially built** — 31 feature screens, 17 endpoint modules; UI redesign in progress |
+| 5–11 | Admin panel, imports, notifications, reporting, hardening, deployment | Admin screens exist in `web/`; **web deploy pipeline is broken** (see `04-...`) |
 
 **Branch topology:** `phase-3-quiz-engine` is cut from `extraction-tooling`, so **PR #3 contains
 PR #2's commits**. Merge #2 first, then #3.
@@ -110,12 +112,14 @@ Immediate next steps, in order:
 1. **Get PR #2 and PR #3 merged**, or work on `phase-3-quiz-engine`. Do not start from `main`.
 2. **Ask the owner the three open questions above.** Question 2 (explanations naming option
    letters) is the one that will actively teach students something wrong if ignored.
-3. **Phase 4 — the React 19 PWA.** Nothing exists yet. `docs/phase-1/06-pwa-and-offline.md` has
-   the offline design; `docs/phase-3/student-api.md` is the API contract to build against. The
-   offline outbox is the interesting part, and the API is already built to support it: every write
-   is idempotent, and answers carry a client-generated uuid.
-4. Alternatively the owner may want a **seeded clickable demo** before Phase 4 — he was offered
-   this and has not answered.
+3. **Phase 4 — the React 19 PWA (`web/`) exists and is substantially built** (student + admin
+   screens, offline outbox, service worker). A UI redesign is in progress across `web/` and
+   `mobile/`. `docs/phase-1/06-pwa-and-offline.md` has the offline design; `docs/phase-3/
+   student-api.md` is the API contract. **Before claiming any web change is "done", read
+   `04-web-deploy-and-repo-layout.md`: the deploy pipeline is broken, so merging to `main` does
+   NOT update the live site** until the deploy secrets + publish step are fixed.
+4. **Fixing the web deploy** and the **failing iOS EAS build** (see `03-mobile-eas-...`) are the
+   two things blocking shipping what already exists.
 
-Not yet built anywhere: admin panel, XLSX/CSV import endpoint (format is designed and templated,
-the endpoint is not written), notifications/push, reporting, certificates, deployment.
+Backend not yet built: XLSX/CSV import endpoint (format is designed and templated, the endpoint is
+not written), notifications/push, reporting, certificates. Admin UI screens exist in `web/`.
